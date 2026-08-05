@@ -332,10 +332,10 @@
 </div>
 </div>
 <div>
-<label class="form-label" for="spesifikasi">Spesifikasi</label>
+<label class="form-label" for="spesifikasi">Spesifikasi </label>
 <input class="standard-input" id="spesifikasi" name="spesifikasi" placeholder="Detail spesifikasi" type="text"/>
 </div>
-<!-- 5. Tipe Perangkat (Full Width) -->
+<!-- 5. Tipe Perangkat yang dimiliki (Full Width) -->
 <div class="col-span-1 md:col-span-2">
 <label class="form-label" for="tipe_perangkat">Tipe Perangkat</label>
 <select class="standard-select text-on-surface" id="tipe_perangkat" name="tipe_perangkat">
