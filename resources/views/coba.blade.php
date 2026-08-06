@@ -120,6 +120,9 @@
         <span class="material-symbols-outlined">notifications</span>
         <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
       </button>
+      <button class="text-on-surface-variant hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors flex items-center justify-center">
+        <span class="material-symbols-outlined">qr_code_scanner</span>
+      </button>
       <div class="w-px h-6 bg-outline-variant mx-2"></div>
       <button class="w-9 h-9 rounded-full bg-primary-container text-white flex items-center justify-center font-semibold text-sm">
         EM
@@ -209,7 +212,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- Chart section (full width) -->
     <div class="bg-white rounded-xl border border-outline-variant shadow-sm p-6 md:p-8">
@@ -318,7 +320,7 @@
       </div>
     </div>
 
-<!-- Data table -->
+    <!-- Data table -->
     <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
       <div class="p-5 border-b border-outline-variant flex flex-col sm:flex-row justify-between gap-4 items-center">
         <div class="flex gap-1 bg-surface-container-low p-1 rounded-lg">
@@ -496,7 +498,7 @@
             <tbody class="text-sm text-on-surface divide-y divide-outline-variant/60">
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">1</td>
-                <td class="p-4 font-medium text-on-surface">Kecamatan Arjasa</td>
+                <td class="p-4 font-medium text-primary">Kecamatan Arjasa</td>
                 <td class="p-4 text-secondary">arjasa.situbondokab.go.id</td>
                 <td class="p-4 font-mono text-xs text-secondary">192.168.99.72</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.249</td>
@@ -518,7 +520,7 @@
               </tr>
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">2</td>
-                <td class="p-4 font-medium text-on-surface">Kecamatan Asembagus</td>
+                <td class="p-4 font-medium text-primary">Kecamatan Asembagus</td>
                 <td class="p-4 text-secondary">asembagus.situbondokab.go.id</td>
                 <td class="p-4 font-mono text-xs text-secondary">192.168.99.72</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.249</td>
@@ -562,7 +564,7 @@
               </tr>
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">4</td>
-                <td class="p-4 font-medium text-on-surface">Kecamatan Banyuglugur</td>
+                <td class="p-4 font-medium text-primary">Kecamatan Banyuglugur</td>
                 <td class="p-4 text-secondary">banyuglugur.situbondokab.go.id</td>
                 <td class="p-4 font-mono text-xs text-secondary">192.168.99.72</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.249</td>
@@ -584,7 +586,7 @@
               </tr>
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">5</td>
-                <td class="p-4 font-medium text-on-surface">Kecamatan Banyuputih</td>
+                <td class="p-4 font-medium text-primary">Kecamatan Banyuputih</td>
                 <td class="p-4 text-secondary">banyuputih.situbondokab.go.id</td>
                 <td class="p-4 font-mono text-xs text-secondary">192.168.99.72</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.249</td>
@@ -639,7 +641,7 @@
             <tbody class="text-sm text-on-surface divide-y divide-outline-variant/60">
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">1</td>
-                <td class="p-4 font-medium text-on-surface">ALADIN (Aplikasi Adminduk Online)</td>
+                <td class="p-4 font-medium text-primary">ALADIN (Aplikasi Adminduk Online)</td>
                 <td class="p-4 font-mono text-xs text-secondary">-</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.229</td>
                 <td class="p-4 text-secondary">Zakiatul Darojati, A.Md.</td>
@@ -656,7 +658,7 @@
               </tr>
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">2</td>
-                <td class="p-4 font-medium text-on-surface">SKEMA (Survey Kepuasan Masyarakat)</td>
+                <td class="p-4 font-medium text-primary">SKEMA (Survey Kepuasan Masyarakat)</td>
                 <td class="p-4 font-mono text-xs text-secondary">192.168.99.94</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.249</td>
                 <td class="p-4 text-secondary">Hosnol Fawaid, S.Kom.</td>
@@ -673,7 +675,7 @@
               </tr>
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">3</td>
-                <td class="p-4 font-medium text-on-surface">Aplikasi Presensi Kabupaten Situbondo (APRESIASI)</td>
+                <td class="p-4 font-medium text-primary">Aplikasi Presensi Kabupaten Situbondo (APRESIASI)</td>
                 <td class="p-4 font-mono text-xs text-secondary">-</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.245</td>
                 <td class="p-4 text-secondary">-</td>
@@ -690,7 +692,7 @@
               </tr>
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">4</td>
-                <td class="p-4 font-medium text-on-surface">Website DPRD</td>
+                <td class="p-4 font-medium text-primary">Website DPRD</td>
                 <td class="p-4 font-mono text-xs text-secondary">192.168.99.72</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.249</td>
                 <td class="p-4 text-secondary">-</td>
@@ -707,7 +709,7 @@
               </tr>
               <tr class="hover:bg-surface-container-lowest transition-colors">
                 <td class="p-4 text-secondary">5</td>
-                <td class="p-4 font-medium text-on-surface">Website Layanan Tourist Information Center (TIC)</td>
+                <td class="p-4 font-medium text-primary">Website Layanan Tourist Information Center (TIC)</td>
                 <td class="p-4 font-mono text-xs text-secondary">192.168.99.72</td>
                 <td class="p-4 font-mono text-xs text-secondary">103.165.156.249</td>
                 <td class="p-4 text-secondary">-</td>
