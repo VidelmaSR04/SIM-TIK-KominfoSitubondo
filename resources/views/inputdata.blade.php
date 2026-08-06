@@ -1,13 +1,11 @@
-<!DOCTYPE html>
-
-<html lang="id"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!DOCTYPE html><html lang="id" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Buat Perangkat Server Baru - SIM TIK</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <script id="tailwind-config">
         tailwind.config = {
           darkMode: "class",
@@ -183,27 +181,27 @@
 <div class="flex-1 overflow-y-auto py-4 flex flex-col">
 <a class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white transition-colors hover:bg-slate-800" href="#">
 <span class="material-symbols-outlined" data-icon="dns">dns</span>
-<span>Server &amp; Aplikasi</span>
+<span class="">Server &amp; Aplikasi</span>
 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white transition-colors hover:bg-slate-800" href="#">
 <span class="material-symbols-outlined" data-icon="settings_applications">settings_applications</span>
-<span>cPanel</span>
+<span class="">cPanel</span>
 </a>
 <a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary bg-primary/10 text-primary font-semibold transition-all duration-200 ease-in-out" href="#">
 <span class="material-symbols-outlined" data-icon="apps">apps</span>
-<span>Aplikasi</span>
+<span class="">Aplikasi</span>
 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white transition-colors hover:bg-slate-800" href="#">
 <span class="material-symbols-outlined" data-icon="swap_horiz">swap_horiz</span>
-<span>SPLP</span>
+<span class="">SPLP</span>
 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white transition-colors hover:bg-slate-800" href="#">
 <span class="material-symbols-outlined" data-icon="assignment">assignment</span>
-<span>Laporan Tugas</span>
+<span class="">Laporan Tugas</span>
 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white transition-colors hover:bg-slate-800" href="#">
 <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
-<span>Laporan NOC</span>
+<span class="">Laporan NOC</span>
 </a>
 </div>
 </nav>
@@ -222,13 +220,13 @@
 <div class="hidden md:flex flex-1 max-w-md items-center">
 <div class="relative w-full">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
-<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-transparent rounded-full text-body-md focus:outline-none focus:border-primary focus:bg-white transition-colors" placeholder="Pencarian..." type="text"/>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-transparent rounded-full text-body-md focus:outline-none focus:border-primary focus:bg-white transition-colors" placeholder="Pencarian..." type="text">
 </div>
 </div>
 <!-- Actions -->
 <div class="flex items-center gap-2 ml-auto">
 <button class="text-on-surface-variant p-2 rounded-full hover:bg-surface-container-low transition-colors">
-<span class="material-symbols-outlined" data-icon="qr_code_scanner">qr_code_scanner</span>
+
 </button>
 <button class="text-on-surface-variant p-2 rounded-full hover:bg-surface-container-low transition-colors relative">
 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
@@ -249,13 +247,13 @@
                             Dashboard
                         </a>
 </li>
-<li>
+<li class="">
 <div class="flex items-center">
 <span class="material-symbols-outlined text-sm mx-1" data-icon="chevron_right">chevron_right</span>
 <a class="hover:text-primary transition-colors ml-1 md:ml-2" href="#">Perangkat &amp; Server</a>
 </div>
 </li>
-<li aria-current="page">
+<li aria-current="page" class="">
 <div class="flex items-center">
 <span class="material-symbols-outlined text-sm mx-1" data-icon="chevron_right">chevron_right</span>
 <span class="text-on-surface ml-1 md:ml-2">Buat Perangkat Baru</span>
@@ -268,9 +266,7 @@
 <!-- Form Card -->
 <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant overflow-hidden mb-8">
 <!-- Card Header -->
-<div class="bg-brand-teal px-6 py-4">
-<h2 class="text-white font-headline-md text-headline-md m-0">Form Biodata</h2>
-</div>
+<div class="px-6 py-4 bg-primary-container"><h2 class="text-white font-headline-md text-headline-md m-0">Form Biodata</h2></div>
 <!-- Card Body (Form) -->
 <div class="p-6">
 <form action="#" method="POST">
@@ -282,10 +278,10 @@
 <div class="input-group-addon">
 <span class="material-symbols-outlined text-xl" data-icon="list">list</span>
 </div>
-<input class="input-group-input" id="nama_perangkat" name="nama_perangkat" placeholder="Masukkan nama perangkat" type="text"/>
+<input class="input-group-input" id="nama_perangkat" name="nama_perangkat" placeholder="Masukkan nama perangkat" type="text">
 </div>
 </div>
-<!-- 2. Row 1: Jenis Perangkat & Serial Numbeer -->
+<!-- 2. Row 1: Jenis Perangkat & Serial Number -->
 <div>
 <label class="form-label" for="jenis_perangkat">Jenis Perangkat</label>
 <select class="standard-select text-on-surface" id="jenis_perangkat" name="jenis_perangkat">
@@ -301,7 +297,7 @@
 <div class="input-group-addon">
 <span class="material-symbols-outlined text-xl" data-icon="key">key</span>
 </div>
-<input class="input-group-input" id="serial_number" name="serial_number" placeholder="Masukkan serial number" type="text"/>
+<input class="input-group-input" id="serial_number" name="serial_number" placeholder="Masukkan serial number" type="text">
 </div>
 </div>
 <!-- 3. Row 2: Merk Perangkat & TYPE -->
@@ -315,7 +311,7 @@
 </div>
 <div>
 <label class="form-label" for="type">TYPE</label>
-<input class="standard-input" id="type" name="type" placeholder="Masukkan tipe spesifik" type="text"/>
+<input class="standard-input" id="type" name="type" placeholder="Masukkan tipe spesifik" type="text">
 </div>
 <!-- 4. Row 3: Kondisi Server & Spesifikasi -->
 <div>
@@ -332,10 +328,10 @@
 </div>
 </div>
 <div>
-<label class="form-label" for="spesifikasi">Spesifikasi </label>
-<input class="standard-input" id="spesifikasi" name="spesifikasi" placeholder="Detail spesifikasi" type="text"/>
+<label class="form-label" for="spesifikasi">Spesifikasi</label>
+<input class="standard-input" id="spesifikasi" name="spesifikasi" placeholder="Detail spesifikasi" type="text">
 </div>
-<!-- 5. Tipe Perangkat yang dimiliki (Full Width) -->
+<!-- 5. Tipe Perangkat (Full Width) -->
 <div class="col-span-1 md:col-span-2">
 <label class="form-label" for="tipe_perangkat">Tipe Perangkat</label>
 <select class="standard-select text-on-surface" id="tipe_perangkat" name="tipe_perangkat">
@@ -366,7 +362,7 @@
 <div class="input-group-addon">
 <span class="material-symbols-outlined text-xl" data-icon="public">public</span>
 </div>
-<input class="input-group-input" id="ip_perangkat" name="ip_perangkat" placeholder="192.168.x.x" type="text"/>
+<input class="input-group-input" id="ip_perangkat" name="ip_perangkat" placeholder="192.168.x.x" type="text">
 </div>
 </div>
 <div>
@@ -386,7 +382,7 @@
 <option value="1 TB">1 TB</option>
 </select>
 </div>
-<div>
+<div class="max-w-md">
 <label class="form-label" for="ukuran_ram">Ukuran RAM</label>
 <select class="standard-select text-on-surface" id="ukuran_ram" name="ukuran_ram">
 <option selected="" value="4 GB">4 GB</option>
@@ -430,13 +426,13 @@
 <div class="input-group-addon">
 <span class="material-symbols-outlined text-xl" data-icon="list">list</span>
 </div>
-<input class="input-group-input" id="peruntukan_perangkat" name="peruntukan_perangkat" placeholder="Masukkan peruntukan perangkat" type="text"/>
+<input class="input-group-input" id="peruntukan_perangkat" name="peruntukan_perangkat" placeholder="Masukkan peruntukan perangkat" type="text">
 </div>
 </div>
 <!-- 13. Row 7: Nama Pengirim & Nama Penerima -->
 <div>
 <label class="form-label" for="nama_pengirim">Nama Pengirim</label>
-<input class="standard-input" id="nama_pengirim" name="nama_pengirim" placeholder="Nama pengirim perangkat" type="text"/>
+<input class="standard-input" id="nama_pengirim" name="nama_pengirim" placeholder="Nama pengirim perangkat" type="text">
 </div>
 <div>
 <label class="form-label" for="nama_penerima">Nama Penerima</label>
@@ -450,17 +446,13 @@
 <div class="col-span-1 md:col-span-2 mb-4">
 <label class="form-label" for="jam_pengisian">Jam Pengisian</label>
 <div class="relative">
-<input class="w-full border border-[#CBD5E1] rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" id="jam_pengisian" name="jam_pengisian" type="time"/>
-<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" data-icon="schedule">schedule</span>
+<input class="w-full border border-[#CBD5E1] rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" id="jam_pengisian" name="jam_pengisian" type="time">
+
 </div>
 </div>
 </div> <!-- End Grid -->
 <!-- Submit Button -->
-<div class="mt-8">
-<button class="bg-brand-teal hover:bg-teal-700 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2" type="submit">
-                                Simpan
-                            </button>
-</div>
+<div class="mt-8"><div class="flex gap-3"><button class="bg-primary-container hover:bg-primary text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" type="submit">Simpan</button><button class="bg-surface-container-high text-on-surface-variant cursor-not-allowed font-medium py-2 px-6 rounded-lg transition-colors shadow-sm" type="button" disabled="">Create PDF</button></div></div>
 </form>
 </div>
 </div>
@@ -470,4 +462,8 @@
 <span class="font-body-md text-body-md text-secondary">Copyright © 2026 Dinas Komunikasi dan Informatika Kab. Situbondo. All rights reserved.</span>
 </footer>
 </div>
+
+
+
+
 </body></html>

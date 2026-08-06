@@ -20,6 +20,11 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
 
+// Halaman detail
+Route::get('/detailserver', function () {
+    return view('detailserver');
+})->name('detailserver');
+
 // Halaman Input Data Perangkat
 Route::get('/inputdata', function () {
     return view('inputdata');
