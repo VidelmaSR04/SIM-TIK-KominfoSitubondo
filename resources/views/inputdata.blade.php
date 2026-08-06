@@ -1,288 +1,604 @@
 @extends('layouts.app')
 
 @push('styles')
-<style>
-    /* CSS Custom dari desain Anda (tidak diubah sama sekali) */
-    .input-group {
-        display: flex;
-        align-items: stretch;
-        border: 1px solid #CBD5E1;
-        border-radius: 0.375rem;
-        overflow: hidden;
-        background: white;
-        transition: all 0.2s;
-    }
-    .input-group:focus-within {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-    }
-    .input-group-addon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #F1F5F9;
-        border-right: 1px solid #CBD5E1;
-        padding: 0 12px;
-        color: #64748B;
-    }
-    .input-group-input {
-        flex: 1;
-        border: none;
-        padding: 8px 12px;
-        outline: none;
-        font-size: 14px;
-    }
-    .form-label {
-        font-weight: 600;
-        color: #191c1e;
-        margin-bottom: 4px;
-        display: block;
-        font-size: 14px;
-    }
-    .standard-input {
-        width: 100%;
-        border: 1px solid #CBD5E1;
-        border-radius: 0.375rem;
-        padding: 8px 12px;
-        font-size: 14px;
-        outline: none;
-        transition: all 0.2s;
-    }
-    .standard-input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-    }
-    .standard-select {
-        width: 100%;
-        border: 1px solid #CBD5E1;
-        border-radius: 0.375rem;
-        padding: 8px 12px;
-        font-size: 14px;
-        outline: none;
-        background-color: white;
-        appearance: none;
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px top 50%;
-        background-size: 10px auto;
-    }
-    .standard-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-    }
-</style>
+    <style>
+        .input-group {
+            display: flex;
+            align-items: stretch;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .input-group:focus-within {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .input-group-addon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #F1F5F9;
+            border-right: 1px solid #CBD5E1;
+            padding: 0 12px;
+            color: #64748B;
+        }
+
+        .input-group-input {
+            flex: 1;
+            border: none;
+            padding: 8px 12px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #191c1e;
+            margin-bottom: 4px;
+            display: block;
+            font-size: 14px;
+        }
+
+        .required-star {
+            color: #ef4444;
+            margin-left: 2px;
+            font-weight: 700;
+        }
+
+        .standard-input {
+            width: 100%;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.375rem;
+            padding: 8px 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .standard-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .standard-select {
+            width: 100%;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.375rem;
+            padding: 8px 12px;
+            font-size: 14px;
+            outline: none;
+            background-color: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
+        }
+
+        .standard-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .form-error {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .helper-text {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+    </style>
 @endpush
 
 @section('content')
-<!-- Breadcrumb -->
-<nav aria-label="Breadcrumb" class="flex text-sm text-secondary mb-4 font-body-md">
-    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-            <a class="inline-flex items-center hover:text-primary transition-colors" href="#">Dashboard</a>
-        </li>
-        <li class="">
-            <div class="flex items-center">
-                <span class="material-symbols-outlined text-sm mx-1" data-icon="chevron_right">chevron_right</span>
-                <a class="hover:text-primary transition-colors ml-1 md:ml-2" href="{{ route('server') }}">Perangkat &amp; Server</a>
-            </div>
-        </li>
-        <li aria-current="page" class="">
-            <div class="flex items-center">
-                <span class="material-symbols-outlined text-sm mx-1" data-icon="chevron_right">chevron_right</span>
-                <span class="text-on-surface ml-1 md:ml-2">Buat Perangkat Baru</span>
-            </div>
-        </li>
-    </ol>
-</nav>
+    @php
+        $isEdit = isset($server);
+        $route = $isEdit ? route('server.update', $server->id) : route('server.store');
+        $method = $isEdit ? 'PUT' : 'POST';
+        $pageTitle = $isEdit ? 'Edit Perangkat Server' : 'Buat Perangkat Server Baru';
+        $breadcrumbTitle = $isEdit ? 'Edit Perangkat' : 'Buat Perangkat Baru';
+    @endphp
 
-<!-- Page Title -->
-<h1 class="font-headline-lg text-headline-lg text-on-surface mb-6">Buat Perangkat Server Baru</h1>
+    <!-- Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="flex text-sm text-secondary mb-4 font-body-md">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li><a class="hover:text-primary transition-colors" href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li><span class="material-symbols-outlined text-sm mx-1">chevron_right</span><a
+                    class="hover:text-primary transition-colors" href="{{ route('server.index') }}">Perangkat & Server</a>
+            </li>
+            <li><span class="material-symbols-outlined text-sm mx-1">chevron_right</span><span
+                    class="text-on-surface">{{ $breadcrumbTitle }}</span></li>
+        </ol>
+    </nav>
 
-<!-- Form Card -->
-<div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant overflow-hidden mb-8">
-    <!-- Card Header -->
-    <div class="px-6 py-4 bg-primary-container"><h2 class="text-white font-headline-md text-headline-md m-0">Form Biodata</h2></div>
-    <!-- Card Body (Form) -->
-    <div class="p-6">
-        <form action="#" method="POST">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 1. Nama Perangkat -->
-                <div class="col-span-1 md:col-span-2">
-                    <label class="form-label" for="nama_perangkat">Nama Perangkat</label>
-                    <div class="input-group">
-                        <div class="input-group-addon"><span class="material-symbols-outlined text-xl" data-icon="list">list</span></div>
-                        <input class="input-group-input" id="nama_perangkat" name="nama_perangkat" placeholder="Masukkan nama perangkat" type="text">
-                    </div>
-                </div>
-                <!-- 2. Jenis & Serial -->
-                <div>
-                    <label class="form-label" for="jenis_perangkat">Jenis Perangkat</label>
-                    <select class="standard-select text-on-surface" id="jenis_perangkat" name="jenis_perangkat">
-                        <option disabled selected value="">-- Pilih Perangkat --</option>
-                        <option value="router">Router</option>
-                        <option value="switch">Switch</option>
-                        <option value="server">Server</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label" for="serial_number">Serial Number</label>
-                    <div class="input-group">
-                        <div class="input-group-addon"><span class="material-symbols-outlined text-xl" data-icon="key">key</span></div>
-                        <input class="input-group-input" id="serial_number" name="serial_number" placeholder="Masukkan serial number" type="text">
-                    </div>
-                </div>
-                <!-- 3. Merk & TYPE -->
-                <div>
-                    <label class="form-label" for="merk_perangkat">Merk Perangkat</label>
-                    <select class="standard-select text-on-surface" id="merk_perangkat" name="merk_perangkat">
-                        <option selected value="MIKROTIK">MIKROTIK</option>
-                        <option value="CISCO">CISCO</option>
-                        <option value="DELL">DELL</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label" for="type">TYPE</label>
-                    <input class="standard-input" id="type" name="type" placeholder="Masukkan tipe spesifik" type="text">
-                </div>
-                <!-- 4. Kondisi & Spesifikasi -->
-                <div>
-                    <label class="form-label">Kondisi Server</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <select class="standard-select text-on-surface" name="kondisi_1">
-                            <option selected value="Standard">Standard</option>
-                            <option value="High Performance">High Performance</option>
-                        </select>
-                        <select class="standard-select text-on-surface" name="kondisi_2">
-                            <option selected value="Baru">Baru</option>
-                            <option value="Bekas">Bekas</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="form-label" for="spesifikasi">Spesifikasi</label>
-                    <input class="standard-input" id="spesifikasi" name="spesifikasi" placeholder="Detail spesifikasi" type="text">
-                </div>
-                <!-- 5. Tipe Perangkat -->
-                <div class="col-span-1 md:col-span-2">
-                    <label class="form-label" for="tipe_perangkat">Tipe Perangkat</label>
-                    <select class="standard-select text-on-surface" id="tipe_perangkat" name="tipe_perangkat">
-                        <option selected value="RACK MOUNT">RACK MOUNT</option>
-                        <option value="TOWER">TOWER</option>
-                        <option value="BLADE">BLADE</option>
-                    </select>
-                </div>
-                <!-- 6. Status Kepemilikan -->
-                <div class="col-span-1 md:col-span-2">
-                    <label class="form-label" for="status_kepemilikan">Status Kepemilikan</label>
-                    <select class="standard-select text-on-surface" id="status_kepemilikan" name="status_kepemilikan">
-                        <option selected value="Kominfo">Kominfo</option>
-                        <option value="OPD Lain">OPD Lain</option>
-                    </select>
-                </div>
-                <!-- 7. Pemilik Perangkat -->
-                <div class="col-span-1 md:col-span-2">
-                    <label class="form-label" for="pemilik_perangkat">Pemilik Perangkat</label>
-                    <select class="standard-select bg-surface-container-high text-on-surface-variant cursor-not-allowed" disabled id="pemilik_perangkat" name="pemilik_perangkat">
-                        <option selected value="Dinas Pendidikan dan Kebudayaan">Dinas Pendidikan dan Kebudayaan</option>
-                    </select>
-                </div>
-                <!-- 8. IP & Status -->
-                <div>
-                    <label class="form-label" for="ip_perangkat">IP Perangkat</label>
-                    <div class="input-group">
-                        <div class="input-group-addon"><span class="material-symbols-outlined text-xl" data-icon="public">public</span></div>
-                        <input class="input-group-input" id="ip_perangkat" name="ip_perangkat" placeholder="192.168.x.x" type="text">
-                    </div>
-                </div>
-                <div>
-                    <label class="form-label" for="status_perangkat">Status Perangkat</label>
-                    <select class="standard-select text-on-surface" id="status_perangkat" name="status_perangkat">
-                        <option selected value="Aktif">Aktif</option>
-                        <option value="Non-Aktif">Non-Aktif</option>
-                        <option value="Maintenance">Maintenance</option>
-                    </select>
-                </div>
-                <!-- 9. HDD & RAM -->
-                <div>
-                    <label class="form-label" for="ukuran_hdd">Ukuran HDD</label>
-                    <select class="standard-select text-on-surface" id="ukuran_hdd" name="ukuran_hdd">
-                        <option selected value="300 GB">300 GB</option>
-                        <option value="500 GB">500 GB</option>
-                        <option value="1 TB">1 TB</option>
-                    </select>
-                </div>
-                <div class="max-w-md">
-                    <label class="form-label" for="ukuran_ram">Ukuran RAM</label>
-                    <select class="standard-select text-on-surface" id="ukuran_ram" name="ukuran_ram">
-                        <option selected value="4 GB">4 GB</option>
-                        <option value="8 GB">8 GB</option>
-                        <option value="16 GB">16 GB</option>
-                        <option value="32 GB">32 GB</option>
-                    </select>
-                </div>
-                <!-- 10. Rack & Core -->
-                <div>
-                    <label class="form-label" for="nomor_rack">Nomor RACK</label>
-                    <select class="standard-select text-on-surface" id="nomor_rack" name="nomor_rack">
-                        <option disabled selected value="">-- Pilih Rack --</option>
-                        <option value="RACK-01">RACK-01</option>
-                        <option value="RACK-02">RACK-02</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label" for="jumlah_core">Jumlah Core</label>
-                    <select class="standard-select text-on-surface" id="jumlah_core" name="jumlah_core">
-                        <option value="2">2</option>
-                        <option selected value="4">4</option>
-                        <option value="8">8</option>
-                        <option value="16">16</option>
-                    </select>
-                </div>
-                <!-- 11. Preview Box -->
-                <div class="col-span-1 md:col-span-2">
-                    <label class="form-label">Preview Rack Mount</label>
-                    <div class="border border-dashed border-outline-variant rounded-lg p-6 bg-surface-container-low flex flex-col items-center justify-center min-h-[150px]">
-                        <span class="text-secondary font-medium mb-4 text-sm">Rack Mount</span>
-                        <div class="w-full max-w-md h-12 bg-white border border-outline rounded flex items-center justify-center shadow-sm">
-                            <span class="text-xs text-outline-variant">Posisi Perangkat Akan Muncul Disini</span>
+    <h1 class="font-headline-lg text-headline-lg text-on-surface mb-6">{{ $pageTitle }}</h1>
+
+    <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-primary-container">
+            <h2 class="text-white font-headline-md text-headline-md m-0">Form Biodata</h2>
+        </div>
+        <div class="p-6">
+            <form action="{{ $route }}" method="POST">
+                @csrf
+                @if ($isEdit)
+                    @method('PUT')
+                @endif
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Nama Perangkat (full width) -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label" for="nama_perangkat">Nama Perangkat <span
+                                class="required-star">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="material-symbols-outlined text-xl">list</span></div>
+                            <input class="input-group-input @error('nama_perangkat') border-red-500 @enderror"
+                                id="nama_perangkat" name="nama_perangkat" placeholder="Masukkan nama perangkat"
+                                type="text" value="{{ old('nama_perangkat', $server->nama_perangkat ?? '') }}">
                         </div>
+                        @error('nama_perangkat')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Jenis Perangkat & Serial Number -->
+                    <div>
+                        <label class="form-label" for="jenis_perangkat">Jenis Perangkat <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('jenis_perangkat') border-red-500 @enderror"
+                            id="jenis_perangkat" name="jenis_perangkat">
+                            <option disabled
+                                {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == '' ? 'selected' : '' }}
+                                value="">-- Pilih Perangkat --</option>
+                            <option value="router"
+                                {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'router' ? 'selected' : '' }}>
+                                Router</option>
+                            <option value="switch"
+                                {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'switch' ? 'selected' : '' }}>
+                                Switch</option>
+                            <option value="server"
+                                {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'server' ? 'selected' : '' }}>
+                                Server</option>
+                        </select>
+                        @error('jenis_perangkat')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="form-label" for="serial_number">Serial Number <span
+                                class="required-star">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="material-symbols-outlined text-xl">key</span></div>
+                            <input class="input-group-input @error('serial_number') border-red-500 @enderror"
+                                id="serial_number" name="serial_number" placeholder="Masukkan serial number" type="text"
+                                value="{{ old('serial_number', $server->serial_number ?? '') }}">
+                        </div>
+                        @error('serial_number')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Merk & TYPE -->
+                    <div>
+                        <label class="form-label" for="merk_perangkat">Merk Perangkat <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('merk_perangkat') border-red-500 @enderror"
+                            id="merk_perangkat" name="merk_perangkat">
+                            <option value="MIKROTIK"
+                                {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'MIKROTIK' ? 'selected' : '' }}>
+                                MIKROTIK</option>
+                            <option value="CISCO"
+                                {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'CISCO' ? 'selected' : '' }}>
+                                CISCO</option>
+                            <option value="DELL"
+                                {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'DELL' ? 'selected' : '' }}>DELL
+                            </option>
+                        </select>
+                        @error('merk_perangkat')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="form-label" for="type">TYPE <span class="required-star">*</span></label>
+                        <input class="standard-input @error('type') border-red-500 @enderror" id="type" name="type"
+                            placeholder="Masukkan tipe spesifik" type="text"
+                            value="{{ old('type', $server->type ?? '') }}">
+                        @error('type')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Kondisi Server (2 select) & Spesifikasi -->
+                    <div>
+                        <label class="form-label">Kondisi Server <span class="required-star">*</span></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-secondary">Tipe</label>
+                                <select class="standard-select @error('kondisi_tipe') border-red-500 @enderror"
+                                    name="kondisi_tipe">
+                                    <option value="Standard"
+                                        {{ old('kondisi_tipe', $server->kondisi_tipe ?? '') == 'Standard' ? 'selected' : '' }}>
+                                        Standard</option>
+                                    <option value="High Performance"
+                                        {{ old('kondisi_tipe', $server->kondisi_tipe ?? '') == 'High Performance' ? 'selected' : '' }}>
+                                        High Performance</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-secondary">Status</label>
+                                <select class="standard-select @error('kondisi_status') border-red-500 @enderror"
+                                    name="kondisi_status">
+                                    <option value="Baru"
+                                        {{ old('kondisi_status', $server->kondisi_status ?? '') == 'Baru' ? 'selected' : '' }}>
+                                        Baru</option>
+                                    <option value="Bekas"
+                                        {{ old('kondisi_status', $server->kondisi_status ?? '') == 'Bekas' ? 'selected' : '' }}>
+                                        Bekas</option>
+                                </select>
+                            </div>
+                        </div>
+                        @error('kondisi_tipe')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                        @error('kondisi_status')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="form-label" for="spesifikasi">Spesifikasi <span class="required-star">*</span></label>
+                        <input class="standard-input @error('spesifikasi') border-red-500 @enderror" id="spesifikasi"
+                            name="spesifikasi" placeholder="Detail spesifikasi" type="text"
+                            value="{{ old('spesifikasi', $server->spesifikasi ?? '') }}">
+                        @error('spesifikasi')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Tipe Perangkat (full width) -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label" for="tipe_perangkat">Tipe Perangkat <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('tipe_perangkat') border-red-500 @enderror"
+                            id="tipe_perangkat" name="tipe_perangkat">
+                            <option value="RACK MOUNT"
+                                {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == 'RACK MOUNT' ? 'selected' : '' }}>
+                                RACK MOUNT</option>
+                            <option value="TOWER"
+                                {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == 'TOWER' ? 'selected' : '' }}>
+                                TOWER</option>
+                            <option value="BLADE"
+                                {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == 'BLADE' ? 'selected' : '' }}>
+                                BLADE</option>
+                        </select>
+                        @error('tipe_perangkat')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Status Kepemilikan & Pemilik -->
+                    <div>
+                        <label class="form-label" for="status_kepemilikan">Status Kepemilikan <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('status_kepemilikan') border-red-500 @enderror"
+                            id="status_kepemilikan" name="status_kepemilikan">
+                            <option value="Kominfo"
+                                {{ old('status_kepemilikan', $server->status_kepemilikan ?? '') == 'Kominfo' ? 'selected' : '' }}>
+                                Kominfo</option>
+                            <option value="OPD Lain"
+                                {{ old('status_kepemilikan', $server->status_kepemilikan ?? '') == 'OPD Lain' ? 'selected' : '' }}>
+                                OPD Lain</option>
+                        </select>
+                        @error('status_kepemilikan')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="form-label" for="pemilik_perangkat">Pemilik Perangkat <span
+                                class="required-star">*</span></label>
+                        <input class="standard-input @error('pemilik_perangkat') border-red-500 @enderror"
+                            id="pemilik_perangkat" name="pemilik_perangkat" placeholder="Nama pemilik" type="text"
+                            value="{{ old('pemilik_perangkat', $server->pemilik_perangkat ?? '') }}">
+                        @error('pemilik_perangkat')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- IP Server & IP VPS -->
+                    <div>
+                        <label class="form-label" for="ip_server">IP Server <span class="required-star">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="material-symbols-outlined text-xl">public</span>
+                            </div>
+                            <input class="input-group-input @error('ip_server') border-red-500 @enderror" id="ip_server"
+                                name="ip_server" placeholder="192.168.x.x" type="text"
+                                value="{{ old('ip_server', $server->ip_server ?? '') }}">
+                        </div>
+                        @error('ip_server')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="form-label" for="ip_vps">IP VPS <span class="required-star">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="material-symbols-outlined text-xl">cloud</span>
+                            </div>
+                            <input class="input-group-input @error('ip_vps') border-red-500 @enderror" id="ip_vps"
+                                name="ip_vps" placeholder="10.0.x.x" type="text"
+                                value="{{ old('ip_vps', $server->ip_vps ?? '') }}">
+                        </div>
+                        @error('ip_vps')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Status Perangkat (full width) -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label" for="status">Status Perangkat <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('status') border-red-500 @enderror" id="status"
+                            name="status">
+                            <option value="Aktif"
+                                {{ old('status', $server->status ?? '') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                            <option value="Non-Aktif"
+                                {{ old('status', $server->status ?? '') == 'Non-Aktif' ? 'selected' : '' }}>Non-Aktif
+                            </option>
+                            <option value="Maintenance"
+                                {{ old('status', $server->status ?? '') == 'Maintenance' ? 'selected' : '' }}>Maintenance
+                            </option>
+                        </select>
+                        @error('status')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- HDD & RAM -->
+                    <div>
+                        <label class="form-label" for="ukuran_hdd">Kapasitas HDD/SSD <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('ukuran_hdd') border-red-500 @enderror" id="ukuran_hdd"
+                            name="ukuran_hdd">
+                            <option value="128 GB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '128 GB' ? 'selected' : '' }}>128 GB
+                            </option>
+                            <option value="256 GB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '256 GB' ? 'selected' : '' }}>256 GB
+                            </option>
+                            <option value="500 GB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '500 GB' ? 'selected' : '' }}>500 GB
+                            </option>
+                            <option value="1 TB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '1 TB' ? 'selected' : '' }}>1 TB
+                            </option>
+                            <option value="1.5 TB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '1.5 TB' ? 'selected' : '' }}>1.5 TB
+                            </option>
+                            <option value="2 TB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '2 TB' ? 'selected' : '' }}>2 TB
+                            </option>
+                            <option value="3 TB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '3 TB' ? 'selected' : '' }}>3 TB
+                            </option>
+                            <option value="4 TB"
+                                {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '4 TB' ? 'selected' : '' }}>4 TB
+                            </option>
+                        </select>
+                        @error('ukuran_hdd')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <!-- RAM -->
+                    <div>
+                        <label class="form-label" for="ukuran_ram">Kapasitas RAM <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('ukuran_ram') border-red-500 @enderror" id="ukuran_ram"
+                            name="ukuran_ram">
+                            <option value="2 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '2 GB' ? 'selected' : '' }}>2 GB
+                            </option>
+                            <option value="4 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '4 GB' ? 'selected' : '' }}>4 GB
+                            </option>
+                            <option value="8 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '8 GB' ? 'selected' : '' }}>8 GB
+                            </option>
+                            <option value="16 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '16 GB' ? 'selected' : '' }}>16 GB
+                            </option>
+                            <option value="32 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '32 GB' ? 'selected' : '' }}>32 GB
+                            </option>
+                            <option value="64 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '64 GB' ? 'selected' : '' }}>64 GB
+                            </option>
+                            <option value="128 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '128 GB' ? 'selected' : '' }}>128 GB
+                            </option>
+                            <option value="256 GB"
+                                {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '256 GB' ? 'selected' : '' }}>256 GB
+                            </option>
+                        </select>
+                        @error('ukuran_ram')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Rack & Core -->
+                    <div>
+                        <label class="form-label" for="nomor_rack">Nomor RACK <span class="required-star">*</span></label>
+                        <select class="standard-select @error('nomor_rack') border-red-500 @enderror" id="nomor_rack"
+                            name="nomor_rack">
+                            <option disabled {{ old('nomor_rack', $server->nomor_rack ?? '') == '' ? 'selected' : '' }}
+                                value="">-- Pilih Rack --</option>
+                            <option value="R1"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R1' ? 'selected' : '' }}>R1</option>
+                            <option value="R2"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R2' ? 'selected' : '' }}>R2</option>
+                            <option value="R3"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R3' ? 'selected' : '' }}>R3</option>
+                            <option value="R4"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R4' ? 'selected' : '' }}>R4</option>
+                            <option value="R5"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R5' ? 'selected' : '' }}>R5</option>
+                            <option value="R6"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R6' ? 'selected' : '' }}>R6</option>
+                            <option value="R7"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R7' ? 'selected' : '' }}>R7</option>
+                            <option value="R8"
+                                {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R8' ? 'selected' : '' }}>R8</option>
+                        </select>
+                        @error('nomor_rack')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <!-- Jumlah Core -->
+                    <div>
+                        <label class="form-label" for="jumlah_core">Jumlah Core <span
+                                class="required-star">*</span></label>
+                        <select class="standard-select @error('jumlah_core') border-red-500 @enderror" id="jumlah_core"
+                            name="jumlah_core">
+                            <option value="2"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 2 ? 'selected' : '' }}>2</option>
+                            <option value="4"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 4 ? 'selected' : '' }}>4</option>
+                            <option value="6"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 6 ? 'selected' : '' }}>6</option>
+                            <option value="8"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 8 ? 'selected' : '' }}>8</option>
+                            <option value="10"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 10 ? 'selected' : '' }}>10</option>
+                            <option value="12"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 12 ? 'selected' : '' }}>12</option>
+                            <option value="14"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 14 ? 'selected' : '' }}>14</option>
+                            <option value="16"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 16 ? 'selected' : '' }}>16</option>
+                            <option value="18"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 18 ? 'selected' : '' }}>18</option>
+                            <option value="20"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 20 ? 'selected' : '' }}>20</option>
+                            <option value="22"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 22 ? 'selected' : '' }}>22</option>
+                            <option value="24"
+                                {{ old('jumlah_core', $server->jumlah_core ?? '') == 24 ? 'selected' : '' }}>24</option>
+                        </select>
+                        @error('jumlah_core')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Preview Rack Mount -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label">Preview Rack Mount</label>
+                        <div
+                            class="border border-dashed border-outline-variant rounded-lg p-6 bg-surface-container-low flex flex-col items-center justify-center min-h-[150px]">
+                            <span class="text-secondary font-medium mb-4 text-sm">Upload Gambar Rack</span>
+
+                            <!-- Preview gambar -->
+                            <div id="preview-container"
+                                class="w-full max-w-md mb-4 {{ isset($server) && $server->gambar_rack ? '' : 'hidden' }}">
+                                <img id="image-preview"
+                                    src="{{ isset($server) && $server->gambar_rack ? Storage::url($server->gambar_rack) : '' }}"
+                                    alt="Preview Rack"
+                                    class="w-full max-h-48 object-contain rounded border border-outline-variant">
+                                <button type="button" onclick="removeImage()"
+                                    class="mt-2 text-sm text-red-600 hover:text-red-800">Hapus Gambar</button>
+                            </div>
+
+                            <!-- Input file -->
+                            <div class="w-full max-w-md">
+                                <label for="gambar_rack"
+                                    class="cursor-pointer flex flex-col items-center justify-center w-full h-24 border-2 border-outline-variant border-dashed rounded-lg bg-white hover:bg-surface-container-low transition-colors">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <span class="material-symbols-outlined text-4xl text-secondary">cloud_upload</span>
+                                        <p class="text-sm text-secondary mt-1">Klik untuk upload gambar</p>
+                                        <p class="text-xs text-secondary">PNG, JPG, JPEG (Max 2MB)</p>
+                                    </div>
+                                    <input id="gambar_rack" name="gambar_rack" type="file" class="hidden"
+                                        accept="image/*" onchange="previewImage(event)">
+                                </label>
+                            </div>
+
+                            <p class="text-xs text-secondary mt-2">Posisi perangkat akan ditampilkan berdasarkan gambar
+                                yang diupload.</p>
+                        </div>
+                        @error('gambar_rack')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Peruntukan (full width) -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label" for="peruntukan">Peruntukan Perangkat <span
+                                class="required-star">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="material-symbols-outlined text-xl">list</span>
+                            </div>
+                            <input class="input-group-input @error('peruntukan') border-red-500 @enderror"
+                                id="peruntukan" name="peruntukan" placeholder="Masukkan peruntukan perangkat"
+                                type="text" value="{{ old('peruntukan', $server->peruntukan ?? '') }}">
+                        </div>
+                        @error('peruntukan')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Pengirim & Penerima -->
+                    <div>
+                        <label class="form-label" for="nama_pengirim">Nama Pengirim <span
+                                class="required-star">*</span></label>
+                        <input class="standard-input @error('nama_pengirim') border-red-500 @enderror" id="nama_pengirim"
+                            name="nama_pengirim" placeholder="Nama pengirim" type="text"
+                            value="{{ old('nama_pengirim', $server->nama_pengirim ?? '') }}">
+                        @error('nama_pengirim')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="form-label" for="nama_penerima">Nama Penerima <span
+                                class="required-star">*</span></label>
+                        <input class="standard-input @error('nama_penerima') border-red-500 @enderror" id="nama_penerima"
+                            name="nama_penerima" placeholder="Nama penerima" type="text"
+                            value="{{ old('nama_penerima', $server->nama_penerima ?? '') }}">
+                        @error('nama_penerima')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Tanggal Pengisian (full width) -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label" for="jam_pengisian">Tanggal Pengisian <span
+                                class="required-star">*</span></label>
+                        <input
+                            class="w-full border border-[#CBD5E1] rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary @error('jam_pengisian') border-red-500 @enderror"
+                            id="jam_pengisian" name="jam_pengisian" type="datetime-local"
+                            value="{{ old('jam_pengisian', isset($server) && $server->jam_pengisian ? $server->jam_pengisian->format('Y-m-d\TH:i') : '') }}">
+                        <p class="text-xs text-secondary mt-1">Format: DD-MM-YYYY HH:MM (contoh: 06-08-2026 14:30). Gunakan
+                            kalender atau ketik manual.</p>
+                        @error('jam_pengisian')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
-                <!-- 12. Peruntukan Perangkat -->
-                <div class="col-span-1 md:col-span-2">
-                    <label class="form-label" for="peruntukan_perangkat">Peruntukan Perangkat</label>
-                    <div class="input-group">
-                        <div class="input-group-addon"><span class="material-symbols-outlined text-xl" data-icon="list">list</span></div>
-                        <input class="input-group-input" id="peruntukan_perangkat" name="peruntukan_perangkat" placeholder="Masukkan peruntukan perangkat" type="text">
-                    </div>
+
+                <!-- Submit Buttons -->
+                <div class="mt-8 flex gap-3">
+                    <button
+                        class="bg-primary-container hover:bg-primary text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                        type="submit">
+                        {{ $isEdit ? 'Update' : 'Simpan' }}
+                    </button>
+                    <a href="{{ route('server.index') }}"
+                        class="bg-surface-container-high text-on-surface-variant font-medium py-2 px-6 rounded-lg transition-colors shadow-sm hover:bg-surface-container">Batal</a>
                 </div>
-                <!-- 13. Pengirim & Penerima -->
-                <div>
-                    <label class="form-label" for="nama_pengirim">Nama Pengirim</label>
-                    <input class="standard-input" id="nama_pengirim" name="nama_pengirim" placeholder="Nama pengirim perangkat" type="text">
-                </div>
-                <div>
-                    <label class="form-label" for="nama_penerima">Nama Penerima</label>
-                    <select class="standard-select text-on-surface" id="nama_penerima" name="nama_penerima">
-                        <option disabled selected value="">-- Pilih penerima --</option>
-                        <option value="Admin 1">Admin NOC 1</option>
-                        <option value="Admin 2">Admin Server 1</option>
-                    </select>
-                </div>
-                <!-- 14. Jam Pengisian -->
-                <div class="col-span-1 md:col-span-2 mb-4">
-                    <label class="form-label" for="jam_pengisian">Jam Pengisian</label>
-                    <input class="w-full border border-[#CBD5E1] rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" id="jam_pengisian" name="jam_pengisian" type="time">
-                </div>
-            </div> <!-- End Grid -->
-            <!-- Submit Button -->
-            <div class="mt-8">
-                <div class="flex gap-3">
-                    <button class="bg-primary-container hover:bg-primary text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" type="submit">Simpan</button>
-                    <button class="bg-surface-container-high text-on-surface-variant cursor-not-allowed font-medium py-2 px-6 rounded-lg transition-colors shadow-sm" type="button" disabled>Create PDF</button>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 @endsection

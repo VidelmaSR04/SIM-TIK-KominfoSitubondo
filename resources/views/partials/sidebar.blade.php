@@ -15,11 +15,10 @@
     </a>
 
     <!-- Menu 2: Perangkat & Server -->
-    <a href="{{ route('server') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('server') ? 'bg-primary-container/15 text-white font-semibold border-l-4 border-primary-container -ml-px' : 'text-slate-300 hover:bg-white/5 hover:text-white' }}">
-      <span class="material-symbols-outlined text-[20px]">dns</span>
-      <span class="text-sm font-medium">Perangkat & Server</span>
-    </a>
-
+  <a href="{{ route('server.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('server.*') ? 'bg-primary-container/15 text-white font-semibold border-l-4 border-primary-container -ml-px' : 'text-slate-300 hover:bg-white/5 hover:text-white' }}">
+    <span class="material-symbols-outlined text-[20px]">dns</span>
+    <span class="text-sm font-medium">Perangkat & Server</span>
+</a>
     <!-- Menu 3: cPanel -->
     <a href="{{ route('cpanel') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('cpanel') ? 'bg-primary-container/15 text-white font-semibold border-l-4 border-primary-container -ml-px' : 'text-slate-300 hover:bg-white/5 hover:text-white' }}">
       <span class="material-symbols-outlined text-[20px]">settings_applications</span>
