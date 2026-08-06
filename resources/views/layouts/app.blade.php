@@ -2,9 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>@yield('title', 'SIM TIK - Dashboard')</title>
 
+    <!-- Scripts Breeze (Vite) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Fonts & Icons Custom -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -55,6 +60,7 @@
     <div class="flex-1 flex flex-col md:ml-sidebar-width min-w-0">
         @include('partials.navbar')
         <main class="flex-1 px-container-padding py-8 space-y-8 max-w-[1400px] w-full mx-auto">
+            {{ $slot ?? '' }}
             @yield('content')
         </main>
         <footer class="bg-white py-5 border-t border-outline-variant text-center no-print">

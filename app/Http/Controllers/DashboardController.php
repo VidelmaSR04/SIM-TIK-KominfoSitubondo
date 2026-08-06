@@ -2,56 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Server;
+use App\Models\Cpanel;
+use App\Models\Aplikasi;
+use Illuminate\Support\Facades\DB;
+
 class DashboardController extends Controller
 {
     public function index()
     {
-        // TODO: ganti angka-angka di bawah ini dengan query asli
-        // dari model/database begitu tabelnya sudah siap.
-        // Contoh nanti: $totalDevices = Server::count() + Vps::count();
-
         // ==== Summary Cards ====
-        $totalDevices     = 1248;
-        $percentageGrowth = 12;
+        $totalDevices = Server::count();
+        $totalApplications = Aplikasi::count();
+        $totalVps = Server::where('tipe_perangkat', 'VPS')->count(); // sesuaikan jika kolom berbeda
+        $totalDomains = Cpanel::count();
 
-        $totalApplications = 342;
-        $newApps            = 5;
+        // Hitung pertumbuhan (contoh: server baru bulan ini vs bulan lalu)
+        $currentMonth = Server::whereMonth('created_at', now()->month)->count();
+        $lastMonth = Server::whereMonth('created_at', now()->subMonth()->month)->count();
+        $percentageGrowth = $lastMonth > 0 ? round((($currentMonth - $lastMonth) / $lastMonth) * 100) : 0;
 
-        $totalVps  = 86;
-        $vpsUsage  = 75; // dalam persen
+        // Aplikasi baru dalam 30 hari terakhir
+        $newApps = Aplikasi::where('created_at', '>=', now()->subDays(30))->count();
 
-        $totalDomains    = 112;
-        $expiringDomains = 3;
+        // VPS Usage (contoh: rata-rata persentase penggunaan, jika ada kolom usage)
+        // Untuk sementara statis 0 atau hitung dari data lain
+        $vpsUsage = 0; // bisa dikembangkan nanti
+
+        // Expiring domains (contoh: cpanel dengan tanggal kadaluarsa, jika ada)
+        $expiringDomains = 0; // bisa dikembangkan nanti
+
+        // ==== Grafik RACK ====
+        // Kelompokkan berdasarkan nomor_rack, ambil total server per rack
+        $rackRaw = Server::select('nomor_rack', DB::raw('count(*) as total'))
+                         ->whereNotNull('nomor_rack')
+                         ->groupBy('nomor_rack')
+                         ->get()
+                         ->keyBy('nomor_rack');
+
+        // Definisikan label rack yang diinginkan (R1 - R8)
+        $rackLabels = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'];
+        $rackData = [];
+        $maxValue = 0;
+
+        foreach ($rackLabels as $label) {
+            // Cari data berdasarkan label, jika tidak ada maka 0
+            $value = $rackRaw->get($label)?->total ?? 0;
+            $rackData[$label] = $value;
+            if ($value > $maxValue) $maxValue = $value;
+        }
+
+        // Pastikan maxValue minimal 1 agar skala grafik tidak 0
+        $maxValue = max($maxValue, 1);
 
         // ==== Mini stats di bawah chart rack ====
-        $rackMount  = 324;
-        $tower      = 45;
-        $kominfo    = 210;
-        $colocation = 159;
+        $rackMount = Server::where('tipe_perangkat', 'RACK MOUNT')->count();
+        $tower     = Server::where('tipe_perangkat', 'TOWER')->count();
+        $kominfo   = Server::where('status_kepemilikan', 'Kominfo')->count();
+        $colocation= Server::where('status_kepemilikan', 'OPD Lain')->count();
 
         // ==== Data tabel (dipakai partial data-table) ====
-        $servers = [
-            ['id' => 'SRV-001', 'nama' => 'Node-DB-Master-01', 'ip_server' => '192.168.10.101', 'ip_vps' => '10.0.5.12', 'status' => 'Aktif'],
-            ['id' => 'SRV-002', 'nama' => 'Web-Frontend-02', 'ip_server' => '192.168.10.102', 'ip_vps' => '-', 'status' => 'Aktif'],
-            ['id' => 'SRV-003', 'nama' => 'Storage-Backup-A', 'ip_server' => '192.168.20.55', 'ip_vps' => '10.0.8.44', 'status' => 'Maintenance'],
-            ['id' => 'SRV-004', 'nama' => 'API-Gateway-Core', 'ip_server' => '192.168.10.200', 'ip_vps' => '10.0.5.99', 'status' => 'Offline'],
-        ];
-
-        $cpanels = [
-            ['id' => 1, 'nama' => 'Kecamatan Arjasa', 'domain' => 'arjasa.situbondokab.go.id', 'ip_local' => '192.168.99.72', 'ip_public' => '103.165.156.249', 'status' => 'Active'],
-            ['id' => 2, 'nama' => 'Kecamatan Asembagus', 'domain' => 'asembagus.situbondokab.go.id', 'ip_local' => '192.168.99.72', 'ip_public' => '103.165.156.249', 'status' => 'Active'],
-            ['id' => 3, 'nama' => 'Bakesbangpol', 'domain' => 'bakesbangpol.situbondokab.go.id', 'ip_local' => '192.168.99.72', 'ip_public' => '103.76.175.182', 'status' => 'Active'],
-            ['id' => 4, 'nama' => 'Kecamatan Banyuglugur', 'domain' => 'banyuglugur.situbondokab.go.id', 'ip_local' => '192.168.99.72', 'ip_public' => '103.165.156.249', 'status' => 'Active'],
-            ['id' => 5, 'nama' => 'Kecamatan Banyuputih', 'domain' => 'banyuputih.situbondokab.go.id', 'ip_local' => '192.168.99.72', 'ip_public' => '103.165.156.249', 'status' => 'Active'],
-        ];
-
-        $aplikasis = [
-            ['id' => 1, 'nama' => 'ALADIN (Aplikasi Adminduk Online)', 'ip_local' => '-', 'ip_public' => '103.165.156.229', 'pic' => 'Zakiatul Darojati, A.Md.', 'status' => 'Sudah Asesmen'],
-            ['id' => 2, 'nama' => 'SKEMA (Survey Kepuasan Masyarakat)', 'ip_local' => '192.168.99.94', 'ip_public' => '103.165.156.249', 'pic' => 'Hosnol Fawaid, S.Kom.', 'status' => 'Sudah Asesmen'],
-            ['id' => 3, 'nama' => 'Aplikasi Presensi Kabupaten Situbondo (APRESIASI)', 'ip_local' => '-', 'ip_public' => '103.165.156.245', 'pic' => '-', 'status' => 'Sudah Asesmen'],
-            ['id' => 4, 'nama' => 'Website DPRD', 'ip_local' => '192.168.99.72', 'ip_public' => '103.165.156.249', 'pic' => '-', 'status' => 'Belum Asesmen'],
-            ['id' => 5, 'nama' => 'Website Layanan Tourist Information Center (TIC)', 'ip_local' => '192.168.99.72', 'ip_public' => '103.165.156.249', 'pic' => '-', 'status' => 'Belum Asesmen'],
-        ];
+        // Gunakan paginate untuk masing-masing tabel, agar bisa ditampilkan dengan pagination
+        $servers = Server::latest()->paginate(10);
+        $cpanels = Cpanel::latest()->paginate(10);
+        $aplikasis = Aplikasi::latest()->paginate(10);
 
         return view('dashboard', compact(
             'totalDevices',
@@ -66,6 +80,8 @@ class DashboardController extends Controller
             'tower',
             'kominfo',
             'colocation',
+            'rackData',
+            'maxValue',
             'servers',
             'cpanels',
             'aplikasis'
