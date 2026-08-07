@@ -6,8 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>@yield('title', 'SIM TIK - Dashboard')</title>
 
-    <!-- Scripts Breeze (Vite) -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Scripts Breeze (Vite) - DIKOMENTARI SEMENTARA -->
+    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 
     <!-- Fonts & Icons Custom -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
