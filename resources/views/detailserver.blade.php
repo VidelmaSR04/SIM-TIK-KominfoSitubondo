@@ -165,84 +165,67 @@
             </div>
         </div>
 
-        <!-- Kolom kanan (1/3) untuk Informasi Tambahan -->
+        <!-- ============================================= -->
+        <!-- KOLOM KANAN: INFORMASI TAMBAHAN + GAMBAR RACK -->
+        <!-- ============================================= -->
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden h-full flex flex-col">
                 <div class="bg-primary text-white px-6 py-4 font-headline-md text-headline-md flex items-center gap-2">
                     <span class="material-symbols-outlined">info</span> Informasi Tambahan
                 </div>
-                <div class="p-6 space-y-2 text-sm flex-1">
+                <div class="p-6 space-y-4 text-sm flex-1">
+                    <!-- Gambar Rack -->
+                    @if($server->gambar_rack)
+                        <div>
+                            <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2">Gambar Rack</p>
+                            <div class="relative group">
+                                <img src="{{ Storage::url($server->gambar_rack) }}"
+                                     alt="Gambar Rack Server"
+                                     class="w-full rounded-lg border border-outline-variant cursor-pointer hover:opacity-90 transition-opacity"
+                                     onclick="openImageModal('{{ Storage::url($server->gambar_rack) }}')">
+                                <button onclick="openImageModal('{{ Storage::url($server->gambar_rack) }}')"
+                                        class="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition-all rounded-lg">
+                                    <span class="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-4xl">zoom_in</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="border-t border-outline-variant pt-3"></div>
+                    @else
+                        <div>
+                            <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2">Gambar Rack</p>
+                            <div class="bg-surface-container-low rounded-lg border border-dashed border-outline-variant p-6 text-center">
+                                <span class="material-symbols-outlined text-4xl text-secondary">image_not_supported</span>
+                                <p class="text-xs text-secondary mt-2">Tidak ada gambar</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-outline-variant pt-3"></div>
+                    @endif
+
+                    <!-- Informasi lainnya -->
                     <div><span class="text-secondary">Dibuat:</span> {{ $server->created_at->format('d M Y, H:i') }}</div>
                     <div><span class="text-secondary">Terakhir Update:</span>
                         {{ $server->updated_at->format('d M Y, H:i') }}</div>
                     <div><span class="text-secondary">ID Server:</span> <span
                             class="font-mono">{{ $server->id }}</span></div>
+                    <div><span class="text-secondary">RACK:</span> <span
+                            class="font-semibold">{{ $server->nomor_rack ?? '-' }}</span></div>
                 </div>
             </div>
         </div>
+        <!-- ============================================= -->
+
     </div>
 
-    <!-- TABEL APLIKASI (Full Width) -->
-    <div class="mt-6 bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright">
-            <h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined">apps</span> Server using for
-            </h3>
-            <div class="flex gap-2">
-                <button
-                    class="p-1.5 text-on-surface-variant hover:bg-surface-container-low rounded transition-colors border border-outline-variant bg-surface-container-lowest">
-                    <span class="material-symbols-outlined text-[20px]">download</span>
-                </button>
-                <button
-                    class="p-1.5 text-on-surface-variant hover:bg-surface-container-low rounded transition-colors border border-outline-variant bg-surface-container-lowest">
-                    <span class="material-symbols-outlined text-[20px]">more_vert</span>
-                </button>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-[#F1F5F9] border-b border-outline-variant">
-                        <th class="px-6 py-3 text-xs font-semibold text-secondary uppercase">IP Local</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-secondary uppercase">IP Public</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-secondary uppercase">Nama Aplikasi</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-secondary uppercase">URL</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-secondary uppercase text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (isset($server->aplikasis) && $server->aplikasis->count() > 0)
-                        @foreach ($server->aplikasis as $app)
-                            <tr class="border-b border-outline-variant hover:bg-surface-container-low transition">
-                                <td class="px-6 py-4 font-mono text-sm">{{ $app->pivot->ip_local ?? '-' }}</td>
-                                <td class="px-6 py-4 font-mono text-sm">{{ $app->pivot->ip_public ?? '-' }}</td>
-                                <td class="px-6 py-4 font-semibold">{{ $app->nama }}</td>
-                                <td class="px-6 py-4 text-primary hover:underline"><a
-                                        href="#">{{ $app->pivot->url ?? '-' }}</a></td>
-                                <td class="px-6 py-4 text-center">
-                                    <button
-                                        class="p-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded transition">
-                                        <span class="material-symbols-outlined text-[18px]">east</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @else
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-secondary">Belum ada aplikasi terpasang.
-                            </td>
-                        </tr>
-                    @endif
-                </tbody>
-            </table>
-        </div>
-        <div
-            class="px-6 py-3 border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-secondary">
-            <span>Showing {{ $server->aplikasis->count() ?? 0 }} entries</span>
-            <div class="flex gap-1">
-                <button class="px-3 py-1 border rounded disabled:opacity-50" disabled>Prev</button>
-                <button class="px-3 py-1 bg-primary text-white rounded">1</button>
-                <button class="px-3 py-1 border rounded hover:bg-surface-container-low">Next</button>
+    <!-- Modal Preview Gambar -->
+    <div id="imageModal" class="fixed inset-0 z-50 hidden bg-black/70 flex items-center justify-center p-4" onclick="closeImageModal()">
+        <div class="relative max-w-4xl w-full" onclick="event.stopPropagation()">
+            <button onclick="closeImageModal()"
+                    class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
+                <span class="material-symbols-outlined text-3xl">close</span>
+            </button>
+            <img id="modalImage" src="" alt="Gambar Rack" class="w-full rounded-lg shadow-2xl">
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-lg">
+                Klik di luar gambar untuk menutup
             </div>
         </div>
     </div>
@@ -267,5 +250,28 @@
                     window.open(url, '_blank');
                 });
         }
+
+        // ============= TAMBAHKAN INI =============
+        // Modal untuk preview gambar
+        function openImageModal(imageUrl) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageUrl;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Tutup modal dengan tombol ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
     </script>
 @endsection

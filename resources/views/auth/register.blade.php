@@ -49,4 +49,37 @@
             </x-primary-button>
         </div>
     </form>
+
+    {{-- TAMBAHKAN LINK REGISTER SERVER DI SINI --}}
+    <div class="mt-8 space-y-3 border-t border-gray-200 pt-6">
+        {{-- Info bahwa ini untuk daftar akun user --}}
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                <span class="material-symbols-outlined inline-block text-sm align-middle">person_add</span>
+                Daftar akun untuk akses sistem
+            </p>
+        </div>
+
+        {{-- Pemisah --}}
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-xs">
+                <span class="px-2 bg-white text-gray-500">atau</span>
+            </div>
+        </div>
+
+        {{-- Link ke Register Server --}}
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                Ingin mendaftarkan server baru?
+                <a href="{{ route('register.server') }}" class="font-medium text-green-600 hover:text-green-500 inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">server</span>
+                    Daftarkan Server
+                </a>
+            </p>
+        </div>
+    </div>
+    {{-- ============================================= --}}
 </x-guest-layout>
