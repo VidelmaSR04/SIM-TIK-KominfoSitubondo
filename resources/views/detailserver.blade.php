@@ -2,10 +2,6 @@
 
 @section('content')
     @php
-        if (!isset($server)) {
-            return redirect()->route('server.index')->with('error', 'Server tidak ditemukan.');
-        }
-
         $statusColor = match ($server->status) {
             'Aktif' => 'bg-emerald-100 text-emerald-800',
             'Maintenance' => 'bg-amber-100 text-amber-800',
@@ -13,34 +9,47 @@
         };
 
         $qrUrl = route('detailserver', $server->id);
-        $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qrUrl);
-    @endphp
+        $qrImageUrl = route('qr.show', $server->id);
+    @endphp<div class="flex justify-between items-center mb-6">
+    <div>
+        <nav aria-label="Breadcrumb" class="flex text-sm text-on-surface-variant mb-2 font-label-md">
+            <ol class="inline-flex items-center space-x-1 md:space-x-2">
 
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <nav aria-label="Breadcrumb" class="flex text-sm text-on-surface-variant mb-2 font-label-md">
-                <ol class="inline-flex items-center space-x-1 md:space-x-2">
-                    <li><a class="hover:text-primary transition-colors" href="{{ route('server.index') }}">Server dan
-                            Aplikasi</a></li>
-                    <li><span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span><a
-                            href="{{ route('server.index') }}">Server</a></li>
-                    <li aria-current="page"><span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span><span
-                            class="text-on-surface font-semibold">Detail Server</span></li>
-                </ol>
-            </nav>
-            <h2 class="font-headline-lg text-headline-lg text-on-surface">Detail Server</h2>
-        </div>
-        <a href="{{ route('server.index') }}"
-            class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-outline-variant px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
-            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Kembali
-        </a>
+                {{-- Item 1: Server dan Aplikasi --}}
+                <li>
+                    <a class="hover:text-primary transition-colors" href="{{ route('server.index') }}">
+                        Server dan Aplikasi
+                    </a>
+                </li>
+
+                {{-- Item 2: Server ← INI YANG BUG, tag <a tidak lengkap --}}
+                <li>
+                    <span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+                    <a class="hover:text-primary transition-colors" href="{{ route('server.index') }}">
+                        Server
+                    </a>
+                </li>
+
+                {{-- Item 3: Detail Server (halaman aktif) --}}
+                <li aria-current="page">
+                    <span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+                    <span class="text-on-surface font-semibold">Detail Server</span>
+                </li>
+
+            </ol>
+        </nav>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Detail Server</h2>
     </div>
 
+    <a href="{{ route('server.index') }}"
+        class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-outline-variant px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Kembali
+    </a>
+</div>
     <!-- GRID UTAMA: 2 baris -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- BARIS 1: Tentang Server (kiri) + QR Code (kanan) -->
-        <!-- Kolom kiri (2/3) -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden h-full">
                 <div class="bg-primary text-white px-6 py-4 font-headline-md text-headline-md flex items-center gap-2">
@@ -102,7 +111,7 @@
                 </div>
                 <div class="p-6 flex flex-col items-center justify-center flex-1">
                     <img id="qrImage" src="{{ $qrImageUrl }}" alt="QR Code"
-                        class="w-40 h-40 rounded-lg border border-outline-variant" crossorigin="anonymous">
+                        class="w-40 h-40 rounded-lg border border-outline-variant">
                     <p class="mt-4 text-sm text-center text-secondary">Scan untuk melihat detail server ini</p>
                     <div class="flex flex-wrap gap-3 mt-3 justify-center">
                         <button onclick="downloadQRCode()"
@@ -123,7 +132,6 @@
         </div>
 
         <!-- BARIS 2: Spesifikasi Server (kiri) + Informasi Tambahan (kanan) -->
-        <!-- Kolom kiri (2/3) -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden h-full">
                 <div class="bg-primary text-white px-6 py-4 font-headline-md text-headline-md flex items-center gap-2">
@@ -165,9 +173,7 @@
             </div>
         </div>
 
-        <!-- ============================================= -->
         <!-- KOLOM KANAN: INFORMASI TAMBAHAN + GAMBAR RACK -->
-        <!-- ============================================= -->
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden h-full flex flex-col">
                 <div class="bg-primary text-white px-6 py-4 font-headline-md text-headline-md flex items-center gap-2">
@@ -212,7 +218,6 @@
                 </div>
             </div>
         </div>
-        <!-- ============================================= -->
 
     </div>
 
@@ -232,9 +237,7 @@
 
     <script>
         function downloadQRCode() {
-            const img = document.getElementById('qrImage');
-            const url = img.src;
-
+            const url = "{{ route('qr.download', $server->id) }}";
             fetch(url)
                 .then(response => response.blob())
                 .then(blob => {
@@ -251,7 +254,6 @@
                 });
         }
 
-        // ============= TAMBAHKAN INI =============
         // Modal untuk preview gambar
         function openImageModal(imageUrl) {
             const modal = document.getElementById('imageModal');
