@@ -179,7 +179,7 @@
 
     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant overflow-hidden mb-8">
         <div class="px-6 py-4 bg-primary-container">
-            <h2 class="text-white font-headline-md text-headline-md m-0">Form Biodata</h2>
+            <h2 class="text-white font-headline-md text-headline-md m-0">Form Data Server</h2>
         </div>
         <div class="p-6">
             <form action="{{ $route }}" method="POST" enctype="multipart/form-data" id="serverForm">
