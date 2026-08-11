@@ -96,13 +96,9 @@ class QrCodeController extends Controller
             $bgWidth = $background->width();
             $bgHeight = $background->height();
 
-            // ======== SESUAIKAN 3 ANGKA INI SAMPAI QR PAS DI KOTAK PUTIH ========
-    
-        $qrSizeRatio = 0.37;       // pas dengan lebar kartu (358px dari 896px lebar background)
-        $offsetXPercent = 0;       // kartu sudah center horizontal, tidak perlu digeser
-        $offsetYPercent = 0;       // kartu sudah center vertikal, tidak perlu digeser
-// ======================================================================
-            // ======================================================================
+            $qrSizeRatio = 0.3995;    // TETAP (ukuran sudah benar ~160px)
+            $offsetXPercent = 0;      // TETAP (center horizontal)
+            $offsetYPercent = 0.65;   // GESER KE BAWAH (65% dari tinggi kartu)
 
             $qrFinalSize = (int) ($bgWidth * $qrSizeRatio);
             $offsetX = (int) ($bgWidth * $offsetXPercent);
