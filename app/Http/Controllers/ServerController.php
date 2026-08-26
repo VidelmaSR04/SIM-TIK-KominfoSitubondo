@@ -3,24 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\Server;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log; // Tambahkan ini
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ServerController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->get('search');
-        $perPage = $request->get('perPage', 10);
+        $search = $request->input('search');
+        $perPage = $request->input('perPage', 10);
 
-        $servers = Server::when($search, function ($query, $search) {
+        $query = Server::when($search, function ($query, $search) {
             return $query->where('nama_perangkat', 'like', "%{$search}%")
                 ->orWhere('id', 'like', "%{$search}%")
                 ->orWhere('ip_server', 'like', "%{$search}%");
-        })->paginate($perPage);
+        });
+
+        // If user is not admin, only show their own servers
+        if (!Auth::check() || Auth::user()->role !== 'admin') {
+            $query->where('user_id', Auth::id());
+        }
+
+        $servers = $query->paginate($perPage);
 
         return view('server', compact('servers'));
     }
@@ -63,6 +72,7 @@ class ServerController extends Controller
         }
 
         $data = $request->except('_token');
+        $data['user_id'] = Auth::user()->id;
 
         // Cek otomatis: lengkap kalau semua field wajib sudah terisi, kalau belum jadi 'dilengkapi'
         $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
@@ -89,20 +99,32 @@ class ServerController extends Controller
         }
         // =========================================
 
-        Server::create($data);
+        $server = Server::create($data);
 
-        return redirect()->route('server.index')->with('success', 'Server berhasil ditambahkan. [DEBUG status_kelengkapan: ' . $data['status_kelengkapan'] . ']');
+        return redirect()->route('detailserver', ['id' => $server->id])->with('success', 'Server berhasil ditambahkan.');
     }
 
     public function show($id)
     {
         $server = Server::findOrFail($id);
+
+        // If user is not admin, verify ownership
+        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('detailserver', compact('server'));
     }
 
     public function edit($id)
     {
         $server = Server::findOrFail($id);
+
+        // If user is not admin, verify ownership
+        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('inputdata', compact('server'));
     }
 

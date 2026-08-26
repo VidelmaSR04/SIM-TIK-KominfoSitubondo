@@ -65,5 +65,49 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// ============= AUTH (Breeze) =============
+// ============= AUTH REGISTRATION (Separate for admin/user) =============
+Route::middleware('guest')->group(function () {
+    // User registration (always open to guests)
+    Route::get('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])
+        ->name('register');
+
+    Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])
+        ->name('register.store');
+
+    /*
+    // Admin registration – cheat system: allow guest only when NO admin exists yet
+    Route::get('/admin/register', function () {
+        // If no admin exists yet, show registration form
+        if (App\Models\User::where('role', 'admin')->count() === 0) {
+            return app('App\Http\Controllers\Auth\RegisteredUserController')->create();
+        }
+
+        // If admin already exists, redirect to login with warning
+        return redirect()
+            ->route('login')
+            ->with('warning', 'Admin sudah ada. Silakan login terlebih dahulu untuk mendaftar admin baru.');
+    })->name('admin.register');
+
+    Route::post('/admin/register', function (Illuminate\Http\Request $request) {
+        // Only process registration if no admin exists yet
+        if (App\Models\User::where('role', 'admin')->count() === 0) {
+            return app('App\Http\Controllers\Auth\RegisteredUserController')->store($request);
+        }
+
+        // If admin already exists, reject with error
+        return redirect()
+            ->back()
+            ->withInput()
+            ->withErrors(['role' => 'Admin sudah ada. Pendaftaran admin ditutup.']);
+    })->name('admin.register.store');
+    */
+});
+
+// ============= AUTH (Breeze - Login, Password Reset, etc.) =============
 require __DIR__.'/auth.php';
+
+// ============= ADMIN DASHBOARD =============
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+        ->name('admin.dashboard');
+});

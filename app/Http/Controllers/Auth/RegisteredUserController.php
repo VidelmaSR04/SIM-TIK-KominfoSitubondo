@@ -36,9 +36,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // Determine role based on the URL
+        // If the path starts with 'admin/register', it's admin registration
+        $isAdminRegistration = $request->path() === 'admin/register';
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'role' => $isAdminRegistration ? 'admin' : 'user',
             'password' => Hash::make($request->password),
         ]);
 
@@ -46,6 +51,12 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Redirect based on role
+        if ($isAdminRegistration) {
+            return redirect()->route('admin.dashboard')->with('success', 'Admin registered successfully.');
+        }
+
+        // For regular users, redirect to input data page after registration
+        return redirect()->route('server.create')->with('success', 'Registered successfully. Please input your server data.');
     }
 }
