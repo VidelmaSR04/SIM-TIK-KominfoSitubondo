@@ -73,19 +73,23 @@
                     </td>
                     <td class="p-4 text-center">
                         <div class="flex items-center justify-center gap-2 text-gray-500">
-                            <a href="{{ route('detailserver', $s->id) }}" class="hover:text-blue-600 transition-colors" title="Lihat Detail Server">
-                                <span class="material-symbols-outlined text-[19px]">visibility</span>
-                            </a>
-                            <a href="{{ route('server.edit', $s->id) }}" class="hover:text-blue-600 transition-colors" title="Edit Data">
-                                <span class="material-symbols-outlined text-[19px]">edit</span>
-                            </a>
-                            <form action="{{ route('server.destroy', $s->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus server ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="hover:text-red-600 transition-colors" title="Hapus Data">
-                                    <span class="material-symbols-outlined text-[19px]">delete</span>
-                                </button>
-                            </form>
+                            @if (Auth::check() && (Auth::user()->isAdmin() || $s->user_id == Auth::id()))
+                                <a href="{{ route('detailserver', $s->id) }}" class="hover:text-blue-600 transition-colors" title="Lihat Detail Server">
+                                    <span class="material-symbols-outlined text-[19px]">visibility</span>
+                                </a>
+                                <a href="{{ route('server.edit', $s->id) }}" class="hover:text-blue-600 transition-colors" title="Edit Data">
+                                    <span class="material-symbols-outlined text-[19px]">edit</span>
+                                </a>
+                                <form action="{{ route('server.destroy', $s->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus server ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="hover:text-red-600 transition-colors" title="Hapus Data">
+                                        <span class="material-symbols-outlined text-[19px]">delete</span>
+                                    </button>
+                                </form>
+                            @else
+                                <span class="text-gray-400">Tidak ada akses</span>
+                            @endif
                         </div>
                     </td>
                 </tr>

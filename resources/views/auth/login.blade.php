@@ -183,39 +183,19 @@
         </form>
 
         {{-- ============================================= --}}
-        {{-- LINK REGISTER USER & REGISTER SERVER --}}
-    {{-- Link Register --}}
-    <div class="mt-8 space-y-3 border-t border-gray-200 pt-6">
-        {{-- Link Register User Biasa --}}
-        <div class="text-center">
-            <p class="text-sm text-gray-600">
-                Belum punya akun?
-                <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">
-                    Daftar Akun
-                </a>
-            </p>
-        </div>
-
-        {{-- Pemisah --}}
-        <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-center text-xs">
-                <span class="px-2 bg-white text-gray-500">atau</span>
+        {{-- LINK REGISTER USER --}}
+        {{-- Link Register --}}
+        <div class="mt-8 space-y-3 border-t border-gray-200 pt-6">
+            {{-- Link Register User Biasa --}}
+            <div class="text-center">
+                <p class="text-sm text-gray-600">
+                    Belum punya akun?
+                    <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                        Daftar Akun
+                    </a>
+                </p>
             </div>
         </div>
-
-        {{-- Link Register Server --}}
-        <div class="text-center">
-            <p class="text-sm text-gray-600">
-                Ingin mendaftarkan server baru?
-                <a href="{{ route('register.server') }}" class="font-medium text-green-600 hover:text-green-500">
-                    Daftarkan Server
-                </a>
-            </p>
-        </div>
-    </div>
     </div>
 </main>
 

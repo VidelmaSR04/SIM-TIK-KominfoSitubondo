@@ -1,16 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    @php
-        $statusColor = match ($server->status) {
-            'Aktif' => 'bg-emerald-100 text-emerald-800',
-            'Maintenance' => 'bg-amber-100 text-amber-800',
-            default => 'bg-red-100 text-red-800',
-        };
+    @auth
+        @if (Auth::user()->isAdmin() || $server->user_id == Auth::id())
+            @php
+                $statusColor = match ($server->status) {
+                    'Aktif' => 'bg-emerald-100 text-emerald-800',
+                    'Maintenance' => 'bg-amber-100 text-amber-800',
+                    default => 'bg-red-100 text-red-800',
+                };
 
-        $qrUrl = route('detailserver', $server->id);
-        $qrImageUrl = route('qr.show', $server->id);
-    @endphp<div class="flex justify-between items-center mb-6">
+                $qrUrl = route('detailserver', $server->id);
+                $qrImageUrl = route('qr.show', $server->id);
+            @endphp<div class="flex justify-between items-center mb-6">
+        @else
+            <div class="p-6 bg-red-50 border border-red-200 text-red-900 rounded-lg">
+                Tidak diizinkan untuk mengakses halaman ini.
+            </div>
+        @endif
+    @else
+        <div class="p-6 bg-red-50 border border-red-200 text-red-900 rounded-lg">
+            Silakan login terlebih dahulu.
+        </div>
+    @endauth
     <div>
         <nav aria-label="Breadcrumb" class="flex text-sm text-on-surface-variant mb-2 font-label-md">
             <ol class="inline-flex items-center space-x-1 md:space-x-2">
