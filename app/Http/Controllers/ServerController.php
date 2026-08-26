@@ -64,6 +64,9 @@ class ServerController extends Controller
 
         $data = $request->except('_token');
 
+        // Cek otomatis: lengkap kalau semua field wajib sudah terisi, kalau belum jadi 'dilengkapi'
+        $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
+
         // ============= UPLOAD GAMBAR =============
         if ($request->hasFile('gambar_rack')) {
             $file = $request->file('gambar_rack');
@@ -88,7 +91,7 @@ class ServerController extends Controller
 
         Server::create($data);
 
-        return redirect()->route('server.index')->with('success', 'Server berhasil ditambahkan.');
+        return redirect()->route('server.index')->with('success', 'Server berhasil ditambahkan. [DEBUG status_kelengkapan: ' . $data['status_kelengkapan'] . ']');
     }
 
     public function show($id)
@@ -138,6 +141,9 @@ public function update(Request $request, $id)
     }
 
     $data = $request->except('_token', '_method');
+
+    // Cek otomatis: lengkap kalau semua field wajib sudah terisi, kalau belum jadi 'dilengkapi'
+    $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
 
     // ============= UPLOAD GAMBAR =============
     $hasNewFile = $request->hasFile('gambar_rack');

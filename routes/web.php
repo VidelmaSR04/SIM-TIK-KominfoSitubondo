@@ -9,6 +9,7 @@ use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ServerRegistrationController;
 
+Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
 Route::get('/qr/download/{id}', [QrCodeController::class, 'download'])->name('qr.download');
 
 // ============= REGISTER SERVER =============
@@ -25,6 +26,10 @@ Route::resource('server', ServerController::class)->except(['show']);
 // Custom routes untuk server
 Route::get('/server/{id}/pdf', [ServerController::class, 'exportPdf'])->name('server.pdf');
 Route::get('/detailserver/{id}', [ServerController::class, 'show'])->name('detailserver');
+
+// ============= LENGKAPI DATA (Admin melengkapi data dari user) =============
+Route::get('/server/{id}/lengkapi', [ServerController::class, 'lengkapi'])->name('server.lengkapi');
+Route::put('/server/{id}/lengkapi', [ServerController::class, 'updateLengkapi'])->name('server.lengkapi.update');
 
 // Redirect /inputdata ke server.create
 Route::get('/inputdata', function () {
