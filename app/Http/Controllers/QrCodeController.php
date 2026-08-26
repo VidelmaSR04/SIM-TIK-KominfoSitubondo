@@ -4,15 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Models\Server;
 use Illuminate\Http\Request;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class QrCodeController extends Controller
 {
     /**
-     * Tampilkan QR Code (dipakai oleh <img src="{{ route('qr.show', $id) }}"> di detailserver.blade.php)
+     * Menampilkan QR Code di halaman (dengan background)
      */
     public function show($id)
+    {
+        $server = Server::findOrFail($id);
+        $url = route('detailserver', $id);
+
+        $qrBinary = $this->fetchQrFromApi($url, 300);
+        $pngBinary = $this->mergeWithBackground($qrBinary);
+
+        return Response::make($pngBinary, 200, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
+    /**
+     * Mengunduh QR Code dengan background desain
+     */
+    public function download($id)
     {
         $server = Server::findOrFail($id);
 
@@ -23,36 +43,82 @@ class QrCodeController extends Controller
 
         $url = route('detailserver', $id);
 
-        $qrCode = QrCode::format('png')
-                        ->size(300)
-                        ->generate($url);
+        $qrBinary = $this->fetchQrFromApi($url, 400);
+        $pngBinary = $this->mergeWithBackground($qrBinary);
 
-        return Response::make($qrCode, 200, [
+        return response($pngBinary, 200, [
             'Content-Type' => 'image/png',
-            'Cache-Control' => 'public, max-age=3600',
+            'Content-Disposition' => 'attachment; filename="qr-server-' . $server->id . '.png"'
         ]);
     }
 
     /**
-     * Download QR Code sebagai file PNG
+     * Ambil binary QR PNG dari API eksternal (api.qrserver.com).
+     * Ini menghindari kebutuhan extension imagick di server lokal,
+     * karena generate QR dilakukan oleh server luar.
      */
-    public function download($id)
+    private function fetchQrFromApi(string $url, int $size): ?string
     {
-        $server = Server::findOrFail($id);
+        try {
+            $response = Http::timeout(10)->get('https://api.qrserver.com/v1/create-qr-code/', [
+                'size' => "{$size}x{$size}",
+                'data' => $url,
+            ]);
 
-        if (!$server->is_lengkap) {
-            abort(403, 'QR Code belum tersedia — data server belum lengkap.');
+            if ($response->successful()) {
+                return $response->body();
+            }
+
+            Log::error('QR API gagal, status: ' . $response->status());
+            return null;
+
+        } catch (\Exception $e) {
+            Log::error('QR API fetch error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Gabungkan QR binary dengan background 'qr-background.png'.
+     * QR diposisikan di tengah kotak putih pada background.
+     */
+    private function mergeWithBackground(?string $qrBinary): string
+    {
+        if ($qrBinary === null) {
+            abort(500, 'Gagal generate QR Code, coba lagi.');
         }
 
-        $url = route('detailserver', $id);
+        $bgPath = public_path('img/qr-background.png');
 
-        $qrCode = QrCode::format('png')
-                        ->size(400)
-                        ->generate($url);
+        if (!file_exists($bgPath)) {
+            Log::warning('QR background tidak ditemukan di: ' . $bgPath);
+            return $qrBinary;
+        }
 
-        return Response::make($qrCode, 200, [
-            'Content-Type' => 'image/png',
-            'Content-Disposition' => 'attachment; filename="qr-server-' . $server->id . '.png"'
-        ]);
+        try {
+            $manager = new ImageManager(new Driver());
+
+            $background = $manager->read($bgPath);
+            $bgWidth = $background->width();
+            $bgHeight = $background->height();
+
+            $qrSizeRatio = 0.3995;    // TETAP (ukuran sudah benar ~160px)
+            $offsetXPercent = 0;      // TETAP (center horizontal)
+            $offsetYPercent = 0.65;   // GESER KE BAWAH (65% dari tinggi kartu)
+
+            $qrFinalSize = (int) ($bgWidth * $qrSizeRatio);
+            $offsetX = (int) ($bgWidth * $offsetXPercent);
+            $offsetY = (int) ($bgHeight * $offsetYPercent);
+
+            $qr = $manager->read($qrBinary)->resize($qrFinalSize, $qrFinalSize);
+
+            $background->place($qr, 'center', $offsetX, $offsetY);
+
+            return (string) $background->toPng();
+
+        } catch (\Exception $e) {
+            Log::error('Intervention Image error: ' . $e->getMessage());
+            return $qrBinary;
+        }
     }
 }

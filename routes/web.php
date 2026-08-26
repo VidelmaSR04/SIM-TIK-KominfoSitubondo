@@ -9,9 +9,11 @@ use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ServerRegistrationController;
 
+// QR Code tampilan (di halaman)
 Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
-Route::get('/qr/download/{id}', [QrCodeController::class, 'download'])->name('qr.download');
 
+// QR Code download (dengan background)
+Route::get('/qr/download/{id}', [QrCodeController::class, 'download'])->name('qr.download');
 // ============= REGISTER SERVER =============
 Route::get('/register-server', [ServerRegistrationController::class, 'create'])->name('register.server');
 Route::post('/register-server', [ServerRegistrationController::class, 'store'])->name('register.server.store');
