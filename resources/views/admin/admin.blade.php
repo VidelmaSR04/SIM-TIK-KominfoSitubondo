@@ -167,7 +167,7 @@
 </div>
 <div class="mt-2">
 <button class="w-full bg-on-surface text-surface-container-lowest font-label-md text-label-md py-3.5 rounded-lg hover:bg-inverse-surface active:bg-black transition-all flex justify-center items-center gap-2 shadow-sm" type="button">
-                        Daftar sebagai Admin
+                        Daftar sebagai Adminn
                         <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
 </button>
 </div>
