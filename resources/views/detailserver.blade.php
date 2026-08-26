@@ -38,7 +38,18 @@
 
             </ol>
         </nav>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface">Detail Server</h2>
+        <div class="flex items-center gap-3">
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">Detail Server</h2>
+            @if($server->is_lengkap)
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">
+                    <span class="material-symbols-outlined text-[14px]">check_circle</span> Data Lengkap
+                </span>
+            @else
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
+                    <span class="material-symbols-outlined text-[14px]">pending_actions</span> Menunggu Dilengkapi
+                </span>
+            @endif
+        </div>
     </div>
 
     <a href="{{ route('server.index') }}"
@@ -46,6 +57,13 @@
         <span class="material-symbols-outlined text-[18px]">arrow_back</span> Kembali
     </a>
 </div>
+    @unless($server->is_lengkap)
+        <div class="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 mb-6">
+            <span class="material-symbols-outlined flex-shrink-0 mt-0.5">info</span>
+            <p class="text-sm font-medium m-0">Data teknis perangkat ini belum lengkap. QR Code akan aktif otomatis setelah admin melengkapi data.</p>
+        </div>
+    @endunless
+
     <!-- GRID UTAMA: 2 baris -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -130,14 +148,20 @@
                         </div>
                     </div>
                 </div>
-                <div class="p-6 flex flex-col items-center justify-center flex-1">
-                    <img id="qrImage" src="{{ $qrImageUrl }}" alt="QR Code"
-                        class="w-40 h-40 rounded-lg border border-outline-variant">
-                    <p class="mt-4 text-sm text-center text-secondary">Scan untuk melihat detail server ini</p>
-                    <div class="flex flex-wrap gap-3 mt-3 justify-center">
-                        <button onclick="downloadQRCode()"
-                            class="flex items-center gap-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-container transition-colors shadow-sm">
-                            <span class="material-symbols-outlined text-[18px]">download</span> Download QR
+            @else
+                <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden h-full flex flex-col opacity-90">
+                    <div class="bg-surface-container-high text-on-surface-variant px-6 py-4 font-headline-md text-headline-md flex items-center gap-2">
+                        <span class="material-symbols-outlined">qr_code_scanner</span> QR Code
+                    </div>
+                    <div class="p-6 flex flex-col items-center justify-center flex-1 text-center">
+                        <div class="w-40 h-40 border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center bg-surface-container-low mb-4">
+                            <span class="material-symbols-outlined text-5xl text-secondary">lock</span>
+                        </div>
+                        <p class="font-semibold text-on-surface mb-1">QR Code Terkunci</p>
+                        <p class="text-sm text-secondary mb-4">Tersedia setelah data dilengkapi admin</p>
+                        <button disabled
+                            class="w-full flex items-center justify-center gap-2 bg-surface-container text-secondary px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
+                            <span class="material-symbols-outlined text-[18px]">hourglass_empty</span> Menunggu Kelengkapan Data
                         </button>
                     </div>
                 </div>
