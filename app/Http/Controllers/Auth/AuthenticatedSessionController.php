@@ -28,20 +28,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = auth()->user();
+
         // Redirect based on user role
-        if (auth()->user()->isAdmin()) {
+        if ($user->isAdmin()) {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        // For regular users, redirect to their most recent server detail or to create server if none
-        $user = auth()->user();
-        $latestServer = $user->servers()->latest()->first();
-
-        if ($latestServer) {
-            return redirect()->intended(route('detailserver', ['id' => $latestServer->id], absolute: false));
-        }
-
-        return redirect()->intended(route('server.create', absolute: false));
+        // Regular user always goes to their dashboard
+        return redirect()->intended(route('user.dashboarduser', absolute: false));
     }
 
     /**

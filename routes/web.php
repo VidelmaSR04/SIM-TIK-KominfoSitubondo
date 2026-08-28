@@ -8,6 +8,8 @@ use App\Http\Controllers\CpanelController;
 use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ServerRegistrationController;
+use App\Http\Controllers\User\DashboardUserController;
+use App\Http\Controllers\User\InputDataUserController;
 
 // QR Code tampilan (di halaman)
 Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
@@ -18,10 +20,10 @@ Route::get('/qr/download/{id}', [QrCodeController::class, 'download'])->name('qr
 Route::get('/register-server', [ServerRegistrationController::class, 'create'])->name('register.server');
 Route::post('/register-server', [ServerRegistrationController::class, 'store'])->name('register.server.store');
 
-// ============= DASHBOARD =============
+// ============= DASHBOARD (ADMIN) =============
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// ============= SERVER ROUTES =============
+// ============= SERVER ROUTES (ADMIN) =============
 Route::delete('/server/{id}/remove-image', [ServerController::class, 'removeImage'])->name('server.removeImage');
 Route::resource('server', ServerController::class)->except(['show']);
 
@@ -33,10 +35,17 @@ Route::get('/detailserver/{id}', [ServerController::class, 'show'])->name('detai
 Route::get('/server/{id}/lengkapi', [ServerController::class, 'lengkapi'])->name('server.lengkapi');
 Route::put('/server/{id}/lengkapi', [ServerController::class, 'updateLengkapi'])->name('server.lengkapi.update');
 
-// Redirect /inputdata ke server.create
+// Redirect /inputdata ke server.create (form ADMIN, biarkan seperti semula)
 Route::get('/inputdata', function () {
     return redirect()->route('server.create');
 })->name('inputdata');
+
+// ============= USER DASHBOARD & INPUT DATA (USER) =============
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/dashboarduser', [DashboardUserController::class, 'index'])->name('user.dashboarduser');
+    Route::get('/inputdatauser', [InputDataUserController::class, 'create'])->name('inputdatauser.create');
+    Route::post('/inputdatauser', [InputDataUserController::class, 'store'])->name('inputdatauser.store');
+});
 
 // ============= CPANEL =============
 Route::get('/cpanel', function () {
