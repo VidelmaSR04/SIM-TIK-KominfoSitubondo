@@ -40,6 +40,7 @@ class Server extends Model
     protected $casts = [
         'jam_pengisian' => 'datetime',
     ];
+
     public function aplikasis()
     {
         return $this->belongsToMany(Aplikasi::class, 'server_aplikasi')
@@ -74,12 +75,17 @@ class Server extends Model
 
     /**
      * Hitung status_kelengkapan otomatis berdasarkan field yang sudah terisi di $data.
+     *
+     * Nilai yang dihasilkan HANYA 'pending' (masih ada field wajib kosong,
+     * menunggu admin melengkapi) atau 'lengkap' (semua field wajib sudah
+     * terisi). Kedua nilai ini yang dipakai konsisten di seluruh aplikasi:
+     * badge status di dashboard user, filter dropdown, dan query admin.
      */
     public static function hitungStatusKelengkapan(array $data): string
     {
         foreach (static::fieldWajibLengkap() as $field) {
             if (empty($data[$field] ?? null)) {
-                return 'dilengkapi'; // masih ada yang kosong
+                return 'pending'; // masih ada yang kosong, menunggu admin
             }
         }
         return 'lengkap'; // semua field wajib sudah terisi

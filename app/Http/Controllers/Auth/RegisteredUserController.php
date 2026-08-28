@@ -57,6 +57,6 @@ class RegisteredUserController extends Controller
         }
 
         // For regular users, redirect to input data page after registration
-        return redirect()->route('server.create')->with('success', 'Registered successfully. Please input your server data.');
+        return redirect()->route('inputdatauser.create')->with('success', 'Registered successfully. Please input your server data.');
     }
 }

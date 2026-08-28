@@ -100,87 +100,16 @@
     </style>
 </head>
 <body class="font-body-md text-on-background bg-background antialiased flex h-screen overflow-hidden">
-<!-- SideNavBar -->
-<nav class="fixed left-0 top-0 h-full w-[260px] bg-[#0F172A] border-r border-outline-variant shadow-sm flex flex-col overflow-y-auto z-20">
-<div class="p-6 border-b border-slate-700">
-<div class="flex items-center gap-4 mb-2">
-<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-<span class="material-symbols-outlined text-white">dns</span>
-</div>
-<div>
-<h1 class="font-headline-md text-headline-md text-white font-bold tracking-tight">SIM TIK</h1>
-<p class="text-slate-400 text-xs">Dinas Kominfo Situbondo</p>
-</div>
-</div>
-</div>
-<div class="p-4">
-<button class="w-full bg-primary hover:bg-primary/90 text-white font-label-md text-label-md py-3 rounded-lg flex items-center justify-center gap-2 transition-colors mb-6 shadow-sm">
-<span class="material-symbols-outlined text-sm">add</span>
-                Tambah Aset
-            </button>
-<ul class="space-y-1">
-<li class="">
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer active:opacity-80" href="#">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="font-body-md text-body-md">Dashboard</span>
-</a>
-</li>
-
-
-<li class="">
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-primary bg-primary/10 text-white font-semibold cursor-pointer active:opacity-80" href="#">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
-<span class="font-body-md text-body-md">Aset TIK</span>
-</a>
-</li>
-<li class="">
-
-</li>
-<li class="">
-
-</li>
-</ul>
-</div>
-<div class="mt-auto p-4 border-t border-slate-700">
-<ul class="space-y-1">
-<li class="">
-
-</li>
-<li class="">
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer active:opacity-80" href="#">
-<span class="material-symbols-outlined">logout</span>
-<span class="font-body-md text-body-md">Keluar</span>
-</a>
-</li>
-</ul>
-</div>
-</nav>
 <!-- Main Content Area -->
-<div class="flex-1 flex flex-col ml-[260px] w-[calc(100%-260px)] h-full relative">
-<!-- TopNavBar -->
-<header class="docked full-width top-0 h-[topbar-height] bg-surface-container-lowest border-b border-outline-variant shadow-sm flex justify-between items-center px-container-padding z-10">
-<div class="flex items-center gap-4 flex-1">
-<div class="relative w-96 max-w-full group focus-within:ring-2 focus-within:ring-primary rounded-lg">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-<input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary transition-colors" placeholder="Pencarian..." type="text">
-</div>
-</div>
-<div class="flex items-center gap-4">
-<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-all relative">
-<span class="material-symbols-outlined">notifications</span>
-<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
-</button>
-<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-all">
-<span class="material-symbols-outlined">help</span>
-</button>
-<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden border border-outline-variant ml-2 cursor-pointer">
-<img alt="Admin Profile" class="w-full h-full object-cover" data-alt="A clean, professional headshot photo of an administrator wearing a dark suit against a neutral white background. Studio lighting, sharp focus, 8k resolution, photorealistic corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZaNMUFJiIknFgX9ZLSFn_Kh0fI8pZRPf5B-v9YWXBSPGmzhLMogGR9jJE1rO82xPjE3NcHq0ZiUrvl4w4-Q4qLphHDgqoWkK4aXMfbwGg7tQ5gu_GIZKEWwSPl9Liww9mZt7oicBePz3wtBTQ7Ly-82m0CeXhdjiwLaXuOz91fCwwmOAP60u3Xq4rjPFZeFZoR8cm5QoDCQLIGMqVSzHRWVJQSTGD8UAlRMFBgQ58OSgZZOz_HjKB">
-</div>
-</div>
-</header>
+<div class="flex-1 flex flex-col w-full h-full relative">
 <!-- Page Content -->
 <main class="flex-1 overflow-y-auto p-container-padding bg-background">
 <div class="max-w-5xl mx-auto">
+<!-- Back to Dashboard -->
+<a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary font-body-md text-body-md transition-colors mb-4" href="{{ route('user.dashboarduser') }}">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Kembali ke Dashboard
+            </a>
 <!-- Header -->
 <div class="mb-6">
 <h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Daftarkan Perangkat Baru</h2>
@@ -191,21 +120,33 @@
 <span class="material-symbols-outlined text-primary mt-0.5">info</span>
 <p class="font-body-md text-body-md text-blue-900">Data akan berstatus <strong>PENDING</strong> hingga dilengkapi oleh admin.</p>
 </div>
+@if ($errors->any())
+<div class="bg-error-container border border-error/30 rounded-lg p-4 mb-8 flex items-start gap-3 shadow-sm">
+<span class="material-symbols-outlined text-error mt-0.5">error</span>
+<div class="font-body-md text-body-md text-on-error-container">
+<p class="font-semibold mb-1">Periksa kembali data yang diisi:</p>
+<ul class="list-disc list-inside">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+</div>
+@endif
 <!-- Form Card -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-8">
-<form action="#" method="POST">
+<form action="{{ route('inputdatauser.store') }}" method="POST">
+@csrf
 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
 <!-- Jenis Perangkat -->
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="jenis">Jenis Perangkat <span class="text-error">*</span></label>
 <div class="relative">
-<select class="w-full appearance-none bg-surface border border-outline-variant rounded-lg py-2.5 pl-4 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="jenis" name="jenis">
-<option disabled="" selected="" value="">Pilih jenis perangkat</option>
-<option value="server">Server</option>
-<option value="switch">Switch</option>
-<option value="router">Router</option>
-<option value="firewall">Firewall</option>
-<option value="ups">UPS</option>
+<select class="w-full appearance-none bg-surface border border-outline-variant rounded-lg py-2.5 pl-4 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="jenis" name="jenis" required>
+<option disabled value="" {{ old('jenis') ? '' : 'selected' }}>Pilih jenis perangkat</option>
+<option value="server" {{ old('jenis') === 'server' ? 'selected' : '' }}>Server</option>
+<option value="switch" {{ old('jenis') === 'switch' ? 'selected' : '' }}>Switch</option>
+<option value="router" {{ old('jenis') === 'router' ? 'selected' : '' }}>Router</option>
 </select>
 <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
 </div>
@@ -213,27 +154,27 @@
 <!-- Merk Perangkat -->
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="merk">Merk Perangkat <span class="text-error">*</span></label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="merk" name="merk" placeholder="Misal: Dell PowerEdge, Cisco..." type="text">
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="merk" name="merk" value="{{ old('merk') }}" placeholder="Misal: Dell PowerEdge, Cisco..." type="text" required>
 </div>
 <!-- Nama Dinas/OPD -->
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="dinas">Nama Dinas/OPD</label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="dinas" name="dinas" placeholder="Masukkan nama instansi" type="text">
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="dinas" name="dinas" value="{{ old('dinas') }}" placeholder="Masukkan nama instansi" type="text">
 </div>
 <!-- Penanggung Jawab -->
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="pj">Penanggung Jawab</label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="pj" name="pj" placeholder="Nama penanggung jawab" type="text">
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="pj" name="pj" value="{{ old('pj') }}" placeholder="Nama penanggung jawab" type="text">
 </div>
 <!-- Penerima Server -->
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="penerima">Penerima Server</label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="penerima" name="penerima" placeholder="Nama staf penerima" type="text">
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="penerima" name="penerima" value="{{ old('penerima') }}" placeholder="Nama staf penerima" type="text">
 </div>
 <!-- Lokasi Rack -->
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="rack">Lokasi Rack Usulan</label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="rack" name="rack" placeholder="Misal: Rack A, U15 (Opsional)" type="text">
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="rack" name="rack" value="{{ old('rack') }}" placeholder="Misal: Rack A, U15 (Opsional)" type="text">
 </div>
 <!-- Spesifikasi (Full Width) -->
 <div class="col-span-1 md:col-span-2">
@@ -243,9 +184,9 @@
 </div>
 <!-- Actions -->
 <div class="mt-8 pt-6 border-t border-outline-variant flex justify-end gap-4">
-<button class="px-6 py-2.5 rounded-lg border border-outline text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high transition-colors focus:ring-2 focus:ring-outline" type="button">
+<a href="{{ route('user.dashboarduser') }}" class="px-6 py-2.5 rounded-lg border border-outline text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high transition-colors focus:ring-2 focus:ring-outline inline-flex items-center">
                                 Batal
-                            </button>
+                            </a>
 <button class="px-6 py-2.5 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md hover:bg-primary hover:text-white transition-colors shadow-sm focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center gap-2" type="submit">
 <span class="material-symbols-outlined text-sm">save</span>
                                 Simpan &amp; Daftarkan
