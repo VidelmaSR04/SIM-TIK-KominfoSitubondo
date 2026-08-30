@@ -16,10 +16,20 @@ class QrCodeWithTemplateService
     protected $qrSize;
     protected $qrMargin;
 
+    // Koordinat kotak putih tempat QR di dalam bingkai template qr-background.png
+    // (diukur langsung dari file template, bukan dihitung otomatis dari tengah gambar,
+    // karena bingkai perak di template tidak persis di tengah kanvas 848x1264)
+    protected $boxX = 216;
+    protected $boxY = 413;
+    protected $boxWidth = 436;
+    protected $boxHeight = 433;
+
     public function __construct()
     {
         $this->backgroundPath = public_path('img/qr-background.png');
-        $this->qrSize = 400; // QR code size in pixels
+        // Sedikit lebih kecil dari kotak (beri margin aman 6px) supaya tidak
+        // menyentuh/menembus tepi bingkai perak akibat anti-aliasing
+        $this->qrSize = min($this->boxWidth, $this->boxHeight) - 6; // -> 427
         $this->qrMargin = 10;
     }
 
@@ -45,9 +55,10 @@ class QrCodeWithTemplateService
         $qrWidth = imagesx($qrImage);
         $qrHeight = imagesy($qrImage);
 
-        // Calculate position to center QR on background
-        $qrX = (int)(($bgWidth - $qrWidth) / 2);
-        $qrY = (int)(($bgHeight - $qrHeight) / 2) + 100; // Slightly lower for design
+        // Posisikan QR agar presisi di tengah kotak putih milik template
+        // (bukan di tengah keseluruhan gambar background)
+        $qrX = (int)($this->boxX + ($this->boxWidth - $qrWidth) / 2);
+        $qrY = (int)($this->boxY + ($this->boxHeight - $qrHeight) / 2);
 
         // Ensure QR has white background before merging
         $this->ensureWhiteBackground($qrImage);

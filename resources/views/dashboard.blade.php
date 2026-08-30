@@ -211,7 +211,7 @@
                                 <th class="p-4 w-40">IP Server</th>
                                 <th class="p-4">IP VPS</th>
                                 <th class="p-4 w-36">Status</th>
-                                <th class="p-4 w-28 text-center">Aksi</th>
+                                <th class="p-4 w-32 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm text-on-surface divide-y divide-outline-variant/60">
@@ -246,15 +246,22 @@
                                     </span>
                                 </td>
                                 <td class="p-4 text-center relative">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <a href="{{ route('detailserver', ['id' => $server->id]) }}" title="Lihat Detail" class="text-secondary hover:text-primary hover:bg-blue-50 transition-colors p-1.5 rounded-lg">
-                                            <span class="material-symbols-outlined text-[19px]">visibility</span>
-                                        </a>
-                                        <a href="#" title="Edit" class="text-secondary hover:text-amber-600 hover:bg-amber-50 transition-colors p-1.5 rounded-lg">
-                                            <span class="material-symbols-outlined text-[19px]">edit</span>
-                                        </a>
-                                    </div>
-                                </td>
+    <div class="flex items-center justify-center gap-1">
+        <a href="{{ route('detailserver', ['id' => $server->id]) }}" title="Lihat Detail" class="text-secondary hover:text-primary hover:bg-blue-50 transition-colors p-1.5 rounded-lg">
+            <span class="material-symbols-outlined text-[19px]">visibility</span>
+        </a>
+        <a href="{{ route('server.edit', $server->id) }}" title="Edit" class="text-secondary hover:text-amber-600 hover:bg-amber-50 transition-colors p-1.5 rounded-lg">
+            <span class="material-symbols-outlined text-[19px]">edit</span>
+        </a>
+        <form action="{{ route('server.destroy', $server->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus server ini?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" title="Hapus" class="text-secondary hover:text-red-600 hover:bg-red-50 transition-colors p-1.5 rounded-lg">
+                <span class="material-symbols-outlined text-[19px]">delete</span>
+            </button>
+        </form>
+    </div>
+</td>
                             </tr>
                             @empty
                             <tr>

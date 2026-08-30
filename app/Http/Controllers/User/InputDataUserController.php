@@ -33,12 +33,12 @@ class InputDataUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'jenis'    => ['required', 'string', 'in:server,switch,router'],
-            'merk'     => ['required', 'string', 'max:255'],
-            'dinas'    => ['nullable', 'string', 'max:255'],
-            'pj'       => ['nullable', 'string', 'max:255'],
-            'penerima' => ['nullable', 'string', 'max:255'],
-            'rack'     => ['nullable', 'string', 'max:255'],
+            'jenis'          => ['required', 'string', 'in:server,switch,router'],
+            'merk'           => ['required', 'string', 'max:255'],
+            'dinas'          => ['nullable', 'string', 'max:255'],
+            'nama_pengirim'  => ['nullable', 'string', 'max:255'],
+            'nama_penerima'  => ['nullable', 'string', 'max:255'],
+            'rack'           => ['nullable', 'string', 'max:255'],
         ]);
 
         $data = [
@@ -46,8 +46,8 @@ class InputDataUserController extends Controller
             'jenis_perangkat'   => $validated['jenis'],
             'merk_perangkat'    => $validated['merk'],
             'pemilik_perangkat' => $validated['dinas'] ?? null,
-            'nama_pengirim'     => $validated['pj'] ?? null,
-            'nama_penerima'     => $validated['penerima'] ?? null,
+            'nama_pengirim'     => $validated['nama_pengirim'] ?? null,
+            'nama_penerima'     => $validated['nama_penerima'] ?? null,
             'nomor_rack'        => $validated['rack'] ?? null,
             'user_id'           => Auth::id(),
         ];

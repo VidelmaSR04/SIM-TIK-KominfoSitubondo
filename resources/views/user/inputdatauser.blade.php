@@ -142,7 +142,7 @@
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="jenis">Jenis Perangkat <span class="text-error">*</span></label>
 <div class="relative">
-<select class="w-full appearance-none bg-surface border border-outline-variant rounded-lg py-2.5 pl-4 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="jenis" name="jenis" required>
+<select class="w-full appearance-none bg-none bg-surface border border-outline-variant rounded-lg py-2.5 pl-4 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="jenis" name="jenis" required>
 <option disabled value="" {{ old('jenis') ? '' : 'selected' }}>Pilih jenis perangkat</option>
 <option value="server" {{ old('jenis') === 'server' ? 'selected' : '' }}>Server</option>
 <option value="switch" {{ old('jenis') === 'switch' ? 'selected' : '' }}>Switch</option>
@@ -161,20 +161,33 @@
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="dinas">Nama Dinas/OPD</label>
 <input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="dinas" name="dinas" value="{{ old('dinas') }}" placeholder="Masukkan nama instansi" type="text">
 </div>
-<!-- Penanggung Jawab -->
+<!-- Nama Pengirim -->
 <div class="col-span-1">
-<label class="block font-label-md text-label-md text-on-surface mb-2" for="pj">Penanggung Jawab</label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="pj" name="pj" value="{{ old('pj') }}" placeholder="Nama penanggung jawab" type="text">
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="nama_pengirim">Nama Pengirim</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="nama_pengirim" name="nama_pengirim" value="{{ old('nama_pengirim') }}" placeholder="Nama pengirim" type="text">
 </div>
-<!-- Penerima Server -->
+<!-- Nama Penerima -->
 <div class="col-span-1">
-<label class="block font-label-md text-label-md text-on-surface mb-2" for="penerima">Penerima Server</label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="penerima" name="penerima" value="{{ old('penerima') }}" placeholder="Nama staf penerima" type="text">
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="nama_penerima">Nama Penerima</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="nama_penerima" name="nama_penerima" value="{{ old('nama_penerima') }}" placeholder="Nama penerima" type="text">
 </div>
 <!-- Lokasi Rack -->
 <div class="col-span-1">
 <label class="block font-label-md text-label-md text-on-surface mb-2" for="rack">Lokasi Rack Usulan</label>
-<input class="w-full bg-surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="rack" name="rack" value="{{ old('rack') }}" placeholder="Misal: Rack A, U15 (Opsional)" type="text">
+<div class="relative">
+<select class="w-full appearance-none bg-none bg-surface border border-outline-variant rounded-lg py-2.5 pl-4 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" id="rack" name="rack">
+<option disabled value="" {{ old('rack') ? '' : 'selected' }}>-- Pilih Rack --</option>
+<option value="R1" {{ old('rack') === 'R1' ? 'selected' : '' }}>R1</option>
+<option value="R2" {{ old('rack') === 'R2' ? 'selected' : '' }}>R2</option>
+<option value="R3" {{ old('rack') === 'R3' ? 'selected' : '' }}>R3</option>
+<option value="R4" {{ old('rack') === 'R4' ? 'selected' : '' }}>R4</option>
+<option value="R5" {{ old('rack') === 'R5' ? 'selected' : '' }}>R5</option>
+<option value="R6" {{ old('rack') === 'R6' ? 'selected' : '' }}>R6</option>
+<option value="R7" {{ old('rack') === 'R7' ? 'selected' : '' }}>R7</option>
+<option value="R8" {{ old('rack') === 'R8' ? 'selected' : '' }}>R8</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
 </div>
 <!-- Spesifikasi (Full Width) -->
 <div class="col-span-1 md:col-span-2">

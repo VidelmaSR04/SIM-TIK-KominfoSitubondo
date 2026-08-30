@@ -134,12 +134,11 @@
 <div class="h-6 w-px bg-outline-variant mx-2"></div>
 <div class="relative" id="profileDropdownWrapper">
 <button id="profileDropdownTrigger" class="flex items-center space-x-3 hover:bg-surface-container-low p-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary" type="button">
-<div class="w-8 h-8 rounded-full overflow-hidden bg-primary-fixed border border-outline-variant shrink-0">
-<img alt="Administrator Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5_tEMQho6TuBV4pw-8-BtLH-AmWbZdycqBY3_KJK1iT3Ogwt6p6XTaqA5RpMIu4INYusyTdo-_J-LbME_qguD6E2EoHxKwdSEH5iDChCdF39wzTknO96PCRq6Mf21Xvrdrp65r07T-p1domHGDQu0vy-1yzbCQOGl2pWguv5AkbhRb9IJzG5iE0JXAiDiSHtYOiUqnwCk3wxIsnw5CnbKJvmwsFbmYMxBbviBj7AqhTwS7bMLZbgM">
+<div class="w-8 h-8 rounded-full bg-primary-fixed border border-outline-variant shrink-0 flex items-center justify-center font-semibold text-sm text-primary">
+{{ auth()->check() ? strtoupper(substr(auth()->user()->name ?? 'Pengguna', 0, 2)) : 'PG' }}
 </div>
 <div class="text-left hidden md:block">
 <p class="font-body-md text-body-md font-bold text-on-surface leading-tight">{{ auth()->user()->name ?? 'Pengguna' }}</p>
-<p class="font-label-md text-label-md text-on-surface-variant font-normal leading-tight">{{ auth()->user()->dinas ?? 'Diskominfo' }}</p>
 </div>
 <span class="material-symbols-outlined text-on-surface-variant text-[20px]">expand_more</span>
 </button>

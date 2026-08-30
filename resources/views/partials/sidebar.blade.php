@@ -46,17 +46,12 @@
     @auth
       @if (Auth::user()->isAdmin())
         <div class="pt-4 mt-4 border-t border-white/10 space-y-1">
-          <!-- Menu 6: Admin Dashboard -->
-          <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-primary-container/15 text-white font-semibold border-l-4 border-primary-container -ml-px' : 'text-slate-300 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-            <span class="text-sm font-medium">Admin Dashboard</span>
-          </a>
 
-          <!-- Menu 7: User Management (placeholder for future) -->
-          <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-slate-400 cursor-not-allowed">
+          <!-- Menu 6: User Management (placeholder for future) -->
+            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-slate-400">
             <span class="material-symbols-outlined text-[20px]">people</span>
             <span class="text-sm font-medium">User Management</span>
-          </a>
+            </a>
         </div>
       @endif
     @endauth

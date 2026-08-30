@@ -113,7 +113,20 @@
     </style>
 </head>
 <body class="bg-pattern min-h-screen flex items-center justify-center font-body-md text-body-md text-on-surface antialiased p-container-padding">
-<main class="w-full max-w-md">
+<!-- Background animasi GhostFibers -->
+<div
+    data-ghost-fibers
+    data-line-color="#0B1440"
+    data-glow-color="#2563EB"
+    data-speed="0.2"
+    data-scale="2.2"
+    data-layers="4"
+    data-brightness="1.8"
+    data-vignette="0.85"
+    class="fixed inset-0 z-0 pointer-events-none"
+></div>
+
+<main class="w-full max-w-md relative z-10">
     <div class="glass-card rounded-xl p-8 w-full relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1 bg-primary"></div>
         <div class="flex flex-col items-center mb-8">
@@ -212,5 +225,6 @@
         }
     }
 </script>
+@vite(['resources/js/ghost-fibers.js'])
 </body>
 </html>
