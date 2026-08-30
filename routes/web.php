@@ -10,6 +10,7 @@ use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ServerRegistrationController;
 use App\Http\Controllers\User\DashboardUserController;
 use App\Http\Controllers\User\InputDataUserController;
+use App\Http\Controllers\UserManagementController;
 
 // QR Code tampilan (di halaman)
 Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
@@ -119,4 +120,11 @@ require __DIR__.'/auth.php';
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
         ->name('admin.dashboard');
+
+
+          // Manajemen Pengguna
+    Route::resource('admin/users', UserManagementController::class)
+        ->names('admin.users')
+        ->parameters(['users' => 'user'])
+        ->except(['show']);
 });
