@@ -41,6 +41,6 @@ class ServerRegistrationController extends Controller
 
         Server::create($validated);
 
-        return redirect()->route('dashboard')->with('success', 'Server berhasil didaftarkan!');
+        return redirect()->route('manajemen-server')->with('success', 'Server berhasil didaftarkan!');
     }
 }

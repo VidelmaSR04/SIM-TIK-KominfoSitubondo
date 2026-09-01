@@ -151,6 +151,156 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* ============= STEPPER (naik-turun, pilihan terkunci) ============= */
+        .stepper {
+            display: flex;
+            align-items: stretch;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            background: white;
+            transition: all 0.2s;
+        }
+        .stepper:focus-within {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .stepper-value {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #191c1e;
+            user-select: none;
+        }
+        .stepper-arrows {
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #CBD5E1;
+            width: 34px;
+        }
+        .stepper-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F1F5F9;
+            border: none;
+            cursor: pointer;
+            color: #64748B;
+            transition: background 0.15s, color 0.15s;
+            padding: 0;
+        }
+        .stepper-btn:first-child {
+            border-bottom: 1px solid #CBD5E1;
+        }
+        .stepper-btn:hover:not(:disabled) {
+            background: #E2E8F0;
+            color: #2563eb;
+        }
+        .stepper-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .stepper-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+        .stepper-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            background: #F8FAFC;
+        }
+
+        /* ============= SEARCHABLE SELECT (dropdown dengan pencarian) ============= */
+        .searchable-select {
+            position: relative;
+        }
+        .searchable-select-trigger {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.375rem;
+            padding: 8px 12px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            color: #191c1e;
+            transition: all 0.2s;
+        }
+        .searchable-select-trigger:focus,
+        .searchable-select.is-open .searchable-select-trigger {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .searchable-select-trigger:disabled {
+            cursor: not-allowed;
+            color: #94A3B8;
+        }
+        .searchable-select-trigger svg {
+            width: 16px;
+            height: 16px;
+            color: #64748B;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .searchable-select-panel {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1);
+            z-index: 50;
+            overflow: hidden;
+        }
+        .searchable-select-panel.hidden {
+            display: none;
+        }
+        .searchable-select-search {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #E2E8F0;
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
+        }
+        .searchable-select-search:focus {
+            border-bottom-color: #2563eb;
+        }
+        .searchable-select-options {
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .searchable-select-option {
+            padding: 9px 12px;
+            font-size: 14px;
+            color: #191c1e;
+            cursor: pointer;
+        }
+        .searchable-select-option.is-active {
+            background: #2563eb;
+            color: white;
+        }
+        .searchable-select-option.is-selected:not(.is-active) {
+            background: #EFF6FF;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .searchable-select-empty {
+            padding: 10px 12px;
+            font-size: 14px;
+            color: #94A3B8;
+            text-align: center;
+        }
     </style>
 @endpush
 
@@ -161,12 +311,91 @@
         $method = $isEdit ? 'PUT' : 'POST';
         $pageTitle = $isEdit ? 'Edit Perangkat Server' : 'Buat Perangkat Server Baru';
         $breadcrumbTitle = $isEdit ? 'Edit Perangkat' : 'Buat Perangkat Baru';
+
+        // Ubah nilai lama seperti "128 GB" / "1.5 TB" jadi angka GB murni, dan pastikan selalu ada nilai (minimal default)
+        if (!function_exists('simtik_extract_gb')) {
+            function simtik_extract_gb($value, $default, $step = 1, $max = null) {
+                $gb = $default;
+                if ($value && preg_match('/([\d.]+)\s*(GB|TB)/i', $value, $m)) {
+                    $num = (float) $m[1];
+                    $unit = strtoupper($m[2]);
+                    $gb = $unit === 'TB' ? (int) round($num * 1024) : (int) round($num);
+                }
+                // Bulatkan ke kelipatan terdekat, jaga tetap >= default (minimum) dan <= max (jika ada)
+                $gb = $default + round(($gb - $default) / $step) * $step;
+                if ($gb < $default) $gb = $default;
+                if ($max && $gb > $max) $gb = $max;
+                return (int) $gb;
+            }
+        }
+
+        $ramGB = simtik_extract_gb(old('ukuran_ram', isset($server) ? $server->ukuran_ram : null), 8, 8);
+        $hddGB = simtik_extract_gb(old('ukuran_hdd', isset($server) ? $server->ukuran_hdd : null), 256, 256, 20480);
+
+        // Daftar OPD/Dinas untuk Pemilik Perangkat (dipakai saat Status Kepemilikan = Colocation)
+        $opdOptions = [
+            'Dinas Pendidikan dan Kebudayaan',
+            'Dinas Kesehatan',
+            'Dinas Pekerjaan Umum dan Penataan Ruang',
+            'Dinas Perumahan dan Kawasan Permukiman',
+            'Satuan Polisi Pamong Praja',
+            'Badan Kesatuan Bangsa dan Politik',
+            'Badan Penanggulangan Bencana Daerah',
+            'Dinas Sosial',
+            'Dinas Tenaga Kerja',
+            'Dinas Pemberdayaan Perempuan dan Perlindungan Anak',
+            'Dinas Ketahanan Pangan',
+            'Dinas Lingkungan Hidup',
+            'Dinas Kependudukan dan Pencatatan Sipil',
+            'Dinas Pemberdayaan Masyarakat dan Desa',
+            'Dinas Pengendalian Penduduk dan Keluarga Berencana',
+            'Dinas Perhubungan',
+            'Dinas Komunikasi, Informatika dan Persandian',
+            'Dinas Koperasi dan Usaha Mikro',
+            'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu',
+            'Dinas Perpustakaan dan Kearsipan',
+            'Dinas Perikanan',
+            'Dinas Pariwisata',
+            'Dinas Tanaman Pangan, Hortikultura dan Perkebunan',
+            'Dinas Peternakan dan Kesehatan Hewan',
+            'Dinas Perdagangan dan Perindustrian',
+            'Badan Perencanaan Pembangunan Daerah',
+            'Badan Kepegawaian dan Pengembangan Sumber Daya Manusia',
+            'Badan Pendapatan, Pengelolaan Keuangan dan Aset Daerah',
+            'Inspektorat Daerah',
+            'Sekretariat Daerah',
+            'Sekretariat DPRD',
+            'Kecamatan Banyuglugur',
+            'Kecamatan Jatibanteng',
+            'Kecamatan Sumbermalang',
+            'Kecamatan Besuki',
+            'Kecamatan Suboh',
+            'Kecamatan Mlandingan',
+            'Kecamatan Bungatan',
+            'Kecamatan Kendit',
+            'Kecamatan Panarukan',
+            'Kecamatan Situbondo',
+            'Kecamatan Panji',
+            'Kecamatan Mangaran',
+            'Kecamatan Kapongan',
+            'Kecamatan Arjasa',
+            'Kecamatan Asembagus',
+            'Kecamatan Jangkar',
+            'Kecamatan Banyuputih',
+            'RSAR',
+            'PDAM Tirta Baluran',
+            'RSUD Besuki',
+            'RSUD Asembagus',
+        ];
+
+        $pemilikSelected = old('pemilik_perangkat', $server->pemilik_perangkat ?? $opdOptions[0]);
+        if (!in_array($pemilikSelected, $opdOptions)) { $pemilikSelected = $opdOptions[0]; }
     @endphp
 
     <!-- Breadcrumb -->
     <nav aria-label="Breadcrumb" class="flex text-sm text-secondary mb-4 font-body-md">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
-            <li><a class="hover:text-primary transition-colors" href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li><a class="hover:text-primary transition-colors" href="{{ route('manajemen-server') }}">Dashboard</a></li>
             <li><span class="material-symbols-outlined text-sm mx-1">chevron_right</span><a
                     class="hover:text-primary transition-colors" href="{{ route('server.index') }}">Perangkat & Server</a>
             </li>
@@ -210,13 +439,23 @@
                     <!-- Jenis Perangkat & Serial Number -->
                     <div>
                         <label class="form-label" for="jenis_perangkat">Jenis Perangkat <span class="required-star">*</span></label>
-                        <select class="standard-select @error('jenis_perangkat') border-red-500 @enderror"
-                            id="jenis_perangkat" name="jenis_perangkat">
-                            <option disabled {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == '' ? 'selected' : '' }} value="">-- Pilih Perangkat --</option>
-                            <option value="router" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'router' ? 'selected' : '' }}>Router</option>
-                            <option value="switch" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'switch' ? 'selected' : '' }}>Switch</option>
-                            <option value="server" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'server' ? 'selected' : '' }}>Server</option>
-                        </select>
+                        <div class="stepper">
+                            <div class="stepper-value" id="jenis_perangkat_display"></div>
+                            <div class="stepper-arrows">
+                                <button type="button" class="stepper-btn" data-stepper-up="jenis_perangkat" aria-label="Ganti ke jenis perangkat berikutnya">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7" /></svg>
+                                </button>
+                                <button type="button" class="stepper-btn" data-stepper-down="jenis_perangkat" aria-label="Ganti ke jenis perangkat sebelumnya">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                            </div>
+                            <select class="hidden @error('jenis_perangkat') border-red-500 @enderror"
+                                id="jenis_perangkat" name="jenis_perangkat">
+                                <option value="router" {{ old('jenis_perangkat', $server->jenis_perangkat ?? 'router') == 'router' ? 'selected' : '' }}>Router</option>
+                                <option value="switch" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'switch' ? 'selected' : '' }}>Switch</option>
+                                <option value="server" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'server' ? 'selected' : '' }}>Server</option>
+                            </select>
+                        </div>
                         @error('jenis_perangkat')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
@@ -315,8 +554,8 @@
                         <label class="form-label" for="status_kepemilikan">Status Kepemilikan <span class="required-star">*</span></label>
                         <select class="standard-select @error('status_kepemilikan') border-red-500 @enderror"
                             id="status_kepemilikan" name="status_kepemilikan">
-                            <option value="Kominfo" {{ old('status_kepemilikan', $server->status_kepemilikan ?? '') == 'Kominfo' ? 'selected' : '' }}>Kominfo</option>
-                            <option value="OPD Lain" {{ old('status_kepemilikan', $server->status_kepemilikan ?? '') == 'OPD Lain' ? 'selected' : '' }}>OPD Lain</option>
+                            <option value="Kominfo" {{ old('status_kepemilikan', $server->status_kepemilikan ?? 'Kominfo') == 'Kominfo' ? 'selected' : '' }}>Kominfo</option>
+                            <option value="Colocation" {{ old('status_kepemilikan', $server->status_kepemilikan ?? '') == 'Colocation' ? 'selected' : '' }}>Colocation</option>
                         </select>
                         @error('status_kepemilikan')
                             <p class="form-error">{{ $message }}</p>
@@ -324,9 +563,27 @@
                     </div>
                     <div>
                         <label class="form-label" for="pemilik_perangkat">Pemilik Perangkat <span class="required-star">*</span></label>
-                        <input class="standard-input @error('pemilik_perangkat') border-red-500 @enderror"
-                            id="pemilik_perangkat" name="pemilik_perangkat" placeholder="Nama pemilik" type="text"
-                            value="{{ old('pemilik_perangkat', $server->pemilik_perangkat ?? '') }}">
+                        <div class="searchable-select" id="pemilik_perangkat_wrapper">
+                            <button type="button" class="searchable-select-trigger" id="pemilik_perangkat_trigger">
+                                <span id="pemilik_perangkat_label">{{ $pemilikSelected }}</span>
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            <div class="searchable-select-panel hidden" id="pemilik_perangkat_panel">
+                                <input type="text" class="searchable-select-search" id="pemilik_perangkat_search" placeholder="Cari nama OPD...">
+                                <div class="searchable-select-options" id="pemilik_perangkat_options">
+                                    @foreach ($opdOptions as $opd)
+                                        <div class="searchable-select-option {{ $pemilikSelected == $opd ? 'is-selected' : '' }}" data-value="{{ $opd }}">{{ $opd }}</div>
+                                    @endforeach
+                                </div>
+                                <div class="searchable-select-empty hidden" id="pemilik_perangkat_empty">Tidak ditemukan</div>
+                            </div>
+                            <select class="hidden @error('pemilik_perangkat') border-red-500 @enderror" id="pemilik_perangkat" name="pemilik_perangkat">
+                                @foreach ($opdOptions as $opd)
+                                    <option value="{{ $opd }}" {{ $pemilikSelected == $opd ? 'selected' : '' }}>{{ $opd }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <p class="helper-text" id="pemilik_perangkat_hint">Hanya aktif jika Status Kepemilikan = Colocation.</p>
                         @error('pemilik_perangkat')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
@@ -371,71 +628,89 @@
                         @enderror
                     </div>
 
-                    <!-- HDD & RAM -->
+                    <!-- ============= HDD & RAM (kelipatan tertentu, otomatis terisi nilai minimum) ============= -->
                     <div>
-                        <label class="form-label" for="ukuran_hdd">Kapasitas HDD/SSD <span class="required-star">*</span></label>
-                        <select class="standard-select @error('ukuran_hdd') border-red-500 @enderror" id="ukuran_hdd" name="ukuran_hdd">
-                            <option value="128 GB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '128 GB' ? 'selected' : '' }}>128 GB</option>
-                            <option value="256 GB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '256 GB' ? 'selected' : '' }}>256 GB</option>
-                            <option value="500 GB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '500 GB' ? 'selected' : '' }}>500 GB</option>
-                            <option value="1 TB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '1 TB' ? 'selected' : '' }}>1 TB</option>
-                            <option value="1.5 TB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '1.5 TB' ? 'selected' : '' }}>1.5 TB</option>
-                            <option value="2 TB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '2 TB' ? 'selected' : '' }}>2 TB</option>
-                            <option value="3 TB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '3 TB' ? 'selected' : '' }}>3 TB</option>
-                            <option value="4 TB" {{ old('ukuran_hdd', $server->ukuran_hdd ?? '') == '4 TB' ? 'selected' : '' }}>4 TB</option>
-                        </select>
+                        <label class="form-label" for="ukuran_hdd_input">Kapasitas Penyimpanan (HDD/SSD) <span class="required-star">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="material-symbols-outlined text-xl">save</span></div>
+                            <input type="number" id="ukuran_hdd_input" min="256" max="20480" step="256" inputmode="numeric"
+                                class="input-group-input @error('ukuran_hdd') border-red-500 @enderror"
+                                value="{{ $hddGB }}">
+                            <div class="input-group-addon" style="border-right:none; border-left:1px solid #CBD5E1;">GB</div>
+                        </div>
+                        <input type="hidden" id="ukuran_hdd" name="ukuran_hdd" value="{{ $hddGB }} GB">
+                        <p class="helper-text">Minimal 256 GB, kelipatan 256 GB, maksimal 20 TB.</p>
                         @error('ukuran_hdd')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
-                    <!-- RAM -->
                     <div>
-                        <label class="form-label" for="ukuran_ram">Kapasitas RAM <span class="required-star">*</span></label>
-                        <select class="standard-select @error('ukuran_ram') border-red-500 @enderror" id="ukuran_ram" name="ukuran_ram">
-                            <option value="2 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '2 GB' ? 'selected' : '' }}>2 GB</option>
-                            <option value="4 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '4 GB' ? 'selected' : '' }}>4 GB</option>
-                            <option value="8 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '8 GB' ? 'selected' : '' }}>8 GB</option>
-                            <option value="16 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '16 GB' ? 'selected' : '' }}>16 GB</option>
-                            <option value="32 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '32 GB' ? 'selected' : '' }}>32 GB</option>
-                            <option value="64 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '64 GB' ? 'selected' : '' }}>64 GB</option>
-                            <option value="128 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '128 GB' ? 'selected' : '' }}>128 GB</option>
-                            <option value="256 GB" {{ old('ukuran_ram', $server->ukuran_ram ?? '') == '256 GB' ? 'selected' : '' }}>256 GB</option>
-                        </select>
+                        <label class="form-label" for="ukuran_ram_input">Kapasitas RAM <span class="required-star">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="material-symbols-outlined text-xl">memory</span></div>
+                            <input type="number" id="ukuran_ram_input" min="8" step="8" inputmode="numeric"
+                                class="input-group-input @error('ukuran_ram') border-red-500 @enderror"
+                                value="{{ $ramGB }}">
+                            <div class="input-group-addon" style="border-right:none; border-left:1px solid #CBD5E1;">GB</div>
+                        </div>
+                        <input type="hidden" id="ukuran_ram" name="ukuran_ram" value="{{ $ramGB }} GB">
+                        <p class="helper-text">Minimal 8 GB, kelipatan 8 GB.</p>
                         @error('ukuran_ram')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Rack & Core -->
+                    <!-- Rack (tetap dropdown biasa) & Core (STEPPER naik-turun) -->
                     <div>
                         <label class="form-label" for="nomor_rack">Nomor RACK <span class="required-star">*</span></label>
-                        <select class="standard-select @error('nomor_rack') border-red-500 @enderror" id="nomor_rack" name="nomor_rack">
-                            <option disabled {{ old('nomor_rack', $server->nomor_rack ?? '') == '' ? 'selected' : '' }} value="">-- Pilih Rack --</option>
-                            <option value="R1" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R1' ? 'selected' : '' }}>R1</option>
-                            <option value="R2" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R2' ? 'selected' : '' }}>R2</option>
-                            <option value="R3" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R3' ? 'selected' : '' }}>R3</option>
-                            <option value="R4" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R4' ? 'selected' : '' }}>R4</option>
-                            <option value="R5" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R5' ? 'selected' : '' }}>R5</option>
-                            <option value="R6" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R6' ? 'selected' : '' }}>R6</option>
-                            <option value="R7" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R7' ? 'selected' : '' }}>R7</option>
-                            <option value="R8" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R8' ? 'selected' : '' }}>R8</option>
-                        </select>
+                        <div class="stepper">
+                            <div class="stepper-value" id="nomor_rack_display"></div>
+                            <div class="stepper-arrows">
+                                <button type="button" class="stepper-btn" data-stepper-up="nomor_rack" aria-label="Naikkan nomor rack">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7" /></svg>
+                                </button>
+                                <button type="button" class="stepper-btn" data-stepper-down="nomor_rack" aria-label="Turunkan nomor rack">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                            </div>
+                            <select class="hidden @error('nomor_rack') border-red-500 @enderror" id="nomor_rack" name="nomor_rack">
+                                <option value="R1" {{ old('nomor_rack', $server->nomor_rack ?? 'R1') == 'R1' ? 'selected' : '' }}>R1</option>
+                                <option value="R2" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R2' ? 'selected' : '' }}>R2</option>
+                                <option value="R3" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R3' ? 'selected' : '' }}>R3</option>
+                                <option value="R4" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R4' ? 'selected' : '' }}>R4</option>
+                                <option value="R5" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R5' ? 'selected' : '' }}>R5</option>
+                                <option value="R6" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R6' ? 'selected' : '' }}>R6</option>
+                                <option value="R7" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R7' ? 'selected' : '' }}>R7</option>
+                                <option value="R8" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R8' ? 'selected' : '' }}>R8</option>
+                            </select>
+                        </div>
                         @error('nomor_rack')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
-                    <!-- Jumlah Core -->
                     <div>
                         <label class="form-label" for="jumlah_core">Jumlah Core <span class="required-star">*</span></label>
-                        <select class="standard-select @error('jumlah_core') border-red-500 @enderror" id="jumlah_core" name="jumlah_core">
-                            @for($i = 1; $i <= 24; $i++)
-                                <option value="{{ $i }}" {{ old('jumlah_core', $server->jumlah_core ?? '') == $i ? 'selected' : '' }}>{{ $i }}</option>
-                            @endfor
-                        </select>
+                        <div class="stepper">
+                            <div class="stepper-value" id="jumlah_core_display"></div>
+                            <div class="stepper-arrows">
+                                <button type="button" class="stepper-btn" data-stepper-up="jumlah_core" aria-label="Naikkan jumlah core">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7" /></svg>
+                                </button>
+                                <button type="button" class="stepper-btn" data-stepper-down="jumlah_core" aria-label="Turunkan jumlah core">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                            </div>
+                            <select class="hidden @error('jumlah_core') border-red-500 @enderror" id="jumlah_core" name="jumlah_core">
+                                @for($i = 1; $i <= 24; $i++)
+                                    <option value="{{ $i }}" {{ old('jumlah_core', $server->jumlah_core ?? '') == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                @endfor
+                            </select>
+                        </div>
                         @error('jumlah_core')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
+                    <!-- ============================================================ -->
 
                     <!-- ============= UPLOAD GAMBAR RACK ============= -->
                     <div class="col-span-1 md:col-span-2">
@@ -488,11 +763,11 @@
 
                     <!-- Peruntukan (full width) -->
                     <div class="col-span-1 md:col-span-2">
-                        <label class="form-label" for="peruntukan">Peruntukan Perangkat <span class="required-star">*</span></label>
+                        <label class="form-label" for="peruntukan">Deskripsi <span class="required-star">*</span></label>
                         <div class="input-group">
                             <div class="input-group-addon"><span class="material-symbols-outlined text-xl">list</span></div>
                             <input class="input-group-input @error('peruntukan') border-red-500 @enderror"
-                                id="peruntukan" name="peruntukan" placeholder="Masukkan peruntukan perangkat"
+                                id="peruntukan" name="peruntukan" placeholder="Masukkan Deskripsi Perangkat"
                                 type="text" value="{{ old('peruntukan', $server->peruntukan ?? '') }}">
                         </div>
                         @error('peruntukan')
@@ -729,6 +1004,190 @@
                     previewImage({ target: { files: files } });
                 }
             });
+        }
+    });
+
+    // ============= HDD & RAM: input angka dengan kelipatan tertentu (step) =============
+    function bindCapacityField(inputId, hiddenId, minValue, step, maxValue) {
+        const input = document.getElementById(inputId);
+        const hidden = document.getElementById(hiddenId);
+        if (!input || !hidden) return;
+
+        function clamp(val) {
+            if (isNaN(val)) return minValue;
+            // Bulatkan ke kelipatan terdekat (relatif terhadap minValue)
+            let rounded = minValue + Math.round((val - minValue) / step) * step;
+            if (rounded < minValue) rounded = minValue;
+            if (maxValue && rounded > maxValue) rounded = maxValue;
+            return rounded;
+        }
+
+        function sync() {
+            const val = clamp(parseInt(input.value, 10));
+            input.value = val;
+            hidden.value = val + ' GB';
+        }
+
+        input.addEventListener('input', function () {
+            // Saat sedang mengetik, sinkronkan apa adanya dulu tanpa memaksa pembulatan
+            const raw = parseInt(input.value, 10);
+            hidden.value = (isNaN(raw) ? minValue : raw) + ' GB';
+        });
+        input.addEventListener('blur', sync);   // saat pindah field, baru dibulatkan ke kelipatan terdekat
+        input.addEventListener('change', sync); // saat pakai tombol panah naik/turun
+
+        sync(); // pastikan langsung terisi nilai minimum saat halaman dimuat
+    }
+
+    // ============= Jumlah Core: tetap pakai stepper terkunci (naik-turun) =============
+    function initStepper(selectId) {
+        const select = document.getElementById(selectId);
+        const display = document.getElementById(selectId + '_display');
+        const upBtn = document.querySelector('[data-stepper-up="' + selectId + '"]');
+        const downBtn = document.querySelector('[data-stepper-down="' + selectId + '"]');
+        if (!select || !display || !upBtn || !downBtn) return;
+
+        function render() {
+            const opt = select.options[select.selectedIndex];
+            display.textContent = opt ? opt.text : '';
+            upBtn.disabled = select.selectedIndex >= select.options.length - 1;
+            downBtn.disabled = select.selectedIndex <= 0;
+        }
+
+        upBtn.addEventListener('click', function () {
+            if (select.selectedIndex < select.options.length - 1) {
+                select.selectedIndex += 1;
+                select.dispatchEvent(new Event('change'));
+                render();
+            }
+        });
+
+        downBtn.addEventListener('click', function () {
+            if (select.selectedIndex > 0) {
+                select.selectedIndex -= 1;
+                select.dispatchEvent(new Event('change'));
+                render();
+            }
+        });
+
+        render();
+    }
+
+    // ============= Pemilik Perangkat: searchable-select (buka panel, cari, pilih) =============
+    function initSearchableSelect(prefix) {
+        const wrapper = document.getElementById(prefix + '_wrapper');
+        const trigger = document.getElementById(prefix + '_trigger');
+        const label = document.getElementById(prefix + '_label');
+        const panel = document.getElementById(prefix + '_panel');
+        const search = document.getElementById(prefix + '_search');
+        const optionsContainer = document.getElementById(prefix + '_options');
+        const emptyMsg = document.getElementById(prefix + '_empty');
+        const hiddenSelect = document.getElementById(prefix);
+        if (!wrapper || !trigger || !label || !panel || !search || !optionsContainer || !hiddenSelect) return;
+
+        const options = Array.from(optionsContainer.querySelectorAll('.searchable-select-option'));
+
+        function openPanel() {
+            if (trigger.disabled) return;
+            panel.classList.remove('hidden');
+            wrapper.classList.add('is-open');
+            search.value = '';
+            filterOptions('');
+            search.focus();
+        }
+
+        function closePanel() {
+            panel.classList.add('hidden');
+            wrapper.classList.remove('is-open');
+        }
+
+        function selectOption(optEl) {
+            const value = optEl.getAttribute('data-value');
+            hiddenSelect.value = value;
+            label.textContent = value;
+            options.forEach(o => o.classList.remove('is-selected'));
+            optEl.classList.add('is-selected');
+            hiddenSelect.dispatchEvent(new Event('change'));
+            closePanel();
+        }
+
+        function filterOptions(query) {
+            const q = query.trim().toLowerCase();
+            let anyVisible = false;
+            options.forEach(o => {
+                const match = o.textContent.toLowerCase().includes(q);
+                o.classList.toggle('hidden', !match);
+                if (match) anyVisible = true;
+            });
+            if (emptyMsg) emptyMsg.classList.toggle('hidden', anyVisible);
+        }
+
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (panel.classList.contains('hidden')) {
+                openPanel();
+            } else {
+                closePanel();
+            }
+        });
+
+        options.forEach(o => {
+            o.addEventListener('click', function () {
+                selectOption(o);
+            });
+        });
+
+        search.addEventListener('input', function () {
+            filterOptions(search.value);
+        });
+
+        // Cegah klik di kotak search ikut menutup panel via listener document di bawah
+        search.addEventListener('click', function (e) { e.stopPropagation(); });
+
+        // Klik di luar widget -> tutup panel
+        document.addEventListener('click', function (e) {
+            if (!wrapper.contains(e.target)) {
+                closePanel();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closePanel();
+        });
+    }
+
+    // ============= Status Kepemilikan -> aktif/nonaktifkan Pemilik Perangkat =============
+    function toggleOwnerField() {
+        const statusSelect = document.getElementById('status_kepemilikan');
+        const ownerSelect = document.getElementById('pemilik_perangkat');
+        const wrapper = document.getElementById('pemilik_perangkat_wrapper');
+        const trigger = document.getElementById('pemilik_perangkat_trigger');
+        if (!statusSelect || !ownerSelect || !wrapper) return;
+
+        const isColocation = statusSelect.value === 'Colocation';
+        ownerSelect.disabled = !isColocation; // kalau disabled, field ini tidak ikut terkirim saat submit
+        if (trigger) trigger.disabled = !isColocation;
+        wrapper.classList.toggle('stepper-disabled', !isColocation);
+
+        if (!isColocation) {
+            const panel = document.getElementById('pemilik_perangkat_panel');
+            if (panel) panel.classList.add('hidden');
+            wrapper.classList.remove('is-open');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        bindCapacityField('ukuran_hdd_input', 'ukuran_hdd', 256, 256, 20480); // 256 GB s/d 20 TB, kelipatan 256 GB
+        bindCapacityField('ukuran_ram_input', 'ukuran_ram', 8, 8, null);      // mulai 8 GB, kelipatan 8 GB
+        initStepper('jenis_perangkat');
+        initStepper('nomor_rack');
+        initStepper('jumlah_core');
+        initSearchableSelect('pemilik_perangkat');
+
+        toggleOwnerField();
+        const statusSelect = document.getElementById('status_kepemilikan');
+        if (statusSelect) {
+            statusSelect.addEventListener('change', toggleOwnerField);
         }
     });
 </script>

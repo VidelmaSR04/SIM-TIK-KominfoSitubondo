@@ -7,7 +7,7 @@
     <title>@yield('title', 'SIM TIK - Dashboard')</title>
 
     <!-- Scripts Breeze (Vite) - DIKOMENTARI SEMENTARA -->
-    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Fonts & Icons Custom -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>

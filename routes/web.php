@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ManajemenServerController;
 use App\Http\Controllers\ServerController;
 use App\Http\Controllers\CpanelController;
 use App\Http\Controllers\AplikasiController;
@@ -11,18 +11,22 @@ use App\Http\Controllers\ServerRegistrationController;
 use App\Http\Controllers\User\DashboardUserController;
 use App\Http\Controllers\User\InputDataUserController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\MasterOptionController;
+use App\Http\Controllers\ServerDocumentController;
+use App\Http\Controllers\ServerPhotoController;
 
 // QR Code tampilan (di halaman)
 Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
 
 // QR Code download (dengan background)
 Route::get('/qr/download/{id}', [QrCodeController::class, 'download'])->name('qr.download');
+
 // ============= REGISTER SERVER =============
 Route::get('/register-server', [ServerRegistrationController::class, 'create'])->name('register.server');
 Route::post('/register-server', [ServerRegistrationController::class, 'store'])->name('register.server.store');
 
-// ============= DASHBOARD (ADMIN) =============
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+// ============= MANAJEMEN SERVER (ADMIN) — dulu bernama "dashboard" =============
+Route::get('/manajemen-server', [ManajemenServerController::class, 'index'])->name('manajemen-server');
 
 // ============= SERVER ROUTES (ADMIN) =============
 Route::delete('/server/{id}/remove-image', [ServerController::class, 'removeImage'])->name('server.removeImage');
@@ -40,6 +44,13 @@ Route::put('/server/{id}/lengkapi', [ServerController::class, 'updateLengkapi'])
 Route::get('/inputdata', function () {
     return redirect()->route('server.create');
 })->name('inputdata');
+
+// ============= MANAJEMEN SERVER: SUBMENU BARU (ADMIN) =============
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/server-dokumen', [ServerDocumentController::class, 'index'])->name('server.dokumen.index');
+    Route::get('/server-foto', [ServerPhotoController::class, 'index'])->name('server.foto.index');
+    Route::get('/server-master', [MasterOptionController::class, 'index'])->name('server.master.index');
+});
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============
 Route::middleware(['auth', 'role:user'])->group(function () {
@@ -77,52 +88,22 @@ Route::middleware('auth')->group(function () {
 
 // ============= AUTH REGISTRATION (Separate for admin/user) =============
 Route::middleware('guest')->group(function () {
-    // User registration (always open to guests)
     Route::get('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])
         ->name('register');
 
     Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])
         ->name('register.store');
-
-    /*
-    // Admin registration – cheat system: allow guest only when NO admin exists yet
-    Route::get('/admin/register', function () {
-        // If no admin exists yet, show registration form
-        if (App\Models\User::where('role', 'admin')->count() === 0) {
-            return app('App\Http\Controllers\Auth\RegisteredUserController')->create();
-        }
-
-        // If admin already exists, redirect to login with warning
-        return redirect()
-            ->route('login')
-            ->with('warning', 'Admin sudah ada. Silakan login terlebih dahulu untuk mendaftar admin baru.');
-    })->name('admin.register');
-
-    Route::post('/admin/register', function (Illuminate\Http\Request $request) {
-        // Only process registration if no admin exists yet
-        if (App\Models\User::where('role', 'admin')->count() === 0) {
-            return app('App\Http\Controllers\Auth\RegisteredUserController')->store($request);
-        }
-
-        // If admin already exists, reject with error
-        return redirect()
-            ->back()
-            ->withInput()
-            ->withErrors(['role' => 'Admin sudah ada. Pendaftaran admin ditutup.']);
-    })->name('admin.register.store');
-    */
 });
 
 // ============= AUTH (Breeze - Login, Password Reset, etc.) =============
 require __DIR__.'/auth.php';
 
-// ============= ADMIN DASHBOARD =============
+// ============= ADMIN: MANAJEMEN SERVER (khusus role admin) =============
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
-        ->name('admin.dashboard');
+    Route::get('/admin/manajemen-server', [ManajemenServerController::class, 'index'])
+        ->name('admin.manajemen-server');
 
-
-          // Manajemen Pengguna
+    // Manajemen Pengguna
     Route::resource('admin/users', UserManagementController::class)
         ->names('admin.users')
         ->parameters(['users' => 'user'])
