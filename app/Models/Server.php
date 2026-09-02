@@ -62,6 +62,14 @@ class Server extends Model
     }
 
     /**
+     * Nama OPD turunan dari status_kepemilikan dan pemilik_perangkat
+     */
+    public function getNamaOpdAttribute()
+    {
+        return $this->status_kepemilikan === 'Colocation' ? $this->pemilik_perangkat : 'Kominfo';
+    }
+
+    /**
      * Field yang wajib terisi sebelum data boleh dianggap "lengkap".
      */
     public static function fieldWajibLengkap(): array

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('kondisi_status', ['Baru', 'Bekas'])->nullable();
             $table->text('spesifikasi')->nullable();
             $table->enum('tipe_perangkat', ['RACK MOUNT', 'TOWER', 'BLADE'])->nullable();
-            $table->enum('status_kepemilikan', ['Kominfo', 'OPD Lain'])->nullable();
+            $table->enum('status_kepemilikan', ['Kominfo', 'Colocation'])->nullable();
             $table->string('pemilik_perangkat')->nullable();
             $table->string('ip_server')->nullable();
             $table->string('ip_vps')->nullable();

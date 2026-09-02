@@ -61,7 +61,7 @@ class ManajemenServerController extends Controller
         $rackMount = $isAdmin ? Server::where('tipe_perangkat', 'RACK MOUNT')->count() : Server::where('user_id', Auth::id())->where('tipe_perangkat', 'RACK MOUNT')->count();
         $tower     = $isAdmin ? Server::where('tipe_perangkat', 'TOWER')->count() : Server::where('user_id', Auth::id())->where('tipe_perangkat', 'TOWER')->count();
         $kominfo   = $isAdmin ? Server::where('status_kepemilikan', 'Kominfo')->count() : Server::where('user_id', Auth::id())->where('status_kepemilikan', 'Kominfo')->count();
-        $colocation= $isAdmin ? Server::where('status_kepemilikan', 'OPD Lain')->count() : Server::where('user_id', Auth::id())->where('status_kepemilikan', 'OPD Lain')->count();
+        $colocation= $isAdmin ? Server::where('status_kepemilikan', 'Colocation')->count() : Server::where('user_id', Auth::id())->where('status_kepemilikan', 'Colocation')->count();
 
         // ==== Data tabel ====
         $servers = $isAdmin ? Server::latest()->paginate(10) : Server::where('user_id', Auth::id())->latest()->paginate(10);

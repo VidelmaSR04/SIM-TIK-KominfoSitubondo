@@ -48,6 +48,8 @@ Route::get('/inputdata', function () {
 // ============= MANAJEMEN SERVER: SUBMENU BARU (ADMIN) =============
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/server-dokumen', [ServerDocumentController::class, 'index'])->name('server.dokumen.index');
+    Route::get('/server-dokumen/{server}/preview', [ServerDocumentController::class, 'streamPdf'])->name('server.dokumen.preview');
+    Route::get('/server-dokumen/{server}/download', [ServerDocumentController::class, 'download'])->name('server.dokumen.download');
     Route::get('/server-foto', [ServerPhotoController::class, 'index'])->name('server.foto.index');
     Route::get('/server-master', [MasterOptionController::class, 'index'])->name('server.master.index');
 });
