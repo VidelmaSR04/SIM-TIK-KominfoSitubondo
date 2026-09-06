@@ -77,8 +77,8 @@
                     </div>
                 </div>
 
-                <a href="{{ route('server.master.index') }}"
-                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('server.master.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
+                <a href="{{ route('master-data.index') }}"
+                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('master-data.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <ellipse cx="12" cy="6" rx="8" ry="3" stroke-width="2" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

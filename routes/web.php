@@ -4,16 +4,14 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ManajemenServerController;
 use App\Http\Controllers\ServerController;
-use App\Http\Controllers\CpanelController;
-use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ServerRegistrationController;
 use App\Http\Controllers\User\DashboardUserController;
 use App\Http\Controllers\User\InputDataUserController;
 use App\Http\Controllers\UserManagementController;
-use App\Http\Controllers\MasterOptionController;
 use App\Http\Controllers\ServerDocumentController;
 use App\Http\Controllers\ServerPhotoController;
+use App\Http\Controllers\MasterDataController;
 
 // QR Code tampilan (di halaman)
 Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
@@ -51,7 +49,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/server-dokumen/{server}/preview', [ServerDocumentController::class, 'streamPdf'])->name('server.dokumen.preview');
     Route::get('/server-dokumen/{server}/download', [ServerDocumentController::class, 'download'])->name('server.dokumen.download');
     Route::get('/server-foto', [ServerPhotoController::class, 'index'])->name('server.foto.index');
-    Route::get('/server-master', [MasterOptionController::class, 'index'])->name('server.master.index');
+
+    // Master Data routes
+    Route::prefix('master-data')->name('master-data.')->group(function () {
+        Route::get('/', [MasterDataController::class, 'index'])->name('index');
+        Route::post('/', [MasterDataController::class, 'store'])->name('store');
+        Route::put('/{masterDatum}', [MasterDataController::class, 'update'])->name('update');
+        Route::patch('/{masterDatum}/toggle-aktif', [MasterDataController::class, 'toggleAktif'])->name('toggleAktif');
+        Route::delete('/{masterDatum}', [MasterDataController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============

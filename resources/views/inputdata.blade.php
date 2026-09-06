@@ -333,7 +333,7 @@
         $hddGB = simtik_extract_gb(old('ukuran_hdd', isset($server) ? $server->ukuran_hdd : null), 256, 256, 20480);
 
         // Daftar OPD/Dinas untuk Pemilik Perangkat (dipakai saat Status Kepemilikan = Colocation)
-        $opdOptions = [
+        $opdOptionsArray = [
             'Dinas Pendidikan dan Kebudayaan',
             'Dinas Kesehatan',
             'Dinas Pekerjaan Umum dan Penataan Ruang',
@@ -388,8 +388,15 @@
             'RSUD Asembagus',
         ];
 
-        $pemilikSelected = old('pemilik_perangkat', $server->pemilik_perangkat ?? $opdOptions[0]);
-        if (!in_array($pemilikSelected, $opdOptions)) { $pemilikSelected = $opdOptions[0]; }
+        $pemilikOptions = \App\Models\MasterData::forSelect('pemilik_perangkat');
+        if (empty($pemilikOptions)) {
+            $pemilikOptions = array_combine($opdOptionsArray, $opdOptionsArray);
+        }
+
+        $pemilikSelected = old('pemilik_perangkat', $server->pemilik_perangkat ?? array_key_first($pemilikOptions));
+        if (!array_key_exists($pemilikSelected, $pemilikOptions)) {
+            $pemilikSelected = array_key_first($pemilikOptions);
+        }
     @endphp
 
     <!-- Breadcrumb -->
@@ -439,23 +446,12 @@
                     <!-- Jenis Perangkat & Serial Number -->
                     <div>
                         <label class="form-label" for="jenis_perangkat">Jenis Perangkat <span class="required-star">*</span></label>
-                        <div class="stepper">
-                            <div class="stepper-value" id="jenis_perangkat_display"></div>
-                            <div class="stepper-arrows">
-                                <button type="button" class="stepper-btn" data-stepper-up="jenis_perangkat" aria-label="Ganti ke jenis perangkat berikutnya">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7" /></svg>
-                                </button>
-                                <button type="button" class="stepper-btn" data-stepper-down="jenis_perangkat" aria-label="Ganti ke jenis perangkat sebelumnya">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
-                                </button>
-                            </div>
-                            <select class="hidden @error('jenis_perangkat') border-red-500 @enderror"
-                                id="jenis_perangkat" name="jenis_perangkat">
-                                <option value="router" {{ old('jenis_perangkat', $server->jenis_perangkat ?? 'router') == 'router' ? 'selected' : '' }}>Router</option>
-                                <option value="switch" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'switch' ? 'selected' : '' }}>Switch</option>
-                                <option value="server" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'server' ? 'selected' : '' }}>Server</option>
-                            </select>
-                        </div>
+                        <select class="standard-select @error('jenis_perangkat') border-red-500 @enderror"
+                            id="jenis_perangkat" name="jenis_perangkat">
+                            <option value="router" {{ old('jenis_perangkat', $server->jenis_perangkat ?? 'router') == 'router' ? 'selected' : '' }}>Router</option>
+                            <option value="switch" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'switch' ? 'selected' : '' }}>Switch</option>
+                            <option value="server" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'server' ? 'selected' : '' }}>Server</option>
+                        </select>
                         @error('jenis_perangkat')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
@@ -478,12 +474,9 @@
                         <label class="form-label" for="merk_perangkat">Merk Perangkat <span class="required-star">*</span></label>
                         <select class="standard-select @error('merk_perangkat') border-red-500 @enderror"
                             id="merk_perangkat" name="merk_perangkat">
-                            <option value="MIKROTIK" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'MIKROTIK' ? 'selected' : '' }}>MIKROTIK</option>
-                            <option value="CISCO" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'CISCO' ? 'selected' : '' }}>CISCO</option>
-                            <option value="DELL" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'DELL' ? 'selected' : '' }}>DELL</option>
-                            <option value="HP" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'HP' ? 'selected' : '' }}>HP</option>
-                            <option value="LENOVO" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'LENOVO' ? 'selected' : '' }}>LENOVO</option>
-                            <option value="HUAWEI" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == 'HUAWEI' ? 'selected' : '' }}>HUAWEI</option>
+                            @foreach (\App\Models\MasterData::forSelect('merk_perangkat') as $value => $label)
+                                <option value="{{ $value }}" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                         @error('merk_perangkat')
                             <p class="form-error">{{ $message }}</p>
@@ -506,15 +499,17 @@
                             <div>
                                 <label class="text-xs text-secondary">Tipe</label>
                                 <select class="standard-select @error('kondisi_tipe') border-red-500 @enderror" name="kondisi_tipe">
-                                    <option value="Standard" {{ old('kondisi_tipe', $server->kondisi_tipe ?? '') == 'Standard' ? 'selected' : '' }}>Standard</option>
-                                    <option value="High Performance" {{ old('kondisi_tipe', $server->kondisi_tipe ?? '') == 'High Performance' ? 'selected' : '' }}>High Performance</option>
+                                    @foreach (\App\Models\MasterData::forSelect('kondisi_tipe') as $value => $label)
+                                        <option value="{{ $value }}" {{ old('kondisi_tipe', $server->kondisi_tipe ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>
                                 <label class="text-xs text-secondary">Status</label>
                                 <select class="standard-select @error('kondisi_status') border-red-500 @enderror" name="kondisi_status">
-                                    <option value="Baru" {{ old('kondisi_status', $server->kondisi_status ?? '') == 'Baru' ? 'selected' : '' }}>Baru</option>
-                                    <option value="Bekas" {{ old('kondisi_status', $server->kondisi_status ?? '') == 'Bekas' ? 'selected' : '' }}>Bekas</option>
+                                    @foreach (\App\Models\MasterData::forSelect('kondisi_status') as $value => $label)
+                                        <option value="{{ $value }}" {{ old('kondisi_status', $server->kondisi_status ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -540,9 +535,9 @@
                         <label class="form-label" for="tipe_perangkat">Tipe Perangkat <span class="required-star">*</span></label>
                         <select class="standard-select @error('tipe_perangkat') border-red-500 @enderror"
                             id="tipe_perangkat" name="tipe_perangkat">
-                            <option value="RACK MOUNT" {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == 'RACK MOUNT' ? 'selected' : '' }}>RACK MOUNT</option>
-                            <option value="TOWER" {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == 'TOWER' ? 'selected' : '' }}>TOWER</option>
-                            <option value="BLADE" {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == 'BLADE' ? 'selected' : '' }}>BLADE</option>
+                            @foreach (\App\Models\MasterData::forSelect('tipe_perangkat') as $value => $label)
+                                <option value="{{ $value }}" {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                         @error('tipe_perangkat')
                             <p class="form-error">{{ $message }}</p>
@@ -554,8 +549,9 @@
                         <label class="form-label" for="status_kepemilikan">Status Kepemilikan <span class="required-star">*</span></label>
                         <select class="standard-select @error('status_kepemilikan') border-red-500 @enderror"
                             id="status_kepemilikan" name="status_kepemilikan">
-                            <option value="Kominfo" {{ old('status_kepemilikan', $server->status_kepemilikan ?? 'Kominfo') == 'Kominfo' ? 'selected' : '' }}>Kominfo</option>
-                            <option value="Colocation" {{ old('status_kepemilikan', $server->status_kepemilikan ?? '') == 'Colocation' ? 'selected' : '' }}>Colocation</option>
+                            @foreach (\App\Models\MasterData::forSelect('status_kepemilikan') as $value => $label)
+                                <option value="{{ $value }}" {{ old('status_kepemilikan', $server->status_kepemilikan ?? 'Kominfo') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                         @error('status_kepemilikan')
                             <p class="form-error">{{ $message }}</p>
@@ -571,15 +567,15 @@
                             <div class="searchable-select-panel hidden" id="pemilik_perangkat_panel">
                                 <input type="text" class="searchable-select-search" id="pemilik_perangkat_search" placeholder="Cari nama OPD...">
                                 <div class="searchable-select-options" id="pemilik_perangkat_options">
-                                    @foreach ($opdOptions as $opd)
-                                        <div class="searchable-select-option {{ $pemilikSelected == $opd ? 'is-selected' : '' }}" data-value="{{ $opd }}">{{ $opd }}</div>
+                                    @foreach ($pemilikOptions as $value => $label)
+                                        <div class="searchable-select-option {{ $pemilikSelected == $value ? 'is-selected' : '' }}" data-value="{{ $value }}">{{ $label }}</div>
                                     @endforeach
                                 </div>
                                 <div class="searchable-select-empty hidden" id="pemilik_perangkat_empty">Tidak ditemukan</div>
                             </div>
                             <select class="hidden @error('pemilik_perangkat') border-red-500 @enderror" id="pemilik_perangkat" name="pemilik_perangkat">
-                                @foreach ($opdOptions as $opd)
-                                    <option value="{{ $opd }}" {{ $pemilikSelected == $opd ? 'selected' : '' }}>{{ $opd }}</option>
+                                @foreach ($pemilikOptions as $value => $label)
+                                    <option value="{{ $value }}" {{ $pemilikSelected == $value ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -619,9 +615,9 @@
                     <div class="col-span-1 md:col-span-2">
                         <label class="form-label" for="status">Status Perangkat <span class="required-star">*</span></label>
                         <select class="standard-select @error('status') border-red-500 @enderror" id="status" name="status">
-                            <option value="Aktif" {{ old('status', $server->status ?? '') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
-                            <option value="Non-Aktif" {{ old('status', $server->status ?? '') == 'Non-Aktif' ? 'selected' : '' }}>Non-Aktif</option>
-                            <option value="Maintenance" {{ old('status', $server->status ?? '') == 'Maintenance' ? 'selected' : '' }}>Maintenance</option>
+                            @foreach (\App\Models\MasterData::forSelect('status_perangkat') as $value => $label)
+                                <option value="{{ $value }}" {{ old('status', $server->status ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                         @error('status')
                             <p class="form-error">{{ $message }}</p>
@@ -674,14 +670,9 @@
                                 </button>
                             </div>
                             <select class="hidden @error('nomor_rack') border-red-500 @enderror" id="nomor_rack" name="nomor_rack">
-                                <option value="R1" {{ old('nomor_rack', $server->nomor_rack ?? 'R1') == 'R1' ? 'selected' : '' }}>R1</option>
-                                <option value="R2" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R2' ? 'selected' : '' }}>R2</option>
-                                <option value="R3" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R3' ? 'selected' : '' }}>R3</option>
-                                <option value="R4" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R4' ? 'selected' : '' }}>R4</option>
-                                <option value="R5" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R5' ? 'selected' : '' }}>R5</option>
-                                <option value="R6" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R6' ? 'selected' : '' }}>R6</option>
-                                <option value="R7" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R7' ? 'selected' : '' }}>R7</option>
-                                <option value="R8" {{ old('nomor_rack', $server->nomor_rack ?? '') == 'R8' ? 'selected' : '' }}>R8</option>
+                                @foreach (\App\Models\MasterData::forSelect('nomor_rack') as $value => $label)
+                                    <option value="{{ $value }}" {{ old('nomor_rack', $server->nomor_rack ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
                             </select>
                         </div>
                         @error('nomor_rack')

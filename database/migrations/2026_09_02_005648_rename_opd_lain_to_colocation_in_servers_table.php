@@ -12,7 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First update existing data from 'OPD Lain' to 'Colocation'
+        // First, update NULL and empty string to 'Kominfo'
+        DB::statement("UPDATE servers SET status_kepemilikan = 'Kominfo' WHERE status_kepemilikan IS NULL OR status_kepemilikan = ''");
+
+        // Then update existing data from 'OPD Lain' to 'Colocation'
         DB::statement("UPDATE servers SET status_kepemilikan = 'Colocation' WHERE status_kepemilikan = 'OPD Lain'");
 
         // Then modify the enum definition
