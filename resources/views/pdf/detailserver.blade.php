@@ -14,29 +14,56 @@
             line-height: 1.5;
         }
 
-        /* === KOP SURAT (CENTER) === */
-        .kop {
+        /* === KOP SURAT RESMI (berbasis tabel, lebih stabil di DomPDF) === */
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+        .kop-table td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+        }
+        .kop-logo {
+            width: 90px;
             text-align: center;
-            border-bottom: 3px solid #004ac6;
-            padding-bottom: 12px;
-            margin-bottom: 18px;
         }
-        .kop .instansi h1 {
-            font-size: 22pt;
+        .kop-logo img {
+            width: 72px;
+        }
+        .kop-teks {
+            text-align: center;
+        }
+        .kop-teks .baris1 {
+            font-family: Arial, sans-serif;
+            font-size: 13pt;
             font-weight: bold;
-            color: #004ac6;
-            margin: 2px 0;
             letter-spacing: 1px;
+            margin: 0;
+            color: #1e293b;
         }
-        .kop .instansi p {
-            font-size: 11pt;
+        .kop-teks .baris2 {
+            font-family: Arial, sans-serif;
+            font-size: 16pt;
+            font-weight: bold;
             margin: 2px 0;
             color: #1e293b;
         }
-        .kop .kontak {
-            font-size: 10pt;
-            color: #475569;
-            margin-top: 4px;
+        .kop-teks .alamat {
+            font-family: Arial, sans-serif;
+            font-size: 9.5pt;
+            margin: 1px 0;
+            color: #1e293b;
+        }
+        .kop-garis-tebal {
+            border-top: 3px solid #000;
+            margin-top: 8px;
+        }
+        .kop-garis-tipis {
+            border-top: 1px solid #000;
+            margin-top: 2px;
+            margin-bottom: 16px;
         }
 
         /* === JUDUL === */
@@ -116,17 +143,23 @@
 </head>
 <body>
 
-    <!-- ========== KOP SURAT (CENTER) ========== -->
-    <div class="kop">
-        <div class="instansi">
-            <h1>DINAS KOMINFO</h1>
-            <p style="font-weight:bold;">Kabupaten Situbondo</p>
-            <p>Jl. Pb. Sudirman No. 01, Patokan, Kec. Situbondo, Jawa Timur 68312</p>
-        </div>
-        <div class="kontak">
-            Telp. (0338) 123456 &nbsp;|&nbsp; Email: kominfo@situbondokab.go.id &nbsp;|&nbsp; www.situbondokab.go.id
-        </div>
-    </div>
+    <!-- ========== KOP SURAT RESMI ========== -->
+    <table class="kop-table">
+        <tr>
+            <td class="kop-logo">
+                <img src="{{ public_path('img/logo-situbondo.png') }}" alt="Logo Kabupaten Situbondo">
+            </td>
+            <td class="kop-teks">
+                <p class="baris1">PEMERINTAH KABUPATEN SITUBONDO</p>
+                <p class="baris2">DINAS KOMUNIKASI DAN INFORMATIKA</p>
+                <p class="alamat">Jalan PB. Sudirman No. 1, Kabupaten Situbondo, Jawa Timur 68312,</p>
+                <p class="alamat">Telepon (0338) 674-096,</p>
+                <p class="alamat">Laman kominfo.situbondokab.go.id, Pos-el kominfo@situbondokab.go.id</p>
+            </td>
+        </tr>
+    </table>
+    <div class="kop-garis-tebal"></div>
+    <div class="kop-garis-tipis"></div>
 
     <!-- ========== JUDUL ========== -->
     <div class="judul">Rincian Server</div>
