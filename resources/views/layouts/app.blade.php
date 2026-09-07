@@ -57,7 +57,7 @@
 </head>
 <body class="bg-background text-on-background min-h-screen flex">
     @include('partials.sidebar')
-    <div class="flex-1 flex flex-col md:ml-sidebar-width min-w-0">
+    <div class="flex-1 flex flex-col min-w-0">
         @include('partials.navbar')
         <main class="flex-1 px-container-padding py-8 space-y-8 max-w-[1400px] w-full mx-auto">
             {{ $slot ?? '' }}

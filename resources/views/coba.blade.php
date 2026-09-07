@@ -102,7 +102,7 @@
 </aside>
 
 <!-- Main -->
-<div class="flex-1 flex flex-col md:ml-sidebar-width min-w-0">
+<div class="flex-1 flex flex-col min-w-0">
 
   <!-- Topbar -->
   <header class="bg-white h-topbar-height border-b border-outline-variant flex items-center justify-between px-container-padding sticky top-0 z-10">

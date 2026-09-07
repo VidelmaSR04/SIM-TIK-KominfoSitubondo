@@ -1,36 +1,24 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $kategoriList = App\Models\MasterData::KATEGORI;
+        $kategoriAktifKey = request()->query('kategori', array_key_first($kategoriList));
+        $kategoriAktifLabel = $kategoriList[$kategoriAktifKey] ?? reset($kategoriList);
+    @endphp
+
     <div class="mb-6">
         <div class="flex justify-between items-center flex-wrap gap-4">
-            <h1 class="text-2xl font-bold text-on-surface">Data Master</h1>
+            <div>
+                <h1 class="text-2xl font-bold text-on-surface">Data Master</h1>
+                <p class="text-sm text-on-surface-variant mt-1">Kelola nilai referensi yang dipakai di seluruh sistem.</p>
+            </div>
             <button type="button"
                     id="tambahDataBtn"
                     class="bg-primary-container hover:bg-primary/90 text-on-primary-container font-medium px-5 py-2 rounded-lg transition-all duration-200 flex items-center gap-2">
                 Tambah Data
                 <span class="material-symbols-outlined">add</span>
             </button>
-        </div>
-    </div>
-
-    <!-- Tabs for categories -->
-    <div class="mb-6">
-        <div class="overflow-x-auto rounded-lg border border-outline-variant bg-surface-container-lowest">
-            <ul class="flex border-b border-outline-variant bg-surface-container-low">
-                @foreach (App\Models\MasterData::KATEGORI as $kategoriKey => $kategoriLabel)
-                    <li>
-                        <a href="{{ route('master-data.index', ['kategori' => $kategoriKey]) }}"
-                           class="px-6 py-4 text-lg font-medium flex-1 text-center transition-all duration-200
-                                  border-b-2 border-transparent hover:text-primary hover:bg-primary/5
-                                  text-on-surface-variant {{ request()->query('kategori') == $kategoriKey ? 'text-primary border-primary bg-primary/5' : '' }} relative">
-                            {{ $kategoriLabel }}
-                            @if (request()->query('kategori') == $kategoriKey)
-                                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
-                            @endif
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
         </div>
     </div>
 
@@ -55,77 +43,134 @@
         </div>
     @endif
 
-    <!-- Table of data -->
-    <div class="rounded-lg border border-outline-variant overflow-hidden shadow-sm">
-        <table class="min-w-full divide-y divide-outline-variant">
-            <thead class="bg-surface-container">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">Urutan</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">Value</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">Label</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="bg-surface-container-lowest divide-y divide-outline-variant">
-                @if ($items->isEmpty())
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">
-                            Tidak ada data untuk kategori ini.
-                        </td>
-                    </tr>
-                @else
-                    @foreach ($items as $item)
-                        <tr class="hover:bg-primary/5 transition-colors duration-150">
-                            <td class="px-6 py-4 text-center text-on-surface font-medium">{{ $item->urutan }}</td>
-                            <td class="px-6 py-4 text-on-surface font-mono">{{ $item->value }}</td>
-                            <td class="px-6 py-4 text-on-surface">{{ $item->label ?? $item->value }}</td>
-                            <td class="px-6 py-4 text-center">
-                                <form action="{{ route('master-data.toggleAktif', $item) }}" method="POST" class="inline-flex items-center">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit"
-                                            class="px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150
-                                                   {{ $item->is_aktif ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'bg-surface-container hover:bg-primary/5 text-on-surface-variant' }}
-                                                   hover:scale-[1.05]">
-                                        {{ $item->is_aktif ? 'Aktif' : 'Tidak Aktif' }}
-                                    </button>
-                                </form>
-                            </td>
-                            <td class="px-6 py-4 text-center space-x-2">
-                                <!-- Edit Button -->
-                                <button type="button"
-                                        class="p-2 rounded-hover bg-surface-container hover:bg-primary/5 text-on-surface-variant transition-colors duration-150 flex items-center justify-center hover:scale-[1.05]"
-                                        data-edit-url="{{ route('master-data.update', $item) }}"
-                                        data-edit-id="{{ $item->id }}"
-                                        data-edit-kategori="{{ $item->kategori }}"
-                                        data-edit-value="{{ $item->value }}"
-                                        data-edit-label="{{ $item->label ?? '' }}"
-                                        data-edit-urutan="{{ $item->urutan }}"
-                                        data-edit-is-aktif="{{ $item->is_aktif ? '1' : '0' }}">
-                                    <span class="material-symbols-outlined">edit</span>
-                                </button>
-                                <!-- Delete Button -->
-                                <form action="{{ route('master-data.destroy', $item) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="p-2 rounded-hover bg-surface-container hover:bg-red-50/5 text-red-500 hover:text-red-600 transition-colors duration-150 flex items-center justify-center hover:scale-[1.05]"
-                                            onclick="return confirm('Yakin ingin menghapus data ini?')">
-                                        <span class="material-symbols-outlined">delete</span>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
+    <div class="flex flex-col md:flex-row gap-6 items-start">
+
+        <!-- Category nav: mobile = horizontal pills -->
+        <div class="md:hidden w-full overflow-x-auto -mx-1 px-1">
+            <div class="flex gap-2 pb-1 whitespace-nowrap">
+                @foreach ($kategoriList as $kategoriKey => $kategoriLabel)
+                    <a href="{{ route('master-data.index', ['kategori' => $kategoriKey]) }}"
+                       class="shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-150
+                              {{ $kategoriKey == $kategoriAktifKey
+                                    ? 'bg-primary-container border-primary-container text-on-primary-container'
+                                    : 'bg-surface-container-lowest border-outline-variant text-on-surface-variant hover:bg-primary/5' }}">
+                        {{ $kategoriLabel }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Category nav: desktop = sidebar list -->
+        <aside class="hidden md:block w-64 shrink-0">
+            <div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden sticky top-4">
+                <div class="px-4 py-3 border-b border-outline-variant">
+                    <span class="text-xs font-medium text-on-surface-variant">Kategori</span>
+                </div>
+                <nav class="max-h-[70vh] overflow-y-auto">
+                    @foreach ($kategoriList as $kategoriKey => $kategoriLabel)
+                        @php $isActive = $kategoriKey == $kategoriAktifKey; @endphp
+                        <a href="{{ route('master-data.index', ['kategori' => $kategoriKey]) }}"
+                           class="flex items-center justify-between gap-2 px-4 py-3 text-sm border-l-2 transition-colors duration-150
+                                  {{ $isActive
+                                        ? 'border-primary bg-primary/5 text-primary font-medium'
+                                        : 'border-transparent text-on-surface-variant hover:bg-primary/5 hover:text-on-surface' }}">
+                            <span>{{ $kategoriLabel }}</span>
+                            @if ($isActive)
+                                <span class="material-symbols-outlined text-base">chevron_right</span>
+                            @endif
+                        </a>
                     @endforeach
-                @endif
-            </tbody>
-        </table>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Table -->
+        <div class="flex-1 w-full min-w-0">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-medium text-on-surface-variant">
+                    Menampilkan: <span class="text-on-surface font-semibold">{{ $kategoriAktifLabel }}</span>
+                </h2>
+                <span class="text-xs text-on-surface-variant">{{ $items->count() }} data</span>
+            </div>
+
+            <div class="rounded-lg border border-outline-variant overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="min-w-[640px] w-full divide-y divide-outline-variant">
+                        <thead class="bg-surface-container">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide w-20">Urutan</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">Value</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">Label</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide w-32">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-on-surface-variant tracking-wide w-28">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-surface-container-lowest divide-y divide-outline-variant">
+                            @if ($items->isEmpty())
+                                <tr>
+                                    <td colspan="5" class="px-6 py-16 text-center">
+                                        <span class="material-symbols-outlined text-3xl text-on-surface-variant/50 block mb-2">inbox</span>
+                                        <p class="text-on-surface-variant text-sm">Belum ada data untuk kategori "{{ $kategoriAktifLabel }}".</p>
+                                        <p class="text-on-surface-variant text-xs mt-1">Klik "Tambah Data" untuk menambahkan entri pertama.</p>
+                                    </td>
+                                </tr>
+                            @else
+                                @foreach ($items as $item)
+                                    <tr class="hover:bg-primary/5 transition-colors duration-150">
+                                        <td class="px-6 py-4 text-on-surface-variant">{{ $item->urutan }}</td>
+                                        <td class="px-6 py-4 text-on-surface font-mono text-sm">{{ $item->value }}</td>
+                                        <td class="px-6 py-4 text-on-surface">{{ $item->label ?? $item->value }}</td>
+                                        <td class="px-6 py-4">
+                                            <form action="{{ route('master-data.toggleAktif', $item) }}" method="POST" class="inline-flex">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-150 hover:scale-[1.03]
+                                                               {{ $item->is_aktif ? 'bg-primary/10 text-primary' : 'bg-surface-container text-on-surface-variant' }}">
+                                                    <span class="h-1.5 w-1.5 rounded-full {{ $item->is_aktif ? 'bg-primary' : 'bg-on-surface-variant/50' }}"></span>
+                                                    {{ $item->is_aktif ? 'Aktif' : 'Tidak Aktif' }}
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <button type="button"
+                                                        title="Edit"
+                                                        class="p-2 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-colors duration-150"
+                                                        data-edit-url="{{ route('master-data.update', $item) }}"
+                                                        data-edit-id="{{ $item->id }}"
+                                                        data-edit-kategori="{{ $item->kategori }}"
+                                                        data-edit-value="{{ $item->value }}"
+                                                        data-edit-label="{{ $item->label ?? '' }}"
+                                                        data-edit-urutan="{{ $item->urutan }}"
+                                                        data-edit-is-aktif="{{ $item->is_aktif ? '1' : '0' }}">
+                                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                                </button>
+                                                <form action="{{ route('master-data.destroy', $item) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            title="Hapus"
+                                                            class="p-2 rounded-lg hover:bg-red-500/10 text-on-surface-variant hover:text-red-500 transition-colors duration-150"
+                                                            onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                                        <span class="material-symbols-outlined text-lg">delete</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Add/Edit Modal -->
-    <div id="master-data-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden aria-hidden="true">
-        <div class="relative w-full max-w-md max-h-[90vh] overflow-hidden">
+    <div id="master-data-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/40" aria-hidden="true">
+        <div class="relative w-full max-w-md max-h-[90vh] overflow-hidden mx-4">
             <div class="relative bg-surface-container-lowest p-6 shadow-lg rounded-lg">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-start pb-4 mb-4 border-b border-outline-variant">
@@ -147,7 +192,7 @@
                     <div>
                         <label for="form-kategori" class="mb-2 block text-sm font-medium text-on-surface-variant">Kategori</label>
                         <select id="form-kategori" name="kategori" class="block w-full rounded-lg border border-outline-variant bg-surface-bright px-4 py-3 text-sm font-medium text-on-surface placeholder-on-surface-variant focus:border-primary focus:ring-primary/20 focus:ring-2 focus:outline-none @error('kategori') border-red-500 @enderror" required>
-                            @foreach (App\Models\MasterData::KATEGORI as $k => $label)
+                            @foreach ($kategoriList as $k => $label)
                                 <option value="{{ $k }}">{{ $label }}</option>
                             @endforeach
                         </select>
@@ -185,7 +230,7 @@
 
                     <!-- Status -->
                     <div class="flex items-center">
-                        <input type="checkbox" id="form-is-aktif" name="is_aktif" value="1" class="h-4 w-4 text-primary focus:ring-primary border-border-outline-variant rounded">
+                        <input type="checkbox" id="form-is-aktif" name="is_aktif" value="1" class="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded">
                         <label for="form-is-aktif" class="ml-3 block text-sm font-medium text-on-surface">Aktif</label>
                     </div>
                 </form>
@@ -221,7 +266,7 @@
             const formIsAktif = document.getElementById('form-is-aktif');
             const modalSubmitBtn = document.getElementById('modal-submit-btn');
 
-            // Open modal for adding new data
+            // Open modal for editing
             document.querySelectorAll('[data-edit-url]').forEach(button => {
                 button.addEventListener('click', function () {
                     const kategori = this.getAttribute('data-edit-kategori');
@@ -246,13 +291,13 @@
                 });
             });
 
-            // Open modal for adding new data (from the main button)
+            // Open modal for adding new data
             document.getElementById('tambahDataBtn').addEventListener('click', function () {
                 modalTitle.textContent = 'Tambah Data Master';
                 form.action = "{{ route('master-data.store') }}";
                 formMethod.value = 'POST';
                 formId.value = '';
-                formKategori.value = "{{ request()->query('kategori', key(App\Models\MasterData::KATEGORI)) }}";
+                formKategori.value = "{{ $kategoriAktifKey }}";
                 formValue.value = '';
                 formLabel.value = '';
                 formUrutan.value = '';
@@ -266,7 +311,6 @@
             function closeModal() {
                 modal.classList.add('hidden');
                 modal.setAttribute('aria-hidden', 'true');
-                // Reset form
                 form.reset();
                 formMethod.value = 'POST';
                 formId.value = '';
@@ -284,11 +328,6 @@
                 if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
                     closeModal();
                 }
-            });
-
-            // Prevent form submission on enter in textarea/input (optional)
-            form.addEventListener('submit', function (e) {
-                // You can add client-side validation here if needed
             });
         });
     </script>
