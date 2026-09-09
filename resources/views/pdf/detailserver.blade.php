@@ -252,8 +252,8 @@
         </tr>
         <!-- BARIS 13 -->
         <tr>
-            <td class="col-left"><span class="label">ID Server</span></td>
-            <td class="col-left value">{{ $server->id }}</td>
+            <td class="col-left"><span class="label">Kode Perangkat</span></td>
+            <td class="col-left value">{{ $server->kode_perangkat ?? $server->id }}</td>
             <td class="col-right"><span class="label"></span></td>
             <td class="col-right value"></td>
         </tr>

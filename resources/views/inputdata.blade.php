@@ -312,6 +312,13 @@
         $pageTitle = $isEdit ? 'Edit Perangkat Server' : 'Buat Perangkat Server Baru';
         $breadcrumbTitle = $isEdit ? 'Edit Perangkat' : 'Buat Perangkat Baru';
 
+        // Status kelengkapan mapping for consistent labeling
+        $statusKelengkapanMap = [
+            'pending' => ['label' => 'Belum Diisi', 'color' => 'bg-gray-100 text-gray-800'],
+            'dilengkapi' => ['label' => 'Sebagian Terisi', 'color' => 'bg-yellow-100 text-yellow-800'],
+            'lengkap' => ['label' => 'Data Lengkap', 'color' => 'bg-green-100 text-green-800'],
+        ];
+
         // Ubah nilai lama seperti "128 GB" / "1.5 TB" jadi angka GB murni, dan pastikan selalu ada nilai (minimal default)
         if (!function_exists('simtik_extract_gb')) {
             function simtik_extract_gb($value, $default, $step = 1, $max = null) {
@@ -614,10 +621,81 @@
                     <!-- Status Perangkat (full width) -->
                     <div class="col-span-1 md:col-span-2">
                         <label class="form-label" for="status">Status Perangkat <span class="required-star">*</span></label>
+
+                        <!-- Read-only status info -->
+                        @if(isset($server))
+                            <div class="mb-3 flex items-center gap-3">
+                                @php
+                                    // Determine status label and color
+                                    $statusMap = [
+                                        'Aktif' => ['label' => 'Aktif', 'color' => 'bg-green-100 text-green-800'],
+                                        'Pending' => ['label' => 'Menunggu Kelengkapan Data', 'color' => 'bg-yellow-100 text-yellow-800'],
+                                        'Non-Aktif' => ['label' => 'Non-Aktif', 'color' => 'bg-gray-100 text-gray-800'],
+                                        'Maintenance' => ['label' => 'Perbaikan', 'color' => 'bg-blue-100 text-blue-800'],
+                                    ];
+                                    $statusInternal = $server->status ?? 'Pending';
+                                    $statusInfo = $statusMap[$statusInternal] ?? ['label' => $statusInternal, 'color' => 'bg-gray-100 text-gray-800'];
+                                    $isLocked = $server->status_locked ?? false;
+                                @endphp
+                                <div class="flex items-center gap-2 px-3 py-1.5 rounded-md {{ $statusInfo['color'] }} text-sm font-medium">
+                                    {{ $statusInfo['label'] }}
+                                </div>
+                                <span class="text-xs text-muted-foreground">
+                                    {{ $isLocked ? 'Status dikunci manual oleh admin' : 'Status ini otomatis mengikuti kelengkapan data' }}
+                                </span>
+                            </div>
+                        @endif
+
+                        @if(isset($server) && !$server->is_lengkap && count($server->getMissingRequiredFields()) > 0)
+                            <div class="mb-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-900">
+                                <div class="flex items-start gap-3">
+                                    <span class="material-symbols-outlined flex-shrink-0 mt-0.5">warning_amber</span>
+                                    <div>
+                                        <p class="font-medium m-0">⚠️ Data belum lengkap. Field yang masih kosong:</p>
+                                        <ul class="list-disc list-inside text-sm mt-1">
+                                            @foreach($server->getMissingRequiredFields() as $field)
+                                                <li>{{ $field }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <select class="standard-select @error('status') border-red-500 @enderror" id="status" name="status">
-                            @foreach (\App\Models\MasterData::forSelect('status_perangkat') as $value => $label)
-                                <option value="{{ $value }}" {{ old('status', $server->status ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
+                            @php
+                                $isLocked = $server->status_locked ?? false;
+                                $currentStatus = $server->status ?? 'Pending';
+                                // Determine label for automatic option
+                                if ($currentStatus === 'Aktif') {
+                                    $autoLabel = 'Aktif (Otomatis)';
+                                } elseif ($currentStatus === 'Pending') {
+                                    $autoLabel = 'Pending (Otomatis)';
+                                } else {
+                                    $autoLabel = 'Kembalikan ke Otomatis';
+                                }
+                                $manualOptions = [
+                                    'Non-Aktif' => 'Non-Aktif',
+                                    'Maintenance' => 'Maintenance',
+                                ];
+                            @endphp
+                            @if ($isLocked)
+                                <!-- When locked, show manual options with current status selected -->
+                                @foreach ($manualOptions as $value => $label)
+                                    <option value="{{ $value }}" {{ old('status', $server->status ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                                <!-- Option to unlock -->
+                                <option value="automatic" {{ old('status', $server->status ?? '') == 'automatic' ? 'selected' : '' }}>
+                                    Kembalikan ke Otomatis
+                                </option>
+                            @else
+                                <!-- When unlocked, show automatic option reflecting current status -->
+                                <option value="automatic" selected>{{ $autoLabel }}</option>
+                                <!-- Manual lock options -->
+                                @foreach ($manualOptions as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            @endif
                         </select>
                         @error('status')
                             <p class="form-error">{{ $message }}</p>

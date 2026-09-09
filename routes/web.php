@@ -35,6 +35,8 @@ Route::get('/server/{id}/pdf', [ServerController::class, 'exportPdf'])->name('se
 Route::get('/detailserver/{id}', [ServerController::class, 'show'])->name('detailserver');
 
 // ============= LENGKAPI DATA (Admin melengkapi data dari user) =============
+
+// ============= LENGKAPI DATA (Admin melengkapi data dari user) =============
 Route::get('/server/{id}/lengkapi', [ServerController::class, 'lengkapi'])->name('server.lengkapi');
 Route::put('/server/{id}/lengkapi', [ServerController::class, 'updateLengkapi'])->name('server.lengkapi.update');
 
@@ -58,6 +60,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::patch('/{masterDatum}/toggle-aktif', [MasterDataController::class, 'toggleAktif'])->name('toggleAktif');
         Route::delete('/{masterDatum}', [MasterDataController::class, 'destroy'])->name('destroy');
     });
+
+    // Unlock and sync route for admin one-click fix
+    Route::post('/server/{id}/unlock-sync', [ServerController::class, 'unlockAndSync'])->name('server.unlockSync');
 });
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============

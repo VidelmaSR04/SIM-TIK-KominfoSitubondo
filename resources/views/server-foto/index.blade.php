@@ -34,8 +34,9 @@
             <table class="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                     <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-y border-outline-variant">
-                        <th class="p-4">ID</th>
-                        <th class="p-4">OPD</th>
+                        <th class="p-4">Nomor</th>
+                        <th class="p-4">Kode Perangkat</th>
+                        <th class="p-4">Kepemilikan</th>
                         <th class="p-4">Tanggal</th>
                         <th class="p-4">Rack</th>
                         <th class="p-4 text-center">Foto</th>
@@ -44,8 +45,9 @@
                 <tbody class="text-sm text-on-surface divide-y divide-outline-variant/60">
                     @forelse ($servers as $server)
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="p-4 text-gray-500 font-mono text-xs">{{ $server->id }}</td>
-                        <td class="p-4">{{ $server->pemilik_perangkat }}</td>
+                        <td class="p-4 text-gray-500 font-mono text-xs">{{ (($servers->currentPage() - 1) * $servers->perPage()) + $loop->iteration }}</td>
+                        <td class="p-4 text-gray-500 font-mono text-xs">{{ $server->kode_perangkat ?? $server->id }}</td>
+                        <td class="p-4">{{ $server->nama_opd }}</td>
                         <td class="p-4 text-gray-500 font-mono text-xs">{{ $server->updated_at->format('d M Y') }}</td>
                         <td class="p-4">{{ $server->nomor_rack ?? '-' }}</td>
                         <td class="p-4 text-center">
@@ -59,7 +61,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="p-4 text-center text-gray-500">Tidak ada foto server.</td>
+                        <td colspan="6" class="p-4 text-center text-gray-500">Tidak ada foto server.</td>
                     </tr>
                     @endforelse
                 </tbody>
