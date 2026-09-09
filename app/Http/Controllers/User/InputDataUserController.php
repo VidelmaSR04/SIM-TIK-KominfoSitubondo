@@ -46,6 +46,7 @@ class InputDataUserController extends Controller
             'jenis_perangkat'   => $validated['jenis'],
             'merk_perangkat'    => $validated['merk'],
             'pemilik_perangkat' => $validated['dinas'] ?? null,
+            'status_kepemilikan'=> 'Colocation',
             'nama_pengirim'     => $validated['nama_pengirim'] ?? null,
             'nama_penerima'     => $validated['nama_penerima'] ?? null,
             'nomor_rack'        => $validated['rack'] ?? null,
@@ -55,7 +56,19 @@ class InputDataUserController extends Controller
         // Otomatis 'dilengkapi' (menunggu admin) karena field wajib teknis belum diisi.
         $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
 
-        Server::create($data);
+        // Buat server baru
+        $server = Server::create($data);
+
+        // Generate and set kode_perangkat
+        $server->kode_perangkat = Server::generateKodePerangkat(
+            $data['status_kepemilikan'],
+            $server->created_at ? $server->created_at->toDateString() : null
+        );
+        $server->save();
+
+        // Sync status berdasarkan status_kelengkapan (jika belum dikunci manual)
+        $server->syncStatusFromKelengkapan();
+        $server->save();
 
         return redirect()
             ->route('user.dashboarduser')

@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log; // Tambahkan ini
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -55,7 +55,7 @@ class ServerController extends Controller
             'pemilik_perangkat'   => 'required_if:status_kepemilikan,Colocation|nullable|string|max:255',
             'ip_server'           => 'required|ip',
             'ip_vps'              => 'nullable|ip',
-            'status'              => 'required|in:Aktif,Non-Aktif,Maintenance',
+            'status'              => 'required|in:Aktif,Non-Aktif,Maintenance,automatic',
             'ukuran_hdd'          => 'required|string|max:50',
             'ukuran_ram'          => 'required|string|max:50',
             'nomor_rack'          => 'required|string|max:50',
@@ -74,8 +74,42 @@ class ServerController extends Controller
         $data = $request->except('_token');
         $data['user_id'] = Auth::user()->id;
 
-        // Cek otomatis: lengkap kalau semua field wajib sudah terisi, kalau belum jadi 'dilengkapi'
+        // Calculate status_kelengkapan FIRST
         $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
+
+        // Determine status_locked based on admin's manual status choice from form
+        // We need to check the original status value BEFORE removing it from $data
+        $formStatus = $data['status'] ?? null;
+        // Remove 'status' from data if it's 'automatic' to prevent SQL error
+        // 'automatic' is a pseudo-value used only to set status_locked = false
+        if (isset($data['status']) && $data['status'] === 'automatic') {
+            unset($data['status']);
+        }
+
+        // Create server instance (we'll set status_locked explicitly after creation)
+        $server = Server::create($data);
+
+        // Generate and set kode_perangkat
+        $server->kode_perangkat = Server::generateKodePerangkat(
+            $data['status_kepemilikan'],
+            $server->created_at ? $server->created_at->toDateString() : null
+        );
+        $server->save();
+
+        // Determine status_locked based on admin's manual status choice from form
+        // If admin selects 'Non-Aktif' or 'Maintenance' -> lock status (status_locked = true)
+        // If admin selects 'Aktif', 'Pending', or 'automatic' -> unlock status (status_locked = false)
+        // This allows admin to override automatic status synchronization or return to automatic mode
+        if (isset($formStatus)) {
+            if ($formStatus === 'Non-Aktif' || $formStatus === 'Maintenance') {
+                $server->status_locked = true;
+            } else {
+                // 'Aktif', 'Pending', or 'automatic' -> unlock for automatic synchronization
+                $server->status_locked = false;
+            }
+            // Save the server with the correct status_locked value
+            $server->save();
+        }
 
         // ============= UPLOAD GAMBAR =============
         if ($request->hasFile('gambar_rack')) {
@@ -83,9 +117,15 @@ class ServerController extends Controller
 
             // Validasi tambahan untuk file
             if ($file->isValid()) {
+                // Hapus gambar lama jika ada (though for new server, likely none)
+                if ($server->gambar_rack && Storage::disk('public')->exists($server->gambar_rack)) {
+                    Storage::disk('public')->delete($server->gambar_rack);
+                    Log::info('Gambar lama dihapus: ' . $server->gambar_rack);
+                }
+
                 $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
                 $path = $file->storeAs('rack_images', $filename, 'public');
-                $data['gambar_rack'] = $path;
+                $server->gambar_rack = $path;
 
                 // Log untuk debugging
                 Log::info('Gambar berhasil diupload:', [
@@ -99,7 +139,9 @@ class ServerController extends Controller
         }
         // =========================================
 
-        $server = Server::create($data);
+        // Sync status berdasarkan status_kelengkapan (jika belum dikunci manual oleh admin)
+        $server->syncStatusFromKelengkapan();
+        $server->save();
 
         return redirect()->route('detailserver', ['id' => $server->id])->with('success', 'Server berhasil ditambahkan.');
     }
@@ -146,7 +188,7 @@ class ServerController extends Controller
             'pemilik_perangkat'   => 'required_if:status_kepemilikan,Colocation|nullable|string|max:255',
             'ip_server'           => 'required|ip',
             'ip_vps'              => 'nullable|ip',
-            'status'              => 'required|in:Aktif,Non-Aktif,Maintenance',
+            'status'              => 'required|in:Aktif,Non-Aktif,Maintenance,automatic',
             'ukuran_hdd'          => 'required|string|max:50',
             'ukuran_ram'          => 'required|string|max:50',
             'nomor_rack'          => 'required|string|max:50',
@@ -164,8 +206,35 @@ class ServerController extends Controller
 
         $data = $request->except('_token', '_method');
 
-        // Cek otomatis: lengkap kalau semua field wajib sudah terisi, kalau belum jadi 'dilengkapi'
+        // Calculate status_kelengkapan FIRST
         $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
+
+        // Determine status_locked based on admin's manual status choice from form
+        // We need to check the original status value BEFORE removing it from $data
+        $formStatus = $data['status'] ?? null;
+        // Remove 'status' from data if it's 'automatic' to prevent SQL error
+        // 'automatic' is a pseudo-value used only to set status_locked = false
+        if (isset($data['status']) && $data['status'] === 'automatic') {
+            unset($data['status']);
+        }
+
+        // Update server with base data (excluding status_locked for mass assignment)
+        $server->update($data);
+
+        // Determine status_locked based on admin's manual status choice from form
+        // If admin selects 'Non-Aktif' or 'Maintenance' -> lock status (status_locked = true)
+        // If admin selects 'Aktif', 'Pending', or 'automatic' -> unlock status (status_locked = false)
+        // This allows admin to override automatic status synchronization or return to automatic mode
+        if (isset($formStatus)) {
+            if ($formStatus === 'Non-Aktif' || $formStatus === 'Maintenance') {
+                $server->status_locked = true;
+            } else {
+                // 'Aktif', 'Pending', or 'automatic' -> unlock for automatic synchronization
+                $server->status_locked = false;
+            }
+            // Save the server with the correct status_locked value
+            $server->save();
+        }
 
         // ============= UPLOAD GAMBAR =============
         $hasNewFile = $request->hasFile('gambar_rack');
@@ -183,7 +252,7 @@ class ServerController extends Controller
 
                 $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
                 $path = $file->storeAs('rack_images', $filename, 'public');
-                $data['gambar_rack'] = $path;
+                $server->gambar_rack = $path;
 
                 Log::info('Gambar baru diupload: ' . $path);
 
@@ -200,11 +269,13 @@ class ServerController extends Controller
                 Storage::disk('public')->delete($server->gambar_rack);
                 Log::info('Gambar dihapus via request: ' . $server->gambar_rack);
             }
-            $data['gambar_rack'] = null;
+            $server->gambar_rack = null;
         }
         // =========================================
 
-        $server->update($data);
+        // Sync status berdasarkan status_kelengkapan (jika belum dikunci manual)
+        $server->syncStatusFromKelengkapan();
+        $server->save();
 
         return redirect()->route('server.index')->with('success', 'Server berhasil diperbarui.');
     }
@@ -287,5 +358,25 @@ class ServerController extends Controller
         $server = Server::findOrFail($id);
         $pdf = Pdf::loadView('pdf.detailserver', compact('server'));
         return $pdf->download('detail-server-' . $server->id . '.pdf');
+    }
+
+    /**
+     * Unlock status and sync with data completeness - for admin one-click fix
+     */
+    public function unlockAndSync(Request $request, $id)
+    {
+        $server = Server::findOrFail($id);
+
+        // Unlock the status
+        $server->status_locked = false;
+
+        // Sync status based on data completeness
+        $server->syncStatusFromKelengkapan();
+
+        // Save the changes
+        $server->save();
+
+        // Redirect back with success message
+        return redirect()->back()->with('success', 'Status berhasil dibuka dan disinkronisasi dengan data kelengkapan.');
     }
 }

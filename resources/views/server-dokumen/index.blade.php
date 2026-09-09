@@ -33,9 +33,10 @@
         <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
                 <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-y border-outline-variant">
-                    <th class="p-4">ID</th>
+                    <th class="p-4">Nomor</th>
+                    <th class="p-4">Kode Perangkat</th>
                     <th class="p-4">QR</th>
-                    <th class="p-4">Nama OPD</th>
+                    <th class="p-4">Kepemilikan</th>
                     <th class="p-4">Tanggal</th>
                     <th class="p-4 text-center">Aksi</th>
                 </tr>
@@ -43,7 +44,8 @@
             <tbody class="text-sm text-on-surface divide-y divide-outline-variant/60">
                 @forelse ($servers as $server)
                 <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 text-gray-500 font-mono text-xs">{{ $server->id }}</td>
+                    <td class="p-4 text-gray-500 font-mono text-xs">{{ (($servers->currentPage() - 1) * $servers->perPage()) + $loop->iteration }}</td>
+                    <td class="p-4 text-gray-500 font-mono text-xs">{{ $server->kode_perangkat ?? $server->id }}</td>
                     <td class="p-4 text-center">
                         <img src="{{ route('qr.show', $server->id) }}" alt="QR Code" class="w-12 h-12">
                     </td>
@@ -64,7 +66,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="p-4 text-center text-gray-500">Tidak ada dokumen server.</td>
+                    <td colspan="6" class="p-4 text-center text-gray-500">Tidak ada dokumen server.</td>
                 </tr>
                 @endforelse
             </tbody>

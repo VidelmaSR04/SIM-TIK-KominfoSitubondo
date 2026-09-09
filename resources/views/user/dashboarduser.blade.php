@@ -225,14 +225,28 @@ Keluar
                                     </div>
 </td>
 <td class="px-6 py-4 whitespace-nowrap text-center">
+@php
+    $statusKelengkapanMap = [
+        'pending' => ['label' => 'Belum Diisi', 'color' => 'bg-gray-100 text-gray-800'],
+        'dilengkapi' => ['label' => 'Sebagian Terisi', 'color' => 'bg-yellow-100 text-yellow-800'],
+        'lengkap' => ['label' => 'Data Lengkap', 'color' => 'bg-green-100 text-green-800'],
+    ];
+    $kelengkapanInfo = $statusKelengkapanMap[$device->status_kelengkapan ?? 'pending'] ?? ['label' => $device->status_kelengkapan, 'color' => 'bg-gray-100 text-gray-800'];
+    $missingFields = $device->getMissingRequiredFields();
+@endphp
 @if($device->status_kelengkapan === 'lengkap')
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md bg-secondary-fixed text-on-secondary-fixed border border-secondary-fixed-dim/30">
-                                        Lengkap
-                                    </span>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md {{ $kelengkapanInfo['color'] }} border border-[${kelengkapanInfo['color']}--400/30]">
+                                    {{ $kelengkapanInfo['label'] }}
+                                </span>
 @else
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md bg-tertiary-fixed text-on-tertiary-fixed border border-tertiary-fixed-dim/30">
-                                        {{ ucfirst($device->status_kelengkapan) }}
-                                    </span>
+<div class="flex items-center gap-2">
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md {{ $kelengkapanInfo['color'] }} border border-[${kelengkapanInfo['color']}--400/30]">
+                                    {{ $kelengkapanInfo['label'] }}
+                                </span>
+    @if(count($missingFields) > 0)
+        <span class="material-symbols-outlined text-[16px] text-yellow-500" title="{{ implode(', ', $missingFields) }}">warning_amber</span>
+    @endif
+</div>
 @endif
 </td>
 </tr>

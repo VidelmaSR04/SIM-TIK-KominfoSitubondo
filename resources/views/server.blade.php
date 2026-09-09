@@ -36,7 +36,8 @@
         <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
                 <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-y border-outline-variant">
-                    <th class="p-4">ID</th>
+                    <th class="p-4">NO</th>
+                    <th class="p-4">KODE PERANGKAT</th>
                     <th class="p-4">NAMA PERANGKAT</th>
                     <th class="p-4">IP SERVER</th>
                     <th class="p-4">IP VPS</th>
@@ -47,7 +48,8 @@
             <tbody class="text-sm text-on-surface divide-y divide-outline-variant/60">
                 @forelse ($servers as $s)
                 <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 text-gray-500 font-mono text-xs">{{ $s->id }}</td>
+                    <td class="p-4 text-gray-500 font-mono text-xs">{{ (($servers->currentPage() - 1) * $servers->perPage()) + $loop->iteration }}</td>
+                    <td class="p-4 text-gray-500 font-mono text-xs">{{ $s->kode_perangkat ?? $s->id }}</td>
                     <td class="p-4 font-medium flex items-center gap-2.5">
                         <span class="material-symbols-outlined text-gray-400 text-[18px]">dns</span> {{ $s->nama_perangkat }}
                     </td>
@@ -55,20 +57,19 @@
                     <td class="p-4 font-mono text-xs text-gray-500">{{ $s->ip_vps ?? '-' }}</td>
                     <td class="p-4">
                         @php
-                            $status = $s->status;
-                            $c = match($status) {
-                                'Aktif' => 'bg-green-100 text-green-700',
-                                'Maintenance' => 'bg-amber-100 text-amber-700',
-                                default => 'bg-red-100 text-red-700'
-                            };
-                            $d = match($status) {
-                                'Aktif' => 'bg-green-500',
-                                'Maintenance' => 'bg-amber-500',
-                                default => 'bg-red-500'
-                            };
+                            $status = $s->status ?? 'Pending';
+                            // Map internal status to display label and color
+                            $statusMap = [
+                                'Aktif' => ['label' => 'Aktif', 'color' => 'bg-green-100 text-green-800', 'dotColor' => 'bg-green-500'],
+                                'Pending' => ['label' => 'Menunggu Kelengkapan Data', 'color' => 'bg-yellow-100 text-yellow-800', 'dotColor' => 'bg-yellow-500'],
+                                'Non-Aktif' => ['label' => 'Non-Aktif', 'color' => 'bg-gray-100 text-gray-800', 'dotColor' => 'bg-gray-500'],
+                                'Maintenance' => ['label' => 'Perbaikan', 'color' => 'bg-blue-100 text-blue-800', 'dotColor' => 'bg-blue-500'],
+                            ];
+                            $statusInfo = $statusMap[$status] ?? ['label' => $status, 'color' => 'bg-gray-100 text-gray-800', 'dotColor' => 'bg-gray-500'];
                         @endphp
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $c }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ $d }}"></span> {{ $status }}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $statusInfo['color'] }} ">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $statusInfo['dotColor'] }}"></span>
+                            {{ $statusInfo['label'] }}
                         </span>
                     </td>
                     <td class="p-4 text-center">
@@ -95,7 +96,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="p-4 text-center text-gray-500">Tidak ada data server.</td>
+                    <td colspan="7" class="p-4 text-center text-gray-500">Tidak ada data server.</td>
                 </tr>
                 @endforelse
             </tbody>

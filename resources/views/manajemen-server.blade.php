@@ -206,7 +206,8 @@
                     <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr class="bg-surface-container-low text-xs font-semibold text-on-surface-variant uppercase tracking-wide border-y border-outline-variant">
-                                <th class="p-4 w-24">ID</th>
+                                <th class="p-4 w-16">No</th>
+                                <th class="p-4 w-24">Kode Perangkat</th>
                                 <th class="p-4 w-56">Nama Perangkat</th>
                                 <th class="p-4 w-40">IP Server</th>
                                 <th class="p-4">IP VPS</th>
@@ -217,7 +218,8 @@
                         <tbody class="text-sm text-on-surface divide-y divide-outline-variant/60">
                             @forelse ($servers as $server)
                             <tr class="hover:bg-surface-container-lowest transition-colors">
-                                <td class="p-4 text-secondary font-mono text-xs">{{ $server->id ?? 'SRV-001' }}</td>
+                                <td class="p-4 text-secondary font-mono text-xs">{{ (($servers->currentPage() - 1) * $servers->perPage()) + $loop->iteration }}</td>
+                                <td class="p-4 text-secondary font-mono text-xs">{{ $server->kode_perangkat ?? $server->id ?? 'SRV-001' }}</td>
                                 <td class="p-4 font-medium">
                                     <div class="flex items-center gap-2.5">
                                         <span class="material-symbols-outlined text-secondary text-[18px]">dns</span>
@@ -228,22 +230,42 @@
                                 <td class="p-4 font-mono text-xs text-secondary">{{ $server->ip_vps ?? '-' }}</td>
                                 <td class="p-4">
                                     @php
-                                        $status = $server->status ?? 'Aktif';
-                                        $statusClasses = match ($status) {
-                                            'Aktif' => 'bg-green-100 text-green-800',
-                                            'Maintenance' => 'bg-amber-100 text-amber-800',
-                                            default => 'bg-red-100 text-red-800',
-                                        };
-                                        $dotClasses = match ($status) {
-                                            'Aktif' => 'bg-green-500',
-                                            'Maintenance' => 'bg-amber-500',
-                                            default => 'bg-red-500',
-                                        };
+                                        $status = $server->status ?? 'Pending';
+                                        // Map internal status to display label and color
+                                        $statusMap = [
+                                            'Aktif' => ['label' => 'Aktif', 'color' => 'bg-green-100 text-green-800', 'dotColor' => 'bg-green-500'],
+                                            'Pending' => ['label' => 'Menunggu Kelengkapan Data', 'color' => 'bg-yellow-100 text-yellow-800', 'dotColor' => 'bg-yellow-500'],
+                                            'Non-Aktif' => ['label' => 'Non-Aktif', 'color' => 'bg-gray-100 text-gray-800', 'dotColor' => 'bg-gray-500'],
+                                            'Maintenance' => ['label' => 'Perbaikan', 'color' => 'bg-blue-100 text-blue-800', 'dotColor' => 'bg-blue-500'],
+                                        ];
+                                        $statusInfo = $statusMap[$status] ?? ['label' => $status, 'color' => 'bg-gray-100 text-gray-800', 'dotColor' => 'bg-gray-500'];
                                     @endphp
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $statusClasses }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ $dotClasses }}"></span>
-                                        {{ $status }}
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium {{ $statusInfo['color'] }} ">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $statusInfo['dotColor'] }}"></span>
+                                        {{ $statusInfo['label'] }}
                                     </span>
+
+                                    @if($server->status_locked && $server->status_kelengkapan === 'lengkap' && $server->status !== 'Aktif')
+                                        <span class="inline-flex items-center gap-1 ml-2">
+                                            <!-- Tooltip container -->
+                                            <div class="relative">
+                                                <button class="flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600"
+                                                        title="Data sudah lengkap, tapi status masih dikunci manual. Aktifkan?"
+                                                        aria-label="Data sudah lengkap, tapi status masih dikunci manual. Aktifkan?">
+                                                    <span class="material-symbols-outlined">warning_amber</span>
+                                                </button>
+                                            </div>
+                                            <!-- Action button -->
+                                            <form action="{{ route('server.unlockSync', $server->id) }}" method="POST" class="inline-flex mt-1">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-md hover:bg-yellow-100 transition-colors"
+                                                        onclick="return confirm('Yakin ingin membuka kunci status dan mensinkronisasikan dengan data kelengkapan?')">
+                                                    <span class="material-symbols-outlined">check_circle</span> Aktifkan
+                                                </button>
+                                            </form>
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="p-4 text-center relative">
     <div class="flex items-center justify-center gap-1">
@@ -265,7 +287,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="p-4 text-center text-secondary">Tidak ada data server</td>
+                                <td colspan="7" class="p-4 text-center text-secondary">Tidak ada data server</td>
                             </tr>
                             @endforelse
                         </tbody>

@@ -52,15 +52,17 @@
         </nav>
         <div class="flex items-center gap-3">
             <h2 class="font-headline-lg text-headline-lg text-on-surface">Detail Server</h2>
-            @if($server->is_lengkap)
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">
-                    <span class="material-symbols-outlined text-[14px]">check_circle</span> Data Lengkap
-                </span>
-            @else
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
-                    <span class="material-symbols-outlined text-[14px]">pending_actions</span> Menunggu Dilengkapi
-                </span>
-            @endif
+            @php
+                $statusKelengkapanMap = [
+                    'pending' => ['label' => 'Belum Diisi', 'color' => 'bg-gray-100 text-gray-800'],
+                    'dilengkapi' => ['label' => 'Sebagian Terisi', 'color' => 'bg-yellow-100 text-yellow-800'],
+                    'lengkap' => ['label' => 'Data Lengkap', 'color' => 'bg-green-100 text-green-800'],
+                ];
+                $kelengkapanInfo = $statusKelengkapanMap[$server->status_kelengkapan ?? 'pending'] ?? ['label' => $server->status_kelengkapan, 'color' => 'bg-gray-100 text-gray-800'];
+            @endphp
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full {{ $kelengkapanInfo['color'] }} text-xs font-semibold">
+                <span class="material-symbols-outlined text-[14px]">{{ $server->status_kelengkapan === 'lengkap' ? 'check_circle' : 'pending_actions' }}</span> {{ $kelengkapanInfo['label'] }}
+            </span>
         </div>
     </div>
 
@@ -75,6 +77,20 @@
             <p class="text-sm font-medium m-0">Data teknis perangkat ini belum lengkap. QR Code akan aktif otomatis setelah admin melengkapi data.</p>
         </div>
     @endunless
+
+    @if(!$server->is_lengkap && count($server->getMissingRequiredFields()) > 0)
+        <div class="flex items-start gap-3 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-900 mb-6">
+            <span class="material-symbols-outlined flex-shrink-0 mt-0.5">warning_amber</span>
+            <div>
+                <p class="text-sm font-medium m-0">⚠️ Data belum lengkap. Field yang masih kosong:</p>
+                <ul class="list-disc list-inside text-xs mt-1">
+                    @foreach($server->getMissingRequiredFields() as $field)
+                        <li>{{ $field }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
 
     <!-- GRID UTAMA: 2 baris -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -280,8 +296,8 @@
                     <div><span class="text-secondary">Dibuat:</span> {{ $server->created_at->format('d M Y, H:i') }}</div>
                     <div><span class="text-secondary">Terakhir Update:</span>
                         {{ $server->updated_at->format('d M Y, H:i') }}</div>
-                    <div><span class="text-secondary">ID Server:</span> <span
-                            class="font-mono">{{ $server->id }}</span></div>
+                    <div><span class="text-secondary">Kode Perangkat:</span> <span
+                            class="font-mono">{{ $server->kode_perangkat ?? $server->id }}</span></div>
                     <div><span class="text-secondary">RACK:</span> <span
                             class="font-semibold">{{ $server->nomor_rack ?? '-' }}</span></div>
                 </div>
