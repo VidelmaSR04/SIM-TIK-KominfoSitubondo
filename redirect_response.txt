@@ -1,0 +1,23 @@
+HTTP/1.1 302 Found
+Host: 127.0.0.1:8000
+Connection: close
+X-Powered-By: PHP/8.2.29
+Cache-Control: no-cache, private
+Date: Wed, 09 Sep 2026 08:45:47 GMT
+Location: http://127.0.0.1:8000/dashboarduser
+Content-Type: text/html; charset=utf-8
+Set-Cookie: XSRF-TOKEN=eyJpdiI6ImVTbCtvMCtGV0NDQzlaL1h2TkNBNkE9PSIsInZhbHVlIjoiRmwrVEZmaFMzSUZLcGpHNnN2UFRMVTZDd0RIbjVTSHR3V2JCVmtVM0ZmdjZVUGdmbk9Mb0RGK1ZVamNYdEJDbUg3QWtzQ0FYaGZraTZlRnI1cE52T2pFMGNwK24vV3JNKzhZS056TzZhV1lLbE1xREZlMkhmbkM1NTRBazJvS3kiLCJtYWMiOiI1NjNhNzZkMmVkYTZlNjM0ZWNjZGE4MmQ5ZGVlNmMzMzY3MTZiYmZkZjAyNmVkNzkxOWRmNjExNDY2NmQyYzdhIiwidGFnIjoiIn0%3D; expires=Wed, 09 Sep 2026 10:45:47 GMT; Max-Age=7200; path=/; samesite=lax
+Set-Cookie: laravel-session=eyJpdiI6IkdRQ2lPeXhKQkozN3RqbjJ5cXpkWHc9PSIsInZhbHVlIjoiMkt6dUMvNlNDNEhJQkw3MmhnMjJIRzJ2UGNkS1QzTGpZdDVaMm9hTUVHSStMVEY1QlBQbS9HbmI1WnMyTUw4VmZySGlwNkFLaHBNbzlsak9hWjg5Vi9ZUGpCcDA0TEl1MXBWa1htWStST0ZaTkJ1ZCs5NkVqaWVjQzhmeUFmRlEiLCJtYWMiOiI4NTNmNjRmMjNmZjkxMWFlMThmZTM0Y2JiNWM2ZWExZjI4YWQwYzE0N2FmYjBiMDk3NzFjZDUzZmFkZTM3NWU0IiwidGFnIjoiIn0%3D; expires=Wed, 09 Sep 2026 10:45:47 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="refresh" content="0;url='http://127.0.0.1:8000/dashboarduser'" />
+
+        <title>Redirecting to http://127.0.0.1:8000/dashboarduser</title>
+    </head>
+    <body>
+        Redirecting to <a href="http://127.0.0.1:8000/dashboarduser">http://127.0.0.1:8000/dashboarduser</a>.
+    </body>
+</html>

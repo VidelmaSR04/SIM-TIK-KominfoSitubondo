@@ -200,63 +200,61 @@ Keluar
 <table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface-container-low border-b border-outline-variant font-label-md text-label-md text-on-surface-variant">
-<th class="px-6 py-3 font-semibold">Nama Perangkat</th>
+<th class="px-6 py-3 font-semibold">Nomor</th>
+<th class="px-6 py-3 font-semibold">Kode Perangkat</th>
 <th class="px-6 py-3 font-semibold">Jenis Perangkat</th>
-<th class="px-6 py-3 font-semibold">Dinas/OPD</th>
-<th class="px-6 py-3 font-semibold">Lokasi</th>
-<th class="px-6 py-3 font-semibold text-center">Status Kelengkapan</th>
+<th class="px-6 py-3 font-semibold">Nama OPD</th>
+<th class="px-6 py-3 font-semibold">Nama Penerima</th>
+<th class="px-6 py-3 font-semibold">Nama Perangkat</th>
+<th class="px-6 py-3 font-semibold">Status</th>
+<th class="px-6 py-3 font-semibold">Aksi</th>
 </tr>
 </thead>
 <tbody id="deviceTableBody" class="font-data-tabular text-data-tabular text-on-surface divide-y divide-outline-variant">
-@forelse($devices as $device)
+@foreach($devices as $device)
 <tr class="device-row hover:bg-surface-container-low/50 transition-colors group"
-    data-search="{{ strtolower($device->nama_perangkat.' '.$device->jenis_perangkat.' '.$device->pemilik_perangkat.' '.$device->nomor_rack) }}"
-    data-status="{{ $device->status_kelengkapan }}">
+    data-search="{{ strtolower($device->nama_perangkat.' '.$device->jenis_perangkat.' '.$device->pemilik_perangkat.' '.$device->nama_penerima.' '.$device->kode_perangkat) }}"
+    data-status="{{ $device->status }}">
+<td class="px-6 py-4 whitespace-nowrap text-center">{{ $loop->iteration }}</td>
+<td class="px-6 py-4 whitespace-nowrap">{{ $device->kode_perangkat }}</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">{{ ucfirst($device->jenis_perangkat) }}</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">{{ $device->pemilik_perangkat }}</td>
+<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">{{ $device->nama_penerima }}</td>
 <td class="px-6 py-4 whitespace-nowrap">
 <div class="font-semibold text-primary">{{ $device->nama_perangkat }}</div>
-<div class="text-on-surface-variant text-[11px] mt-0.5">SN: {{ $device->serial_number ?? '-' }}</div>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">{{ ucfirst($device->jenis_perangkat) }}</td>
-<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">{{ $device->pemilik_perangkat ?? '-' }}</td>
-<td class="px-6 py-4 whitespace-nowrap text-on-surface-variant">
-<div class="flex items-center">
-<span class="material-symbols-outlined text-[16px] mr-1.5 text-on-surface-variant/70">dns</span>
-                                        {{ $device->nomor_rack ?? '-' }}
-                                    </div>
 </td>
 <td class="px-6 py-4 whitespace-nowrap text-center">
 @php
-    $statusKelengkapanMap = [
-        'pending' => ['label' => 'Belum Diisi', 'color' => 'bg-gray-100 text-gray-800'],
-        'dilengkapi' => ['label' => 'Sebagian Terisi', 'color' => 'bg-yellow-100 text-yellow-800'],
-        'lengkap' => ['label' => 'Data Lengkap', 'color' => 'bg-green-100 text-green-800'],
+    $statusMap = [
+        'Aktif' => ['label' => 'Aktif', 'color' => 'bg-green-100 text-green-800'],
+        'Non-Aktif' => ['label' => 'Non-Aktif', 'color' => 'bg-red-100 text-red-800'],
+        'Maintenance' => ['label' => 'Maintenance', 'color' => 'bg-yellow-100 text-yellow-800'],
     ];
-    $kelengkapanInfo = $statusKelengkapanMap[$device->status_kelengkapan ?? 'pending'] ?? ['label' => $device->status_kelengkapan, 'color' => 'bg-gray-100 text-gray-800'];
-    $missingFields = $device->getMissingRequiredFields();
+    $statusInfo = $statusMap[$device->status] ?? ['label' => $device->status, 'color' => 'bg-gray-100 text-gray-800'];
 @endphp
-@if($device->status_kelengkapan === 'lengkap')
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md {{ $kelengkapanInfo['color'] }} border border-[${kelengkapanInfo['color']}--400/30]">
-                                    {{ $kelengkapanInfo['label'] }}
-                                </span>
-@else
-<div class="flex items-center gap-2">
-    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md {{ $kelengkapanInfo['color'] }} border border-[${kelengkapanInfo['color']}--400/30]">
-                                    {{ $kelengkapanInfo['label'] }}
-                                </span>
-    @if(count($missingFields) > 0)
-        <span class="material-symbols-outlined text-[16px] text-yellow-500" title="{{ implode(', ', $missingFields) }}">warning_amber</span>
-    @endif
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md {{ $statusInfo['color'] }} border border-[${statusInfo['color']}--400/30]">
+    {{ $statusInfo['label'] }}
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<div class="flex justify-center space-x-3">
+<a href="#" class="text-on-surface-variant hover:text-primary transition-colors" title="Lihat detail">
+<span class="material-symbols-outlined">visibility</span>
+</a>
+<a href="#" class="text-on-surface-variant hover:text-primary transition-colors" title="Unduh">
+<span class="material-symbols-outlined">download</span>
+</a>
 </div>
-@endif
 </td>
 </tr>
-@empty
+@endforeach
+@if(count($devices) === 0)
 <tr>
-<td colspan="5" class="px-6 py-10 text-center text-on-surface-variant">
+<td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">
     Belum ada perangkat yang Anda daftarkan.
 </td>
 </tr>
-@endforelse
+@endif
 </tbody>
 </table>
 </div>

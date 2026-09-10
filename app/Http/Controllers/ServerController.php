@@ -41,11 +41,16 @@ class ServerController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        // Determine if merk is 'lainnya' to validate alternative field
+        $merkValue = $request->input('merk_perangkat');
+        // Determine if jenis is 'lainnya' to validate alternative field
+        $jenisValue = $request->input('jenis_perangkat');
+
+        $validationRules = [
             'nama_perangkat'      => 'required|string|max:255',
-            'jenis_perangkat'     => 'required|in:router,switch,server',
+            'jenis_perangkat'     => ['required', 'string', 'max:255'],
             'serial_number'       => 'required|string|max:255',
-            'merk_perangkat'      => 'required|string|max:255',
+            'merk_perangkat'      => ['required', 'string', 'max:255'],
             'type'                => 'required|string|max:255',
             'kondisi_tipe'        => 'required|in:Standard,High Performance',
             'kondisi_status'      => 'required|in:Baru,Bekas',
@@ -65,14 +70,53 @@ class ServerController extends Controller
             'nama_pengirim'       => 'required|string|max:255',
             'nama_penerima'       => 'required|string|max:255',
             'jam_pengisian'       => 'required|date',
-        ]);
+        ];
+
+        if ($jenisValue === 'lainnya') {
+            $validationRules['jenis_lainnya'] = ['required', 'string', 'max:255'];
+        }
+        if ($merkValue === 'lainnya') {
+            $validationRules['merk_lainnya'] = ['required', 'string', 'max:255'];
+        }
+
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $data = $request->except('_token');
-        $data['user_id'] = Auth::user()->id;
+        $validated = $request->validate($validationRules);
+
+        // Determine final merk & jenis value
+        $finalMerk = ($merkValue === 'lainnya') ? $validated['merk_lainnya'] : $merkValue;
+        $finalJenis = ($jenisValue === 'lainnya') ? $validated['jenis_lainnya'] : $jenisValue;
+
+        $data = [
+            'nama_perangkat' => $validated['nama_perangkat'],
+            'jenis_perangkat'   => $finalJenis,
+            'merk_perangkat'    => $finalMerk,
+            'serial_number'     => $validated['serial_number'],
+            'type'              => $validated['type'],
+            'kondisi_tipe'      => $validated['kondisi_tipe'],
+            'kondisi_status'    => $validated['kondisi_status'],
+            'spesifikasi'       => $validated['spesifikasi'],
+            'tipe_perangkat'    => $validated['tipe_perangkat'],
+            'status_kepemilikan'=> $validated['status_kepemilikan'],
+            'pemilik_perangkat' => $validated['pemilik_perangkat'],
+            'ip_server'         => $validated['ip_server'],
+            'ip_vps'            => $validated['ip_vps'],
+            'status'            => $validated['status'],
+            'ukuran_hdd'        => $validated['ukuran_hdd'],
+            'ukuran_ram'        => $validated['ukuran_ram'],
+            'nomor_rack'        => $validated['nomor_rack'],
+            'gambar_rack'       => $validated['gambar_rack'] ?? null,
+            'jumlah_core'       => $validated['jumlah_core'],
+            'peruntukan'        => $validated['peruntukan'],
+            'nama_pengirim'     => $validated['nama_pengirim'],
+            'nama_penerima'     => $validated['nama_penerima'] ?: null,
+            'jam_pengisian'     => $validated['jam_pengisian'],
+            'user_id'           => Auth::user()->id,
+        ];
 
         // Calculate status_kelengkapan FIRST
         $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
@@ -174,11 +218,16 @@ class ServerController extends Controller
     {
         $server = Server::findOrFail($id);
 
-        $validator = Validator::make($request->all(), [
+        // Determine if merk is 'lainnya' to validate alternative field
+        $merkValue = $request->input('merk_perangkat');
+        // Determine if jenis is 'lainnya' to validate alternative field
+        $jenisValue = $request->input('jenis_perangkat');
+
+        $validationRules = [
             'nama_perangkat'      => 'required|string|max:255',
-            'jenis_perangkat'     => 'required|in:router,switch,server',
+            'jenis_perangkat'     => ['required', 'string', 'max:255'],
             'serial_number'       => 'required|string|max:255',
-            'merk_perangkat'      => 'required|string|max:255',
+            'merk_perangkat'      => ['required', 'string', 'max:255'],
             'type'                => 'required|string|max:255',
             'kondisi_tipe'        => 'required|in:Standard,High Performance',
             'kondisi_status'      => 'required|in:Baru,Bekas',
@@ -198,13 +247,52 @@ class ServerController extends Controller
             'nama_pengirim'       => 'required|string|max:255',
             'nama_penerima'       => 'required|string|max:255',
             'jam_pengisian'       => 'required|date',
-        ]);
+        ];
+
+        if ($jenisValue === 'lainnya') {
+            $validationRules['jenis_lainnya'] = ['required', 'string', 'max:255'];
+        }
+        if ($merkValue === 'lainnya') {
+            $validationRules['merk_lainnya'] = ['required', 'string', 'max:255'];
+        }
+
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $data = $request->except('_token', '_method');
+        $validated = $request->validate($validationRules);
+
+        // Determine final merk & jenis value
+        $finalMerk = ($merkValue === 'lainnya') ? $validated['merk_lainnya'] : $merkValue;
+        $finalJenis = ($jenisValue === 'lainnya') ? $validated['jenis_lainnya'] : $jenisValue;
+
+        $data = [
+            'nama_perangkat' => $validated['nama_perangkat'],
+            'jenis_perangkat'   => $finalJenis,
+            'merk_perangkat'    => $finalMerk,
+            'serial_number'     => $validated['serial_number'],
+            'type'              => $validated['type'],
+            'kondisi_tipe'      => $validated['kondisi_tipe'],
+            'kondisi_status'    => $validated['kondisi_status'],
+            'spesifikasi'       => $validated['spesifikasi'],
+            'tipe_perangkat'    => $validated['tipe_perangkat'],
+            'status_kepemilikan'=> $validated['status_kepemilikan'],
+            'pemilik_perangkat' => $validated['pemilik_perangkat'],
+            'ip_server'         => $validated['ip_server'],
+            'ip_vps'            => $validated['ip_vps'],
+            'status'            => $validated['status'],
+            'ukuran_hdd'        => $validated['ukuran_hdd'],
+            'ukuran_ram'        => $validated['ukuran_ram'],
+            'nomor_rack'        => $validated['nomor_rack'],
+            'gambar_rack'       => $validated['gambar_rack'] ?? null,
+            'jumlah_core'       => $validated['jumlah_core'],
+            'peruntukan'        => $validated['peruntukan'],
+            'nama_pengirim'     => $validated['nama_pengirim'],
+            'nama_penerima'     => $validated['nama_penerima'] ?: null,
+            'jam_pengisian'     => $validated['jam_pengisian'],
+        ];
 
         // Calculate status_kelengkapan FIRST
         $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);

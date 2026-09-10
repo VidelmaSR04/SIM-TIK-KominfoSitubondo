@@ -34,7 +34,8 @@ class Server extends Model
         'peruntukan',
         'nama_pengirim',
         'nama_penerima',
-        'jam_pengisian'
+        'jam_pengisian',
+        'tanggal_input'
     ];
 
     protected $casts = [
@@ -166,6 +167,53 @@ class Server extends Model
     }
 
     /**
+     * Get alternative jenis value for display in form
+     * Returns the actual value if it's not in master data (custom/Lainnya),
+     * otherwise returns empty string
+     */
+    public function getJenisLainnyaAttribute()
+    {
+        $jenisList = MasterData::forSelect('jenis_perangkat');
+        if (empty($jenisList)) {
+            $jenisList = ['router' => 'Router', 'switch' => 'Switch', 'server' => 'Server'];
+        }
+
+        // If the current value is not in the master data list, it's a custom value
+        if (!array_key_exists($this->jenis_perangkat, $jenisList)) {
+            return $this->jenis_perangkat;
+        }
+
+        return '';
+    }
+
+    /**
+     * Get alternative merk value for display in form
+     * Returns the actual value if it's not in master data (custom/Lainnya),
+     * otherwise returns empty string
+     */
+    public function getMerkLainnyaAttribute()
+    {
+        $merkList = MasterData::forSelect('merk_perangkat');
+        if (empty($merkList)) {
+            $merkList = [
+                'MIKROTIK' => 'MIKROTIK',
+                'CISCO' => 'CISCO',
+                'DELL' => 'DELL',
+                'HP' => 'HP',
+                'LENOVO' => 'LENOVO',
+                'HUAWEI' => 'HUAWEI',
+            ];
+        }
+
+        // If the current value is not in the master data list, it's a custom value
+        if (!array_key_exists($this->merk_perangkat, $merkList)) {
+            return $this->merk_perangkat;
+        }
+
+        return '';
+    }
+
+    /**
      * Hitung status_kelengkapan otomatis berdasarkan field yang sudah terisi di $data.
      *
      * Nilai yang dihasilkan:
@@ -236,8 +284,8 @@ class Server extends Model
         $datePart = $date->format('ymd'); // YYMMDD format
 
         // Hitung urutan harian berdasarkan kode yang sudah ada untuk hari ini
-        $todayStart = $date->startOfDay();
-        $todayEnd = $date->endOfDay();
+        $todayStart = $date->copy()->startOfDay();
+        $todayEnd = $date->copy()->endOfDay();
 
         $existingCodesToday = self::whereBetween('created_at', [$todayStart, $todayEnd])
             ->whereNotNull('kode_perangkat')

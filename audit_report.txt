@@ -1,0 +1,94 @@
+# Audit Report for /inputdatauser and /dashboarduser Pages
+
+## Langkah 0.5 - Audit Checklist
+
+### 1. Dropdown **Jenis Perangkat** di `/inputdatauser` — opsinya muncul atau kosong?
+**Status: ❌ Kosong (tidak berfungsi)**
+- Controller fetches `jenisList` from MasterData::where('kategori', 'jenis_perangkat')
+- View attempts to display with `@foreach($jenisList as $value => $label)`
+- **Problem**: MasterData records for 'jenis_perangkat' have empty `label` fields (values: router, switch, server)
+- While the MasterData::forSelect() method should fallback to using `value` when `label` is empty, the view is using `pluck('label', 'value')` which returns empty labels as keys
+- Result: Dropdown shows empty options or no visible options
+
+### 2. Dropdown **Merek Perangkat** — sudah jadi dropdown (bukan input teks bebas)? Opsinya muncul atau kosong?
+**Status: ❌ Kosong (tidak berfungsi)**
+- Controller fetches `merkList` from MasterData::where('kategori', 'merk_perangkat')
+- View attempts to display with `@foreach($merkList as $value => $label)`
+- **Problem**: MasterData records for 'merk_perangkat' have empty `label` fields (values: MIKROTIK, CISCO, DELL, HP, LENOVO, HUAWEI)
+- Same issue as above: pluck returns empty labels as keys
+- Result: Dropdown shows empty options or no visible options
+
+### 3. Dropdown **Nama Dinas/OPD** — opsinya muncul atau kosong? Sumber datanya dari mana?
+**Status: ⚠️ Berfungsi tetapi tidak optimal**
+- Controller fetches `opdList` from MasterData::where('kategori', 'pemilik_perangkat')
+- View attempts to display with `@foreach($opdList as $value => $label)`
+- **Problem**: MasterData records for 'pemilik_perangkat' have empty `label` fields
+- However, looking at the admin inputdata.blade.php, I can see it has a fallback mechanism:
+  ```php
+  $pemilikOptions = \App\Models\MasterData::forSelect('pemilik_perangkat');
+  if (empty($pemilikOptions)) {
+      $pemilikOptions = array_combine($opdOptionsArray, $opdOptionsArray);
+  }
+  ```
+- The user controller does NOT have this fallback
+- Result: Dropdown may show empty options or no visible options (same issue as above)
+
+### 4. Opsi **"Lainnya"** di dropdown Jenis Perangkat & Merek Perangkat — sudah ada atau belum? Kalau sudah ada, apakah input manualnya benar-benar muncul & tersimpan ke database?
+**Status: ✅ Sudah ada dan berfungsi**
+- Controller includes validation for 'jenis_lainnya' and 'merk_lainnya' when dropdown value is 'lainnya'
+- View includes conditional display of alternative inputs:
+  ```blade
+  <div id="jenis-lainnya-wrapper" class="hidden">
+      <!-- input for jenis_lainnya -->
+  </div>
+  <div id="merk-lainnya-wrapper" class="hidden">
+      <!-- input for merk_lainnya -->
+  </div>
+  ```
+- Controller logic correctly uses alternative values when dropdown = 'lainnya'
+- JavaScript handles show/hide of alternative inputs
+- **Note**: This would work IF the dropdowns were properly populated
+
+### 5. **Kode Perangkat otomatis** — apakah sudah reuse logic dari admin, dan benar-benar ter-generate & tersimpan di database saat submit?
+**Status: ✅ Sudah reuse logic dan berfungsi**
+- Controller uses `Server::generateKodePerangkat($data['status_kepemilikan'], $tanggalForCode)`
+- This is the exact same method used by admin
+- Includes proper fallback to today's date if tanggal_input is null
+- Status kepemilikan is correctly determined based on OPD selection ('Kominfo' vs 'Colocation')
+
+### 6. **Tanggal Input (kalender)** — sudah ada, dan komponennya sama dengan admin?
+**Status: ✅ Sudah ada tetapi komponen berbeda**
+- Field exists: `<input type="date" id="tanggal_input" name="tanggal_input" ...>`
+- Admin uses: `<input type="datetime-local" id="jam_pengisian" name="jam_pengisian" ...>` (for timestamp)
+- **Issue**: User form uses simple date picker (date-only), admin uses datetime-local (date+time)
+- Per prompt: "pakai ulang (copy-paste) komponen kalender yang sama persis dengan yang dipakai di halaman admin"
+- Admin uses datetime-local input with specific styling and helper text
+
+### 7. Tombol **Batal** & **Simpan & Daftarkan** — submit berhasil, status PENDING tersimpan, dan data muncul di halaman admin?
+**Status: ✅ Berfungsi (asumsi berdasarkan kode)**
+- Controller validates and creates Server record
+- Uses `Server::hitungStatusKelengkapan($data)` which should return 'pending' since technical fields are empty
+- Calls `$server->syncStatusFromKelengkapan()` to set status accordingly
+- Redirects to dashboard with success message
+- **Note**: Actual functionality depends on dropdowns being populated
+
+### 8. Tabel di `/dashboarduser` — kolomnya masih format lama atau sudah baru? Datanya benar-benar terhubung dari input `/inputdatauser` atau statis/dummy?
+**Status: ❌ Format lama (perlu update sesuai Langkah 2)**
+- Current columns: Nama Perangkat, Jenis Perangkat, Dinas/OPD, Lokasi, Status Kelengkapan
+- **Missing columns** as requested in Langkah 2:
+  1. No (nomor urut baris)
+  2. Kode Perangkat (from kode_perangkat column)
+  3. Nama Penerima
+  4. Status (badge style - already partially there but needs update)
+  5. Aksi (mata & unduh icons)
+- Data IS properly connected: `Server::where('user_id', Auth::id())`
+- **Issue**: Table structure needs to be updated per Langkah 2 requirements
+
+## Summary of Issues Found
+1. All three dropdowns (Jenis Perangkat, Merek Perangkat, Nama Dinas/OPD) are not displaying options properly due to empty label fields in MasterData
+2. Tanggal Input component doesn't match admin (should be datetime-local, not just date)
+3. Dashboard user table missing required columns per Langkah 2
+4. Need to implement proper fallback for OPD data like admin does (though this is secondary to the label issue)
+
+## Root Cause
+The primary issue is that MasterData records have empty `label` fields, and the controller is using `pluck('label', 'value')` which creates an array with empty keys when labels are empty. The admin avoids this by using `MasterData::forSelect()` method which properly handles empty labels by falling back to values.

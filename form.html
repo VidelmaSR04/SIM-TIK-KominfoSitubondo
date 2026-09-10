@@ -99,7 +99,7 @@
 <main class="flex-1 overflow_y_auto p_container_padding bg_background">
 <div class="max-w-5xl mx-auto">
 <!-- Back to Dashboard -->
-<a class="inline-flex items-center gap-2 text_on_surface-variant hover:text_primary font-body-md text-body-md transition-colors mb-4" href="{{ route('user.dashboarduser') }}">
+<a class="inline-flex items-center gap-2 text_on_surface-variant hover:text_primary font-body-md text-body-md transition-colors mb-4" href="http://127.0.0.1:8000/dashboarduser">
 <span class="material-symbols-outlined text-[20px]">arrow_back</span>
                 Kembali ke Dashboard
             </a>
@@ -113,24 +113,10 @@
 <span class="material-symbols-outlined text_primary mt-0.5">info</span>
 <p class="font-body-md text-body-md text_blue-900">Data akan berstatus <strong>PENDING</strong> hingga dilengkapi oleh admin.</p>
 </div>
-@if ($errors->any())
-<div class="bg-error_container border border-error/30 rounded-lg p-4 mb-8 flex items_start gap-3 shadow-sm">
-<span class="material-symbols_outined text_error mt-0.5">error</span>
-<div class="font-body-md text-body-md text_on_error_container">
-<p class="font-semibold mb-1">Periksa kembali data yang diisi:</p>
-<ul class="list-disc list_inside">
-@foreach ($errors->all() as $error)
-<li>{{ $error }}</li>
-@endforeach
-</ul>
-</div>
-</div>
-@endif
 <!-- Form Card -->
 <div class="bg-surface_container_lowest border border-outline-variant rounded-xl shadow-sm p-8">
-<form action="{{ route('inputdatauser.store') }}" method="POST">
-@csrf
-<div class="space-y-6">
+<form action="http://127.0.0.1:8000/inputdatauser" method="POST">
+<input type="hidden" name="_token" value="H9sJaGiSHpXmvCUmRpYdsoqxAbti6GOlY3o5ICDA" autocomplete="off"><div class="space-y-6">
     <!-- Kode Perangkat (readonly preview) -->
     <div>
         <label class="block font-label-md text-label-md text_on_surface mb-2" for="kode_perangkat">Kode Perangkat <span class="text-error">*</span></label>
@@ -148,7 +134,7 @@
         <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_pengirim">Nama Pengirim <span class="text-error">*</span></label>
         <input type="text" id="nama_pengirim" name="nama_pengirim"
             class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-            value="{{ old('nama_pengirim') }}" placeholder="Nama pengirim" required>
+            value="" placeholder="Nama pengirim" required>
     </div>
 
     <!-- Nama Dinas/OPD -->
@@ -158,28 +144,171 @@
             class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             required>
             <option value="" disabled selected>Pilih Dinas/OPD</option>
-            @foreach($opdList as $value => $label)
-                <option value="{{ $value }}" {{ old('opd') === $value ? 'selected' : '' }}>
-                    {{ $label }}
+                            <option value="Dinas Pendidikan dan Kebudayaan" >
+                    Dinas Pendidikan dan Kebudayaan
                 </option>
-            @endforeach
-        </select>
+                            <option value="Dinas Kesehatan" >
+                    Dinas Kesehatan
+                </option>
+                            <option value="Dinas Pekerjaan Umum dan Penataan Ruang" >
+                    Dinas Pekerjaan Umum dan Penataan Ruang
+                </option>
+                            <option value="Dinas Perumahan dan Kawasan Permukiman" >
+                    Dinas Perumahan dan Kawasan Permukiman
+                </option>
+                            <option value="Satuan Polisi Pamong Praja" >
+                    Satuan Polisi Pamong Praja
+                </option>
+                            <option value="Badan Kesatuan Bangsa dan Politik" >
+                    Badan Kesatuan Bangsa dan Politik
+                </option>
+                            <option value="Badan Penanggulangan Bencana Daerah" >
+                    Badan Penanggulangan Bencana Daerah
+                </option>
+                            <option value="Dinas Sosial" >
+                    Dinas Sosial
+                </option>
+                            <option value="Dinas Tenaga Kerja" >
+                    Dinas Tenaga Kerja
+                </option>
+                            <option value="Dinas Pemberdayaan Perempuan dan Perlindungan Anak" >
+                    Dinas Pemberdayaan Perempuan dan Perlindungan Anak
+                </option>
+                            <option value="Dinas Ketahanan Pangan" >
+                    Dinas Ketahanan Pangan
+                </option>
+                            <option value="Dinas Lingkungan Hidup" >
+                    Dinas Lingkungan Hidup
+                </option>
+                            <option value="Dinas Kependudukan dan Pencatatan Sipil" >
+                    Dinas Kependudukan dan Pencatatan Sipil
+                </option>
+                            <option value="Dinas Pemberdayaan Masyarakat dan Desa" >
+                    Dinas Pemberdayaan Masyarakat dan Desa
+                </option>
+                            <option value="Dinas Pengendalian Penduduk dan Keluarga Berencana" >
+                    Dinas Pengendalian Penduduk dan Keluarga Berencana
+                </option>
+                            <option value="Dinas Perhubungan" >
+                    Dinas Perhubungan
+                </option>
+                            <option value="Dinas Komunikasi, Informatika dan Persandian" >
+                    Dinas Komunikasi, Informatika dan Persandian
+                </option>
+                            <option value="Dinas Koperasi dan Usaha Mikro" >
+                    Dinas Koperasi dan Usaha Mikro
+                </option>
+                            <option value="Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu" >
+                    Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu
+                </option>
+                            <option value="Dinas Perpustakaan dan Kearsipan" >
+                    Dinas Perpustakaan dan Kearsipan
+                </option>
+                            <option value="Dinas Perikanan" >
+                    Dinas Perikanan
+                </option>
+                            <option value="Dinas Pariwisata" >
+                    Dinas Pariwisata
+                </option>
+                            <option value="Dinas Tanaman Pangan, Hortikultura dan Perkebunan" >
+                    Dinas Tanaman Pangan, Hortikultura dan Perkebunan
+                </option>
+                            <option value="Dinas Peternakan dan Kesehatan Hewan" >
+                    Dinas Peternakan dan Kesehatan Hewan
+                </option>
+                            <option value="Dinas Perdagangan dan Perindustrian" >
+                    Dinas Perdagangan dan Perindustrian
+                </option>
+                            <option value="Badan Perencanaan Pembangunan Daerah" >
+                    Badan Perencanaan Pembangunan Daerah
+                </option>
+                            <option value="Badan Kepegawaian dan Pengembangan Sumber Daya Manusia" >
+                    Badan Kepegawaian dan Pengembangan Sumber Daya Manusia
+                </option>
+                            <option value="Badan Pendapatan, Pengelolaan Keuangan dan Aset Daerah" >
+                    Badan Pendapatan, Pengelolaan Keuangan dan Aset Daerah
+                </option>
+                            <option value="Inspektorat Daerah" >
+                    Inspektorat Daerah
+                </option>
+                            <option value="Sekretariat Daerah" >
+                    Sekretariat Daerah
+                </option>
+                            <option value="Sekretariat DPRD" >
+                    Sekretariat DPRD
+                </option>
+                            <option value="Kecamatan Banyuglugur" >
+                    Kecamatan Banyuglugur
+                </option>
+                            <option value="Kecamatan Jatibanteng" >
+                    Kecamatan Jatibanteng
+                </option>
+                            <option value="Kecamatan Sumbermalang" >
+                    Kecamatan Sumbermalang
+                </option>
+                            <option value="Kecamatan Besuki" >
+                    Kecamatan Besuki
+                </option>
+                            <option value="Kecamatan Suboh" >
+                    Kecamatan Suboh
+                </option>
+                            <option value="Kecamatan Mlandingan" >
+                    Kecamatan Mlandingan
+                </option>
+                            <option value="Kecamatan Bungatan" >
+                    Kecamatan Bungatan
+                </option>
+                            <option value="Kecamatan Kendit" >
+                    Kecamatan Kendit
+                </option>
+                            <option value="Kecamatan Panarukan" >
+                    Kecamatan Panarukan
+                </option>
+                            <option value="Kecamatan Situbondo" >
+                    Kecamatan Situbondo
+                </option>
+                            <option value="Kecamatan Panji" >
+                    Kecamatan Panji
+                </option>
+                            <option value="Kecamatan Mangaran" >
+                    Kecamatan Mangaran
+                </option>
+                            <option value="Kecamatan Kapongan" >
+                    Kecamatan Kapongan
+                </option>
+                            <option value="Kecamatan Arjasa" >
+                    Kecamatan Arjasa
+                </option>
+                            <option value="Kecamatan Asembagus" >
+                    Kecamatan Asembagus
+                </option>
+                            <option value="Kecamatan Jangkar" >
+                    Kecamatan Jangkar
+                </option>
+                            <option value="Kecamatan Banyuputih" >
+                    Kecamatan Banyuputih
+                </option>
+                            <option value="RSAR" >
+                    RSAR
+                </option>
+                            <option value="PDAM Tirta Baluran" >
+                    PDAM Tirta Baluran
+                </option>
+                            <option value="RSUD Besuki" >
+                    RSUD Besuki
+                </option>
+                            <option value="RSUD Asembagus" >
+                    RSUD Asembagus
+                </option>
+                    </select>
     </div>
 
     <!-- Nama Penerima -->
     <div>
-        <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_penerima">Nama Penerima (diisi admin)</label>
+        <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_penerima">Nama Penerima <span class="text-error">*</span></label>
         <input type="text" id="nama_penerima" name="nama_penerima"
             class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-            value="{{ old('nama_penerima') }}" placeholder="Akan diisi oleh admin">
-    </div>
-
-    <!-- Nama Perangkat -->
-    <div>
-        <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_perangkat">Nama Perangkat <span class="text-error">*</span></label>
-        <input type="text" id="nama_perangkat" name="nama_perangkat"
-            class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-            value="{{ old('nama_perangkat') }}" placeholder="Masukkan nama perangkat" required>
+            value="" placeholder="Nama penerima" required>
     </div>
 
     <!-- Jenis Perangkat -->
@@ -190,12 +319,16 @@
                 class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 required>
                 <option value="" disabled selected>Pilih jenis perangkat</option>
-                @foreach($jenisList as $value => $label)
-                    <option value="{{ $value }}" {{ old('jenis_perangkat') === $value ? 'selected' : '' }}>
-                        {{ $label }}
+                                    <option value="router" >
+                        router
                     </option>
-                @endforeach
-                <option value="lainnya" {{ old('jenis_perangkat') === 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                    <option value="switch" >
+                        switch
+                    </option>
+                                    <option value="server" >
+                        server
+                    </option>
+                                <option value="lainnya" >Lainnya</option>
             </select>
 
             <!-- Alternative input for Lainnya -->
@@ -203,7 +336,7 @@
                 <label class="block font-label-md text-label-md text_on_surface mb-1" for="jenis_lainnya">Jenis Perangkat (Lainnya) <span class="text-error">*</span></label>
                 <input type="text" id="jenis_lainnya" name="jenis_lainnya"
                     class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                    value="{{ old('jenis_lainnya') }}" placeholder="Masukkan jenis perangkat lain" required>
+                    value="" placeholder="Masukkan jenis perangkat lain" required>
             </div>
         </div>
     </div>
@@ -216,12 +349,25 @@
                 class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 required>
                 <option value="" disabled selected>Pilih merk perangkat</option>
-                @foreach($merkList as $value => $label)
-                    <option value="{{ $value }}" {{ old('merk_perangkat') === $value ? 'selected' : '' }}>
-                        {{ $label }}
+                                    <option value="MIKROTIK" >
+                        MIKROTIK
                     </option>
-                @endforeach
-                <option value="lainnya" {{ old('merk_perangkat') === 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                    <option value="CISCO" >
+                        CISCO
+                    </option>
+                                    <option value="DELL" >
+                        DELL
+                    </option>
+                                    <option value="HP" >
+                        HP
+                    </option>
+                                    <option value="LENOVO" >
+                        LENOVO
+                    </option>
+                                    <option value="HUAWEI" >
+                        HUAWEI
+                    </option>
+                                <option value="lainnya" >Lainnya</option>
             </select>
 
             <!-- Alternative input for Lainnya -->
@@ -229,7 +375,7 @@
                 <label class="block font-label-md text-label-md text_on_surface mb-1" for="merk_lainnya">Merk Perangkat (Lainnya) <span class="text-error">*</span></label>
                 <input type="text" id="merk_lainnya" name="merk_lainnya"
                     class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                    value="{{ old('merk_lainnya') }}" placeholder="Masukkan merk perangkat lain" required>
+                    value="" placeholder="Masukkan merk perangkat lain" required>
             </div>
         </div>
     </div>
@@ -239,13 +385,13 @@
         <label class="block font-label-md text-label-md text_on_surface mb-2" for="tanggal_input">Tanggal Input <span class="text-error">*</span></label>
         <input type="date" id="tanggal_input" name="tanggal_input"
             class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-            value="{{ old('tanggal_input', now()->toDateString()) }}" required>
+            value="2026-09-09" required>
     </div>
 </div>
 
 <!-- Actions -->
 <div class="mt-8 pt-6 border-t border-outline-variant flex justify-end gap-4">
-    <a href="{{ route('user.dashboarduser') }}" class="px-6 py-2.5 rounded-lg border border-outline text_on_surface-variant font-label-md text-body-md hover:bg-surface_container_high transition-colors focus:ring-2 focus:ring-outline inline-flex items-center">
+    <a href="http://127.0.0.1:8000/dashboarduser" class="px-6 py-2.5 rounded-lg border border-outline text_on_surface-variant font-label-md text-body-md hover:bg-surface_container_high transition-colors focus:ring-2 focus:ring-outline inline-flex items-center">
         Batal
     </a>
     <button type="submit" class="px-6 py-2.5 rounded-lg bg-primary-container text-on-primary-container font-label-md text-body-md hover:bg-primary hover:text-white transition-colors shadow-sm focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center gap-2">
@@ -268,14 +414,10 @@
         const merkLainnyaWrapper = document.getElementById('merk-lainnya_wrapper');
 
         function toggleLainnya(select, wrapper) {
-            const input = wrapper.querySelector('input');
             if (select.value === 'lainnya') {
                 wrapper.classList.remove('hidden');
-                input.required = true;
             } else {
                 wrapper.classList.add('hidden');
-                input.required = false;
-                input.value = '';
             }
         }
 

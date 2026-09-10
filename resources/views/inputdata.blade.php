@@ -455,14 +455,53 @@
                         <label class="form-label" for="jenis_perangkat">Jenis Perangkat <span class="required-star">*</span></label>
                         <select class="standard-select @error('jenis_perangkat') border-red-500 @enderror"
                             id="jenis_perangkat" name="jenis_perangkat">
-                            <option value="router" {{ old('jenis_perangkat', $server->jenis_perangkat ?? 'router') == 'router' ? 'selected' : '' }}>Router</option>
-                            <option value="switch" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'switch' ? 'selected' : '' }}>Switch</option>
-                            <option value="server" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == 'server' ? 'selected' : '' }}>Server</option>
+                            @foreach (\App\Models\MasterData::forSelect('jenis_perangkat') as $value => $label)
+                                <option value="{{ $value }}" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                            <option value="lainnya" {{ (old('jenis_perangkat') == 'lainnya' || (!old('jenis_perangkat') && !empty($server->jenisLainnya))) ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         @error('jenis_perangkat')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
+                    <!-- Alternative input for Lainnya -->
+                    <div id="jenis-lainnya_wrapper" class="{{ (old('jenis_perangkat') == 'lainnya' || (!old('jenis_perangkat') && !empty($server->jenisLainnya))) ? '' : 'hidden' }}">
+                        <label class="form-label" for="jenis_lainnya">Jenis Perangkat (Lainnya) <span class="required-star">*</span></label>
+                        <input type="text" id="jenis_lainnya" name="jenis_lainnya"
+                            class="standard-input @error('jenis_lainnya') border-red-500 @enderror"
+                            value="{{ old('jenis_lainnya', $server->jenisLainnya ?? '') }}"
+                            placeholder="Masukkan jenis perangkat lain">
+                        @error('jenis_lainnya')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Merk & TYPE -->
+                    <div>
+                        <label class="form-label" for="merk_perangkat">Merk Perangkat <span class="required-star">*</span></label>
+                        <select class="standard-select @error('merk_perangkat') border-red-500 @enderror"
+                            id="merk_perangkat" name="merk_perangkat">
+                            @foreach (\App\Models\MasterData::forSelect('merk_perangkat') as $value => $label)
+                                <option value="{{ $value }}" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                            <option value="lainnya" {{ (old('merk_perangkat') == 'lainnya' || (!old('merk_perangkat') && !empty($server->merkLainnya))) ? 'selected' : '' }}>Lainnya</option>
+                        </select>
+                        @error('merk_perangkat')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <!-- Alternative input for Lainnya -->
+                    <div id="merk-lainnya_wrapper" class="{{ (old('merk_perangkat') == 'lainnya' || (!old('merk_perangkat') && !empty($server->merkLainnya))) ? '' : 'hidden' }}">
+                        <label class="form-label" for="merk_lainnya">Merk Perangkat (Lainnya) <span class="required-star">*</span></label>
+                        <input type="text" id="merk_lainnya" name="merk_lainnya"
+                            class="standard-input @error('merk_lainnya') border-red-500 @enderror"
+                            value="{{ old('merk_lainnya', $server->merkLainnya ?? '') }}"
+                            placeholder="Masukkan merk perangkat lain">
+                        @error('merk_lainnya')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div>
                         <label class="form-label" for="serial_number">Serial Number <span class="required-star">*</span></label>
                         <div class="input-group">
@@ -476,19 +515,6 @@
                         @enderror
                     </div>
 
-                    <!-- Merk & TYPE -->
-                    <div>
-                        <label class="form-label" for="merk_perangkat">Merk Perangkat <span class="required-star">*</span></label>
-                        <select class="standard-select @error('merk_perangkat') border-red-500 @enderror"
-                            id="merk_perangkat" name="merk_perangkat">
-                            @foreach (\App\Models\MasterData::forSelect('merk_perangkat') as $value => $label)
-                                <option value="{{ $value }}" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('merk_perangkat')
-                            <p class="form-error">{{ $message }}</p>
-                        @enderror
-                    </div>
                     <div>
                         <label class="form-label" for="type">TYPE <span class="required-star">*</span></label>
                         <input class="standard-input @error('type') border-red-500 @enderror" id="type" name="type"
@@ -793,7 +819,8 @@
                                      class="preview-image"
                                      id="current-image">
                                 <button type="button"
-                                        onclick="removeImage({{ $server->id }})"
+                                        data-id="{{ $server->id }}"
+                                        onclick="removeImage(this.dataset.id)"
                                         class="remove-image-btn"
                                         id="removeImageBtn"
                                         title="Hapus gambar">
@@ -1245,6 +1272,19 @@
         }
     }
 
+    // Toggle Lainnya functionality for Jenis Perangkat and Merk Perangkat
+    function toggleLainnya(select, wrapper) {
+        const input = wrapper.querySelector('input');
+        if (select.value === 'lainnya') {
+            wrapper.classList.remove('hidden');
+            input.required = true;
+        } else {
+            wrapper.classList.add('hidden');
+            input.required = false;
+            input.value = '';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         bindCapacityField('ukuran_hdd_input', 'ukuran_hdd', 256, 256, 20480); // 256 GB s/d 20 TB, kelipatan 256 GB
         bindCapacityField('ukuran_ram_input', 'ukuran_ram', 8, 8, null);      // mulai 8 GB, kelipatan 8 GB
@@ -1252,6 +1292,26 @@
         initStepper('nomor_rack');
         initStepper('jumlah_core');
         initSearchableSelect('pemilik_perangkat');
+
+        // Initialize toggleLainnya for Jenis Perangkat and Merk Perangkat
+        const jenisSelect = document.getElementById('jenis_perangkat');
+        const jenisLainnyaWrapper = document.getElementById('jenis-lainnya_wrapper');
+        const merkSelect = document.getElementById('merk_perangkat');
+        const merkLainnyaWrapper = document.getElementById('merk-lainnya_wrapper');
+
+        if (jenisSelect && jenisLainnyaWrapper) {
+            toggleLainnya(jenisSelect, jenisLainnyaWrapper);
+            jenisSelect.addEventListener('change', function () {
+                toggleLainnya(jenisSelect, jenisLainnyaWrapper);
+            });
+        }
+
+        if (merkSelect && merkLainnyaWrapper) {
+            toggleLainnya(merkSelect, merkLainnyaWrapper);
+            merkSelect.addEventListener('change', function () {
+                toggleLainnya(merkSelect, merkLainnyaWrapper);
+            });
+        }
 
         toggleOwnerField();
         const statusSelect = document.getElementById('status_kepemilikan');

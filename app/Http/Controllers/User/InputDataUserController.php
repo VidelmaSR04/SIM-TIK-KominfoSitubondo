@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Server;
+use App\Models\MasterData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,53 +17,156 @@ class InputDataUserController extends Controller
      */
     public function create(): View
     {
-        return view('user.inputdatauser');
+        // Fetch master data for dropdowns (same as admin)
+        $opdList = MasterData::forSelect('pemilik_perangkat');
+        if (empty($opdList)) {
+            $opdOptionsArray = [
+                'Dinas Pendidikan dan Kebudayaan',
+                'Dinas Kesehatan',
+                'Dinas Pekerjaan Umum dan Penataan Ruang',
+                'Dinas Perumahan dan Kawasan Permukiman',
+                'Satuan Polisi Pamong Praja',
+                'Badan Kesatuan Bangsa dan Politik',
+                'Badan Penanggulangan Bencana Daerah',
+                'Dinas Sosial',
+                'Dinas Tenaga Kerja',
+                'Dinas Pemberdayaan Perempuan dan Perlindungan Anak',
+                'Dinas Ketahanan Pangan',
+                'Dinas Lingkungan Hidup',
+                'Dinas Kependudukan dan Pencatatan Sipil',
+                'Dinas Pemberdayaan Masyarakat dan Desa',
+                'Dinas Pengendalian Penduduk dan Keluarga Berencana',
+                'Dinas Perhubungan',
+                'Dinas Komunikasi, Informatika dan Persandian',
+                'Dinas Koperosi dan Usaha Mikro',
+                'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu',
+                'Dinas Perpustakaan dan Kearsipan',
+                'Dinas Perikanan',
+                'Dinas Pariwisata',
+                'Dinas Tanaman Pangan, Hortikultura dan Perkebunan',
+                'Dinas Peternakan dan Kesehatan Hewan',
+                'Dinas Perdagangan dan Perindustrian',
+                'Badan Perencanaan Pembangunan Daerah',
+                'Badan Kepegawaian dan Pengembangan Sumber Daya Manusia',
+                'Badan Pendapatan, Pengelolaan Keuangan dan Aset Daerah',
+                'Inspektorat Daerah',
+                'Sekretariat Daerah',
+                'Sekretariat DPRD',
+                'Kecamatan Banyuglugur',
+                'Kecamatan Jatibanteng',
+                'Kecamatan Sumbermalang',
+                'Kecamatan Besuki',
+                'Kecamatan Suboh',
+                'Kecamatan Mlandingan',
+                'Kecamatan Bungatan',
+                'Kecamatan Kendit',
+                'Kecamatan Panarukan',
+                'Kecamatan Situbondo',
+                'Kecamatan Panji',
+                'Kecamatan Mangaran',
+                'Kecamatan Kapongan',
+                'Kecamatan Arjasa',
+                'Kecamatan Asembagus',
+                'Kecamatan Jangkar',
+                'Kecamatan Banyuputih',
+                'RSAR',
+                'PDAM Tirta Baluran',
+                'RSUD Besuki',
+                'RSUD Asembagus',
+            ];
+            $opdList = array_combine($opdOptionsArray, $opdOptionsArray);
+        }
+
+        $jenisList = MasterData::forSelect('jenis_perangkat');
+        if (empty($jenisList)) {
+            $jenisList = [
+                'router' => 'Router',
+                'switch' => 'Switch',
+                'server' => 'Server',
+            ];
+        }
+
+        $merkList = MasterData::forSelect('merk_perangkat');
+        if (empty($merkList)) {
+            $merkOptionsArray = [
+                'MIKROTIK' => 'MIKROTIK',
+                'CISCO' => 'CISCO',
+                'DELL' => 'DELL',
+                'HP' => 'HP',
+                'LENOVO' => 'LENOVO',
+                'HUAWEI' => 'HUAWEI',
+            ];
+            $merkList = $merkOptionsArray;
+        }
+
+        return view('user.inputdatauser', compact(
+            'opdList',
+            'jenisList',
+            'merkList'
+        ));
     }
 
     /**
      * Simpan perangkat baru yang didaftarkan user ke tabel `servers` yang sama
      * dengan yang dipakai admin, supaya data otomatis muncul di halaman
      * "Perangkat & Server" milik admin begitu disimpan.
-     *
-     * - user_id otomatis diisi dari user yang sedang login (bukan input manual).
-     * - Field teknis lanjutan (serial number, IP, RAM, dsb) sengaja dikosongkan
-     *   dulu di sini karena akan dilengkapi oleh admin lewat menu "Lengkapi Data".
-     * - status_kelengkapan dihitung otomatis lewat Server::hitungStatusKelengkapan()
-     *   (akan menghasilkan 'dilengkapi' karena field teknis wajib belum terisi).
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'jenis'          => ['required', 'string', 'in:server,switch,router'],
-            'merk'           => ['required', 'string', 'max:255'],
-            'dinas'          => ['nullable', 'string', 'max:255'],
-            'nama_pengirim'  => ['nullable', 'string', 'max:255'],
-            'nama_penerima'  => ['nullable', 'string', 'max:255'],
-            'rack'           => ['nullable', 'string', 'max:255'],
-        ]);
+        // Determine if merk is 'lainnya' to validate alternative field
+        $merkValue = $request->input('merk_perangkat');
+        // Determine if jenis is 'lainnya' to validate alternative field
+        $jenisValue = $request->input('jenis_perangkat');
+
+        $validationRules = [
+            'nama_pengirim' => ['required', 'string', 'max:255'],
+            'opd' => ['required', 'string', 'max:255'],
+            'nama_penerima' => ['nullable', 'string', 'max:255'],
+            'nama_perangkat' => ['required', 'string', 'max:255'],
+            'jenis_perangkat' => ['required', 'string', 'max:255'],
+            'merk_perangkat' => ['required', 'string', 'max:255'],
+            'tanggal_input' => ['required', 'date'],
+        ];
+
+        if ($merkValue === 'lainnya') {
+            $validationRules['merk_lainnya'] = ['required', 'string', 'max:255'];
+        }
+        if ($jenisValue === 'lainnya') {
+            $validationRules['jenis_lainnya'] = ['required', 'string', 'max:255'];
+        }
+
+        $validated = $request->validate($validationRules);
+
+        // Determine status kepemilikan based on selected OPD
+        $statusKepemilikan = ($validated['opd'] === 'Kominfo') ? 'Kominfo' : 'Colocation';
+
+        // Determine final merk & jenis value
+        $finalMerk = ($merkValue === 'lainnya') ? $validated['merk_lainnya'] : $merkValue;
+        $finalJenis = ($jenisValue === 'lainnya') ? $validated['jenis_lainnya'] : $jenisValue;
 
         $data = [
-            'nama_perangkat'    => $validated['merk'],
-            'jenis_perangkat'   => $validated['jenis'],
-            'merk_perangkat'    => $validated['merk'],
-            'pemilik_perangkat' => $validated['dinas'] ?? null,
-            'status_kepemilikan'=> 'Colocation',
-            'nama_pengirim'     => $validated['nama_pengirim'] ?? null,
-            'nama_penerima'     => $validated['nama_penerima'] ?? null,
-            'nomor_rack'        => $validated['rack'] ?? null,
+            'nama_perangkat' => $validated['nama_perangkat'],
+            'jenis_perangkat'   => $finalJenis,
+            'merk_perangkat'    => $finalMerk,
+            'pemilik_perangkat' => $validated['opd'],
+            'status_kepemilikan'=> $statusKepemilikan,
+            'nama_pengirim'     => $validated['nama_pengirim'],
+            'nama_penerima'     => $validated['nama_penerima'] ?: null,
+            'tanggal_input'     => $validated['tanggal_input'],
             'user_id'           => Auth::id(),
         ];
 
-        // Otomatis 'dilengkapi' (menunggu admin) karena field wajib teknis belum diisi.
+        // Hitung status_kelengkapan (should be 'pending' because technical fields empty)
         $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
 
         // Buat server baru
         $server = Server::create($data);
 
-        // Generate and set kode_perangkat
+        // Generate and set kode_perangkat using tanggal_input (or today if null)
+        $tanggalForCode = $validated['tanggal_input'] ?? \Illuminate\Support\Carbon::now()->toDateString();
         $server->kode_perangkat = Server::generateKodePerangkat(
             $data['status_kepemilikan'],
-            $server->created_at ? $server->created_at->toDateString() : null
+            $tanggalForCode
         );
         $server->save();
 
