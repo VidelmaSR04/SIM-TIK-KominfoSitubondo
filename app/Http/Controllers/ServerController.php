@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Server;
 use App\Models\User;
+use App\Models\MasterData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ServerController extends Controller
@@ -39,6 +41,38 @@ class ServerController extends Controller
         return view('inputdata');
     }
 
+    private function resolveMasterDataValue(string $kategori, string $input): string
+    {
+        $input = trim($input);
+        if (empty($input)) {
+            return '';
+        }
+
+        // Check if value already exists (case-insensitive, trimmed)
+        $existing = MasterData::where('kategori', $kategori)
+            ->whereRaw('LOWER(TRIM(value)) = LOWER(?)', [$input])
+            ->first();
+
+        if ($existing) {
+            return $existing->value;
+        }
+
+        // Determine next urutan
+        $maxUrutan = MasterData::where('kategori', $kategori)->max('urutan');
+        $nextUrutan = $maxUrutan !== null ? $maxUrutan + 1 : 1;
+
+        // Create new master data entry (value = label = input)
+        MasterData::create([
+            'kategori' => $kategori,
+            'value' => $input,
+            'label' => $input,
+            'urutan' => $nextUrutan,
+            'is_aktif' => true,
+        ]);
+
+        return $input;
+    }
+
     public function store(Request $request)
     {
         // Determine if merk is 'lainnya' to validate alternative field
@@ -67,8 +101,8 @@ class ServerController extends Controller
             'gambar_rack'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'jumlah_core'         => 'required|integer|min:1',
             'peruntukan'          => 'required|string|max:255',
-            'nama_pengirim'       => 'required|string|max:255',
-            'nama_penerima'       => 'required|string|max:255',
+            'nama_pengirim'       => $request->input('status_kepemilikan') !== 'Kominfo' ? 'required|string|max:255' : 'nullable|string|max:255',
+            'nama_penerima'       => $request->input('status_kepemilikan') !== 'Kominfo' ? 'required|string|max:255' : 'nullable|string|max:255',
             'jam_pengisian'       => 'required|date',
         ];
 
@@ -87,9 +121,14 @@ class ServerController extends Controller
 
         $validated = $request->validate($validationRules);
 
-        // Determine final merk & jenis value
-        $finalMerk = ($merkValue === 'lainnya') ? $validated['merk_lainnya'] : $merkValue;
-        $finalJenis = ($jenisValue === 'lainnya') ? $validated['jenis_lainnya'] : $jenisValue;
+        // Handle custom merk and jenis input: save to master data if 'lainnya' selected
+        $finalMerk = $merkValue === 'lainnya' && !empty($validated['merk_lainnya'] ?? '')
+            ? $this->resolveMasterDataValue('merk_perangkat', $validated['merk_lainnya'])
+            : $merkValue;
+
+        $finalJenis = $jenisValue === 'lainnya' && !empty($validated['jenis_lainnya'] ?? '')
+            ? $this->resolveMasterDataValue('jenis_perangkat', $validated['jenis_lainnya'])
+            : $jenisValue;
 
         $data = [
             'nama_perangkat' => $validated['nama_perangkat'],
@@ -102,7 +141,7 @@ class ServerController extends Controller
             'spesifikasi'       => $validated['spesifikasi'],
             'tipe_perangkat'    => $validated['tipe_perangkat'],
             'status_kepemilikan'=> $validated['status_kepemilikan'],
-            'pemilik_perangkat' => $validated['pemilik_perangkat'],
+            'pemilik_perangkat' => $validated['pemilik_perangkat'] ?? null,
             'ip_server'         => $validated['ip_server'],
             'ip_vps'            => $validated['ip_vps'],
             'status'            => $validated['status'],
@@ -112,8 +151,8 @@ class ServerController extends Controller
             'gambar_rack'       => $validated['gambar_rack'] ?? null,
             'jumlah_core'       => $validated['jumlah_core'],
             'peruntukan'        => $validated['peruntukan'],
-            'nama_pengirim'     => $validated['nama_pengirim'],
-            'nama_penerima'     => $validated['nama_penerima'] ?: null,
+            'nama_pengirim'     => empty($validated['nama_pengirim'] ?? '') ? null : $validated['nama_pengirim'],
+            'nama_penerima'     => empty($validated['nama_penerima'] ?? '') ? null : $validated['nama_penerima'],
             'jam_pengisian'     => $validated['jam_pengisian'],
             'user_id'           => Auth::user()->id,
         ];
@@ -133,10 +172,11 @@ class ServerController extends Controller
         // Create server instance (we'll set status_locked explicitly after creation)
         $server = Server::create($data);
 
-        // Generate and set kode_perangkat
+        // Generate and set kode_perangkat based on submitted date (jam_pengisian)
+        $dateForCode = $validated['jam_pengisian'] ?? \Illuminate\Support\Carbon::now()->toDateString();
         $server->kode_perangkat = Server::generateKodePerangkat(
             $data['status_kepemilikan'],
-            $server->created_at ? $server->created_at->toDateString() : null
+            $dateForCode
         );
         $server->save();
 
@@ -168,6 +208,7 @@ class ServerController extends Controller
                 }
 
                 $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+                $filename = str_replace('..', '', $filename);
                 $path = $file->storeAs('rack_images', $filename, 'public');
                 $server->gambar_rack = $path;
 
@@ -186,6 +227,12 @@ class ServerController extends Controller
         // Sync status berdasarkan status_kelengkapan (jika belum dikunci manual oleh admin)
         $server->syncStatusFromKelengkapan();
         $server->save();
+
+        // Ensure status is not null (fallback)
+        if ($server->status === null) {
+            $server->status = $server->status_kelengkapan === 'lengkap' ? 'Aktif' : 'Pending';
+            $server->save();
+        }
 
         return redirect()->route('detailserver', ['id' => $server->id])->with('success', 'Server berhasil ditambahkan.');
     }
@@ -244,8 +291,8 @@ class ServerController extends Controller
             'gambar_rack'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'jumlah_core'         => 'required|integer|min:1',
             'peruntukan'          => 'required|string|max:255',
-            'nama_pengirim'       => 'required|string|max:255',
-            'nama_penerima'       => 'required|string|max:255',
+            'nama_pengirim'       => $request->input('status_kepemilikan') !== 'Kominfo' ? 'required|string|max:255' : 'nullable|string|max:255',
+            'nama_penerima'       => $request->input('status_kepemilikan') !== 'Kominfo' ? 'required|string|max:255' : 'nullable|string|max:255',
             'jam_pengisian'       => 'required|date',
         ];
 
@@ -264,9 +311,14 @@ class ServerController extends Controller
 
         $validated = $request->validate($validationRules);
 
-        // Determine final merk & jenis value
-        $finalMerk = ($merkValue === 'lainnya') ? $validated['merk_lainnya'] : $merkValue;
-        $finalJenis = ($jenisValue === 'lainnya') ? $validated['jenis_lainnya'] : $jenisValue;
+        // Handle custom merk and jenis input: save to master data if 'lainnya' selected
+        $finalMerk = $merkValue === 'lainnya' && !empty($validated['merk_lainnya'] ?? '')
+            ? $this->resolveMasterDataValue('merk_perangkat', $validated['merk_lainnya'])
+            : $merkValue;
+
+        $finalJenis = $jenisValue === 'lainnya' && !empty($validated['jenis_lainnya'] ?? '')
+            ? $this->resolveMasterDataValue('jenis_perangkat', $validated['jenis_lainnya'])
+            : $jenisValue;
 
         $data = [
             'nama_perangkat' => $validated['nama_perangkat'],
@@ -279,7 +331,7 @@ class ServerController extends Controller
             'spesifikasi'       => $validated['spesifikasi'],
             'tipe_perangkat'    => $validated['tipe_perangkat'],
             'status_kepemilikan'=> $validated['status_kepemilikan'],
-            'pemilik_perangkat' => $validated['pemilik_perangkat'],
+            'pemilik_perangkat' => $validated['pemilik_perangkat'] ?? null,
             'ip_server'         => $validated['ip_server'],
             'ip_vps'            => $validated['ip_vps'],
             'status'            => $validated['status'],
@@ -289,8 +341,8 @@ class ServerController extends Controller
             'gambar_rack'       => $validated['gambar_rack'] ?? null,
             'jumlah_core'       => $validated['jumlah_core'],
             'peruntukan'        => $validated['peruntukan'],
-            'nama_pengirim'     => $validated['nama_pengirim'],
-            'nama_penerima'     => $validated['nama_penerima'] ?: null,
+            'nama_pengirim'     => empty($validated['nama_pengirim'] ?? '') ? null : $validated['nama_pengirim'],
+            'nama_penerima'     => empty($validated['nama_penerima'] ?? '') ? null : $validated['nama_penerima'],
             'jam_pengisian'     => $validated['jam_pengisian'],
         ];
 
@@ -308,6 +360,14 @@ class ServerController extends Controller
 
         // Update server with base data (excluding status_locked for mass assignment)
         $server->update($data);
+
+        // Regenerate kode_perangkat based on submitted date (jam_pengisian)
+        $dateForCode = $validated['jam_pengisian'];
+        $server->kode_perangkat = Server::generateKodePerangkat(
+            $data['status_kepemilikan'],
+            $dateForCode
+        );
+        $server->save();
 
         // Determine status_locked based on admin's manual status choice from form
         // If admin selects 'Non-Aktif' or 'Maintenance' -> lock status (status_locked = true)
@@ -339,6 +399,7 @@ class ServerController extends Controller
                 }
 
                 $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+                $filename = str_replace('..', '', $filename);
                 $path = $file->storeAs('rack_images', $filename, 'public');
                 $server->gambar_rack = $path;
 
@@ -364,6 +425,12 @@ class ServerController extends Controller
         // Sync status berdasarkan status_kelengkapan (jika belum dikunci manual)
         $server->syncStatusFromKelengkapan();
         $server->save();
+
+        // Ensure status is not null (fallback)
+        if ($server->status === null) {
+            $server->status = $server->status_kelengkapan === 'lengkap' ? 'Aktif' : 'Pending';
+            $server->save();
+        }
 
         return redirect()->route('server.index')->with('success', 'Server berhasil diperbarui.');
     }
@@ -466,5 +533,24 @@ class ServerController extends Controller
 
         // Redirect back with success message
         return redirect()->back()->with('success', 'Status berhasil dibuka dan disinkronisasi dengan data kelengkapan.');
+    }
+
+    /**
+     * Return next kode_perangkat for given status_kepemilikan and date (YYYY-MM-DD)
+     * via AJAX.
+     */
+    public function nextCode(Request $request)
+    {
+        $status = $request->input('status_kepemilikan');
+        $date = $request->input('date'); // expected format Y-m-d
+
+        if (!$status || !in_array($status, ['Kominfo', 'Colocation'])) {
+            return response()->json(['error' => 'Invalid status'], 400);
+        }
+
+        $dateObj = $date ? \Illuminate\Support\Carbon::parse($date) : \Illuminate\Support\Carbon::now();
+        $kode = \App\Models\Server::generateKodePerangkat($status, $dateObj->toDateString());
+
+        return response()->json(['kode_perangkat' => $kode]);
     }
 }

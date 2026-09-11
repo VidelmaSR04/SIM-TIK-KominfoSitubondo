@@ -114,7 +114,7 @@
 <p class="font-body-md text-body-md text_blue-900">Data akan berstatus <strong>PENDING</strong> hingga dilengkapi oleh admin.</p>
 </div>
 @if ($errors->any())
-<div class="bg-error_container border border-error/30 rounded-lg p-4 mb-8 flex items_start gap-3 shadow-sm">
+<div class="bg-error_container border border-error/30 rounded-lg p-4 mb-8 flex_items_start gap-3 shadow-sm">
 <span class="material-symbols_outined text_error mt-0.5">error</span>
 <div class="font-body-md text-body-md text_on_error_container">
 <p class="font-semibold mb-1">Periksa kembali data yang diisi:</p>
@@ -130,25 +130,25 @@
 <div class="bg-surface_container_lowest border border-outline-variant rounded-xl shadow-sm p-8">
 <form action="{{ route('inputdatauser.store') }}" method="POST">
 @csrf
+
+        <?php
+            // Determine default values for kode_perangkat preview (user form)
+            $opd = old('opd') ?? '';
+            $statusKepemilikan = ($opd === 'Kominfo') ? 'Kominfo' : 'Colocation';
+            $dateString = old('tanggal_input') ?? now()->toDateString();
+            $defaultKode = \App\Models\Server::generateKodePerangkat($statusKepemilikan, $dateString);
+        ?>
+
 <div class="space-y-6">
-    <!-- Kode Perangkat (readonly preview) -->
-    <div>
-        <label class="block font-label-md text-label-md text_on_surface mb-2" for="kode_perangkat">Kode Perangkat <span class="text-error">*</span></label>
-        <div class="flex items-center space-x-3">
-            <input type="text" id="kode_perangkat" name="kode_perangkat" readonly
-                class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                placeholder="Kode perangkat akan dibuat otomatis mengikuti format sistem"
-            >
-        </div>
-        <p class="mt-1 text-xs text_on_surface-variant">Kode perangkat akan dibuat otomatis setelah submit berdasarkan tanggal input dan pilihan OPD.</p>
-    </div>
 
     <!-- Nama Pengirim -->
     <div>
-        <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_pengirim">Nama Pengirim <span class="text-error">*</span></label>
+        <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_pengirim">Nama Pengirim @if ($opd !== 'Kominfo') <span class="text-error">*</span> @endif</label>
         <input type="text" id="nama_pengirim" name="nama_pengirim"
             class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-            value="{{ old('nama_pengirim') }}" placeholder="Nama pengirim" required>
+            value="{{ old('nama_pengirim') }}" placeholder="Nama pengirim"
+            @if ($opd === 'Kominfo') disabled @endif
+            @if ($opd !== 'Kominfo') required @endif>
     </div>
 
     <!-- Nama Dinas/OPD -->
@@ -168,10 +168,23 @@
 
     <!-- Nama Penerima -->
     <div>
-        <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_penerima">Nama Penerima (diisi admin)</label>
+        <label class="block font-label-md text-label-md text_on_surface mb-2" for="nama_penerima">Nama Penerika (diisi admin)</label>
         <input type="text" id="nama_penerima" name="nama_penerima"
             class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             value="{{ old('nama_penerima') }}" placeholder="Akan diisi oleh admin">
+    </div>
+
+    <!-- Kode Perangkat (readonly preview) -->
+    <div>
+        <label class="block font-label-md text-label-md text_on_surface mb-2" for="kode_perangkat">Kode Perangkat <span class="text-error">*</span></label>
+        <div class="flex items-center space-x-3">
+            <input type="text" id="kode_perangkat" name="kode_perangkat" readonly
+                class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                value="{{ old('kode_perangkat', $defaultKode) }}"
+                placeholder="Kode perangkat akan dibuat otomatis mengikuti format sistem"
+            >
+        </div>
+        <p class="mt-1 text-xs text_on_surface-variant">Kode perangkat akan dibuat otomatis setelah submit berdasarkan tanggal input dan pilihan OPD.</p>
     </div>
 
     <!-- Nama Perangkat -->
@@ -258,8 +271,79 @@
 </div>
 </main>
 </div>
-</body></html>
+</body><script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const jenisSelect = document.getElementById('jenis_perangkat');
+        const jenisLainnyaWrapper = document.getElementById('jenis-lainnya_wrapper');
+        const merkSelect = document.getElementById('merk_perangkat');
+        const merkLainnyaWrapper = document.getElementById('merk-lainnya_wrapper');
 
+        function toggleLainnya(select, wrapper) {
+            const input = wrapper.querySelector('input');
+            if (select.value === 'lainnya') {
+                wrapper.classList.remove('hidden');
+                input.required = true;
+            } else {
+                wrapper.classList.add('hidden');
+                input.required = false;
+                input.value = '';
+            }
+        }
+
+        // Initial state
+        toggleLainnya(jenisSelect, jenisLainnyaWrapper);
+        toggleLainnya(merkSelect, merkLainnyaWrapper);
+
+        // Event listeners
+        jenisSelect.addEventListener('change', function () {
+            toggleLainnya(jenisSelect, jenisLainnyaWrapper);
+        });
+        merkSelect.addEventListener('change', function () {
+            toggleLainnya(merkSelect, merkLainnyaWrapper);
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const opdSelect = document.getElementById('opd');
+        const tanggalInput = document.getElementById('tanggal_input');
+        const kodePerangkat = document.getElementById('kode_perangkat');
+
+        async function updateKodePerangkatPreview() {
+            if (!opdSelect || !tanggalInput || !kodePerangkat) return;
+            const isKominfo = opdSelect.value === 'Kominfo';
+            const prefix = isKominfo ? 'KO' : 'CO';
+            let dateParam = '';
+            if (tanggalInput.value) {
+                dateParam = tanggalInput.value; // Y-m-d
+            } else {
+                dateParam = ''; // empty => today
+            }
+            try {
+                const response = await fetch('/server/next-code?status_kepemilikan=' + encodeURIComponent(opdSelect.value) + (dateParam ? '&date=' + encodeURIComponent(dateParam) : ''));
+                const data = await response.json();
+                if (data.kode_perangkat) {
+                    kodePerangkat.value = data.kode_perangkat;
+                } else {
+                    // fallback
+                    const datePart = dateParam ? dateParam.replace(/-/g, '').slice(2) : (() => { const today = new Date(); return String(today.getFullYear()).slice(-2) + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0'); })();
+                    kodePerangkat.value = prefix + datePart + 'A';
+                }
+            } catch (e) {
+                console.error(e);
+                // fallback
+                const datePart = tanggalInput.value ? tanggalInput.value.replace(/-/g, '').slice(2) : (() => { const today = new Date(); return String(today.getFullYear()).slice(-2) + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0'); })();
+                kodePerangkat.value = prefix + datePart + 'A';
+            }
+        }
+
+        // Initial update
+        updateKodePerangkatPreview();
+        // Update on change
+        if (opdSelect) opdSelect.addEventListener('change', updateKodePerangkatPreview);
+        if (tanggalInput) tanggalInput.addEventListener('change', updateKodePerangkatPreview);
+    });
+</script>
+</html>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const jenisSelect = document.getElementById('jenis_perangkat');
@@ -290,5 +374,38 @@
         merkSelect.addEventListener('change', function () {
             toggleLainnya(merkSelect, merkLainnyaWrapper);
         });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const opdSelect = document.getElementById('opd');
+        const tanggalInput = document.getElementById('tanggal_input');
+        const kodePerangkat = document.getElementById('kode_perangkat');
+
+        function updateKodePerangkatPreview() {
+            if (!opdSelect || !tanggalInput || !kodePerangkat) return;
+            const isKominfo = opdSelect.value === 'Kominfo';
+            const prefix = isKominfo ? 'KO' : 'CO';
+            let datePart = '';
+            if (tanggalInput.value) {
+                // format YYYY-MM-DD to YYMMDD
+                const [year, month, day] = tanggalInput.value.split('-');
+                datePart = year.slice(2) + month.padStart(2, '0') + day.padStart(2, '0');
+            } else {
+                const today = new Date();
+                const yy = String(today.getFullYear()).slice(-2);
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                datePart = yy + mm + dd;
+            }
+            // placeholder sequence A
+            kodePerangkat.value = prefix + datePart + 'A';
+        }
+
+        // Initial update
+        updateKodePerangkatPreview();
+        // Update on change
+        if (opdSelect) opdSelect.addEventListener('change', updateKodePerangkatPreview);
+        if (tanggalInput) tanggalInput.addEventListener('change', updateKodePerangkatPreview);
     });
 </script>

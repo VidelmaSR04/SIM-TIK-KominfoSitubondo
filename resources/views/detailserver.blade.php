@@ -103,6 +103,10 @@
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                     <div>
+                        <p class="text-xs text-secondary font-semibold uppercase tracking-wider">Kode Perangkat</p>
+                        <p class="font-semibold text-on-surface">{{ $server->kode_perangkat ?? '-' }}</p>
+                    </div>
+                    <div>
                         <p class="text-xs text-secondary font-semibold uppercase tracking-wider">Nama Server</p>
                         <p class="font-semibold text-on-surface">{{ $server->nama_perangkat }}</p>
                     </div>
@@ -169,10 +173,10 @@
                                 class="flex items-center gap-1 bg-surface-container-low text-on-surface-variant px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-container transition-colors border border-outline-variant">
                                 <span class="material-symbols-outlined text-[18px]">link</span> Salin Link
                             </a>
-                            <a href="{{ route('server.pdf', $server->id) }}" target="_blank"
+                            <button onclick="downloadPdf({{$server->id}})"
                                 class="flex items-center gap-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-container transition-colors shadow-sm">
                                 <span class="material-symbols-outlined text-[18px]">print</span> Cetak PDF
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -352,6 +356,16 @@
             const modal = document.getElementById('imageModal');
             modal.classList.add('hidden');
             document.body.style.overflow = 'auto';
+        }
+
+        function downloadPdf(id) {
+            const url = `/server/${id}/pdf`;
+            // Try opening in new tab
+            const newWin = window.open(url, '_blank');
+            if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+                // Popup blocked: fallback to setting location.href (may trigger download)
+                window.location.href = url;
+            }
         }
 
         // Tutup modal dengan tombol ESC

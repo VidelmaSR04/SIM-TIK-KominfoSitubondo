@@ -406,6 +406,18 @@
         }
     @endphp
 
+    @php
+        // Determine default values for kode_perangkat preview
+        if ($isEdit) {
+            $statusKepemilikan = old('status_kepemilikan') ?? $server->status_kepemilikan ?? 'Kominfo';
+            $dateString = old('jam_pengisian') ?? ($server->jam_pengisian ? $server->jam_pengisian->format('Y-m-d') : \Illuminate\Support\Carbon::now()->toDateString());
+        } else {
+            $statusKepemilikan = old('status_kepemilikan') ?? 'Kominfo';
+            $dateString = old('jam_pengisian') ?? \Illuminate\Support\Carbon::now()->toDateString();
+        }
+        $defaultKode = \App\Models\Server::generateKodePerangkat($statusKepemilikan, $dateString);
+    @endphp
+
     <!-- Breadcrumb -->
     <nav aria-label="Breadcrumb" class="flex text-sm text-secondary mb-4 font-body-md">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -436,6 +448,15 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+                    <!-- Kode Perangkat (full width) -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label" for="kode_perangkat">Kode Perangkat</label>
+                        <input type="text" id="kode_perangkat" name="kode_perangkat" readonly
+                               class="w-full bg_surface border border-outline-variant rounded-lg py-2.5 px-4 font-body-md text-body-md text_on_surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               value="{{ old('kode_perangkat', $isEdit ? $server->kode_perangkat : $defaultKode) }}">
+                        <p class="mt-1 text-xs text_on_surface-variant">Kode perangkat akan dibuat otomatis setelah submit berdasarkan tanggal input dan pilihan OPD.</p>
+                    </div>
+
                     <!-- Nama Perangkat (full width) -->
                     <div class="col-span-1 md:col-span-2">
                         <label class="form-label" for="nama_perangkat">Nama Perangkat <span class="required-star">*</span></label>
@@ -443,7 +464,7 @@
                             <div class="input-group-addon"><span class="material-symbols-outlined text-xl">list</span></div>
                             <input class="input-group-input @error('nama_perangkat') border-red-500 @enderror"
                                 id="nama_perangkat" name="nama_perangkat" placeholder="Masukkan nama perangkat"
-                                type="text" value="{{ old('nama_perangkat', $server->nama_perangkat ?? '') }}">
+                                type="text" value="{{ old('nama_perangkat', $isEdit ? $server->nama_perangkat : '') }}">
                         </div>
                         @error('nama_perangkat')
                             <p class="form-error">{{ $message }}</p>
@@ -456,20 +477,20 @@
                         <select class="standard-select @error('jenis_perangkat') border-red-500 @enderror"
                             id="jenis_perangkat" name="jenis_perangkat">
                             @foreach (\App\Models\MasterData::forSelect('jenis_perangkat') as $value => $label)
-                                <option value="{{ $value }}" {{ old('jenis_perangkat', $server->jenis_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $value }}" {{ old('jenis_perangkat', $isEdit ? $server->jenis_perangkat : '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
-                            <option value="lainnya" {{ (old('jenis_perangkat') == 'lainnya' || (!old('jenis_perangkat') && !empty($server->jenisLainnya))) ? 'selected' : '' }}>Lainnya</option>
+                            <option value="lainnya" {{ (old('jenis_perangkat') == 'lainnya' || (!old('jenis_perangkat') && $isEdit && !empty($server->jenisLainnya))) ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         @error('jenis_perangkat')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
                     <!-- Alternative input for Lainnya -->
-                    <div id="jenis-lainnya_wrapper" class="{{ (old('jenis_perangkat') == 'lainnya' || (!old('jenis_perangkat') && !empty($server->jenisLainnya))) ? '' : 'hidden' }}">
+                    <div id="jenis-lainnya_wrapper" class="{{ (old('jenis_perangkat') == 'lainnya' || (!old('jenis_perangkat') && $isEdit && !empty($server->jenisLainnya))) ? '' : 'hidden' }}">
                         <label class="form-label" for="jenis_lainnya">Jenis Perangkat (Lainnya) <span class="required-star">*</span></label>
                         <input type="text" id="jenis_lainnya" name="jenis_lainnya"
                             class="standard-input @error('jenis_lainnya') border-red-500 @enderror"
-                            value="{{ old('jenis_lainnya', $server->jenisLainnya ?? '') }}"
+                            value="{{ old('jenis_lainnya', $isEdit ? $server->jenisLainnya : '') }}"
                             placeholder="Masukkan jenis perangkat lain">
                         @error('jenis_lainnya')
                             <p class="form-error">{{ $message }}</p>
@@ -482,20 +503,20 @@
                         <select class="standard-select @error('merk_perangkat') border-red-500 @enderror"
                             id="merk_perangkat" name="merk_perangkat">
                             @foreach (\App\Models\MasterData::forSelect('merk_perangkat') as $value => $label)
-                                <option value="{{ $value }}" {{ old('merk_perangkat', $server->merk_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $value }}" {{ old('merk_perangkat', $isEdit ? $server->merk_perangkat : '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
-                            <option value="lainnya" {{ (old('merk_perangkat') == 'lainnya' || (!old('merk_perangkat') && !empty($server->merkLainnya))) ? 'selected' : '' }}>Lainnya</option>
+                            <option value="lainnya" {{ (old('merk_perangkat') == 'lainnya' || (!old('merk_perangkat') && $isEdit && !empty($server->merkLainnya))) ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         @error('merk_perangkat')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
                     <!-- Alternative input for Lainnya -->
-                    <div id="merk-lainnya_wrapper" class="{{ (old('merk_perangkat') == 'lainnya' || (!old('merk_perangkat') && !empty($server->merkLainnya))) ? '' : 'hidden' }}">
+                    <div id="merk-lainnya_wrapper" class="{{ (old('merk_perangkat') == 'lainnya' || (!old('merk_perangkat') && $isEdit && !empty($server->merkLainnya))) ? '' : 'hidden' }}">
                         <label class="form-label" for="merk_lainnya">Merk Perangkat (Lainnya) <span class="required-star">*</span></label>
                         <input type="text" id="merk_lainnya" name="merk_lainnya"
                             class="standard-input @error('merk_lainnya') border-red-500 @enderror"
-                            value="{{ old('merk_lainnya', $server->merkLainnya ?? '') }}"
+                            value="{{ old('merk_lainnya', $isEdit ? $server->merkLainnya : '') }}"
                             placeholder="Masukkan merk perangkat lain">
                         @error('merk_lainnya')
                             <p class="form-error">{{ $message }}</p>
@@ -873,32 +894,37 @@
 
                     <!-- Pengirim & Penerima -->
                     <div>
-                        <label class="form-label" for="nama_pengirim">Nama Pengirim <span class="required-star">*</span></label>
+                        <label class="form-label" for="nama_pengirim">Nama Pengirim @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') <span class="required-star">*</span> @endif</label>
                         <input class="standard-input @error('nama_pengirim') border-red-500 @enderror" id="nama_pengirim"
                             name="nama_pengirim" placeholder="Nama pengirim" type="text"
-                            value="{{ old('nama_pengirim', $server->nama_pengirim ?? '') }}">
+                            value="{{ old('nama_pengirim', $isEdit ? $server->nama_pengirim : '') }}"
+                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) === 'Kominfo') disabled @endif
+                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') required @endif>
                         @error('nama_pengirim')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label class="form-label" for="nama_penerima">Nama Penerima <span class="required-star">*</span></label>
+                        <label class="form-label" for="nama_penerima">Nama Penerima @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') <span class="required-star">*</span> @endif</label>
                         <input class="standard-input @error('nama_penerima') border-red-500 @enderror" id="nama_penerima"
                             name="nama_penerima" placeholder="Nama penerima" type="text"
-                            value="{{ old('nama_penerima', $server->nama_penerima ?? '') }}">
+                            value="{{ old('nama_penerima', $isEdit ? $server->nama_penerima : '') }}"
+                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) === 'Kominfo') disabled @endif
+                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') required @endif>
                         @error('nama_penerima')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
 
+                    
                     <!-- Tanggal Pengisian (full width) -->
                     <div class="col-span-1 md:col-span-2">
                         <label class="form-label" for="jam_pengisian">Tanggal Pengisian <span class="required-star">*</span></label>
                         <input
                             class="w-full border border-[#CBD5E1] rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary @error('jam_pengisian') border-red-500 @enderror"
-                            id="jam_pengisian" name="jam_pengisian" type="datetime-local"
-                            value="{{ old('jam_pengisian', isset($server) && $server->jam_pengisian ? $server->jam_pengisian->format('Y-m-d\TH:i') : '') }}">
-                        <p class="text-xs text-secondary mt-1">Format: DD-MM-YYYY HH:MM (contoh: 06-08-2026 14:30). Gunakan kalender atau ketik manual.</p>
+                            id="jam_pengisian" name="jam_pengisian" type="date"
+                            value="{{ old('jam_pengisian', isset($server) && $server->jam_pengisian ? $server->jam_pengisian->format('Y-m-d') : '') }}">
+                        <p class="text-xs text-secondary mt-1">Format: YYYY-MM-DD (contoh: 2026-09-10). Gunakan kalender atau ketik manual.</p>
                         @error('jam_pengisian')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
@@ -1317,6 +1343,63 @@
         const statusSelect = document.getElementById('status_kepemilikan');
         if (statusSelect) {
             statusSelect.addEventListener('change', toggleOwnerField);
+        }
+    });
+// Update nama fields disabled/required and kode_perangkat preview via AJAX
+    async function updateKodePerangkatPreview() {
+        const statusSelect = document.getElementById('status_kepemilikan');
+        const namaPengirim = document.getElementById('nama_pengirim');
+        const namaPenerima = document.getElementById('nama_penerima');
+        const kodePerangkat = document.getElementById('kode_perangkat');
+        const jamPengisian = document.getElementById('jam_pengisian');
+
+        const isKominfo = statusSelect && statusSelect.value === 'Kominfo';
+        if (namaPengirim) {
+            namaPengirim.disabled = isKominfo;
+            namaPengirim.required = !isKominfo;
+        }
+        if (namaPenerima) {
+            namaPenerima.disabled = isKominfo;
+            namaPenerima.required = !isKominfo;
+        }
+
+        if (kodePerangkat && jamPengisian) {
+            const prefix = isKominfo ? 'KO' : 'CO';
+            let dateParam = '';
+            if (jamPengisian.value) {
+                dateParam = jamPengisian.value; // Y-m-d
+            } else {
+                dateParam = ''; // empty => today
+            }
+            try {
+                const response = await fetch('/server/next-code?status_kepemilikan=' + encodeURIComponent(statusSelect.value) + (dateParam ? '&date=' + encodeURIComponent(dateParam) : ''));
+                const data = await response.json();
+                if (data.kode_perangkat) {
+                    kodePerangkat.value = data.kode_perangkat;
+                } else {
+                    // fallback
+                    const datePart = dateParam ? dateParam.replace(/-/g, '').slice(2) : (() => { const today = new Date(); return String(today.getFullYear()).slice(-2) + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0'); })();
+                    kodePerangkat.value = prefix + datePart + 'A';
+                }
+            } catch (e) {
+                console.error(e);
+                // fallback
+                const datePart = jamPengisian.value ? jamPengisian.value.replace(/-/g, '').slice(2) : (() => { const today = new Date(); return String(today.getFullYear()).slice(-2) + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0'); })();
+                kodePerangkat.value = prefix + datePart + 'A';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const statusSelect = document.getElementById('status_kepemilikan');
+        if (statusSelect) {
+            statusSelect.addEventListener('change', updateKodePerangkatPreview);
+            // initial call to set correct state on load
+            updateKodePerangkatPreview();
+        }
+        const jamPengisian = document.getElementById('jam_pengisian');
+        if (jamPengisian) {
+            jamPengisian.addEventListener('change', updateKodePerangkatPreview);
         }
     });
 </script>

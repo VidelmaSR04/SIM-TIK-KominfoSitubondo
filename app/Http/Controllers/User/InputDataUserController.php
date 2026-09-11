@@ -8,10 +8,42 @@ use App\Models\MasterData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class InputDataUserController extends Controller
 {
+    private function resolveMasterDataValue(string $kategori, string $input): string
+    {
+        $input = trim($input);
+        if (empty($input)) {
+            return '';
+        }
+
+        // Check if value already exists (case-insensitive, trimmed)
+        $existing = MasterData::where('kategori', $kategori)
+            ->whereRaw('LOWER(TRIM(value)) = LOWER(?)', [$input])
+            ->first();
+
+        if ($existing) {
+            return $existing->value;
+        }
+
+        // Determine next urutan
+        $maxUrutan = MasterData::where('kategori', $kategori)->max('urutan');
+        $nextUrutan = $maxUrutan !== null ? $maxUrutan + 1 : 1;
+
+        // Create new master data entry (value = label = input)
+        MasterData::create([
+            'kategori' => $kategori,
+            'value' => $input,
+            'label' => $input,
+            'urutan' => $nextUrutan,
+            'is_aktif' => true,
+        ]);
+
+        return $input;
+    }
     /**
      * Tampilkan form pendaftaran perangkat baru untuk user.
      */
@@ -119,7 +151,7 @@ class InputDataUserController extends Controller
         $jenisValue = $request->input('jenis_perangkat');
 
         $validationRules = [
-            'nama_pengirim' => ['required', 'string', 'max:255'],
+            'nama_pengirim' => $request->input('opd') !== 'Kominfo' ? ['required', 'string', 'max:255'] : ['nullable', 'string', 'max:255'],
             'opd' => ['required', 'string', 'max:255'],
             'nama_penerima' => ['nullable', 'string', 'max:255'],
             'nama_perangkat' => ['required', 'string', 'max:255'],
@@ -141,8 +173,13 @@ class InputDataUserController extends Controller
         $statusKepemilikan = ($validated['opd'] === 'Kominfo') ? 'Kominfo' : 'Colocation';
 
         // Determine final merk & jenis value
-        $finalMerk = ($merkValue === 'lainnya') ? $validated['merk_lainnya'] : $merkValue;
-        $finalJenis = ($jenisValue === 'lainnya') ? $validated['jenis_lainnya'] : $jenisValue;
+        $finalMerk = $merkValue === 'lainnya' && !empty($validated['merk_lainnya'] ?? '')
+            ? $this->resolveMasterDataValue('merk_perangkat', $validated['merk_lainnya'])
+            : $merkValue;
+
+        $finalJenis = $jenisValue === 'lainnya' && !empty($validated['jenis_lainnya'] ?? '')
+            ? $this->resolveMasterDataValue('jenis_perangkat', $validated['jenis_lainnya'])
+            : $jenisValue;
 
         $data = [
             'nama_perangkat' => $validated['nama_perangkat'],

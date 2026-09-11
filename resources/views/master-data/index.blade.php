@@ -118,7 +118,7 @@
                                 @foreach ($items as $item)
                                     <tr class="hover:bg-primary/5 transition-colors duration-150">
                                         <td class="px-6 py-4 text-on-surface-variant">{{ $item->urutan }}</td>
-                                        <td class="px-6 py-4 text-on-surface font-mono text-sm">{{ $item->value }}</td>
+                                        <td class="px-6 py-4 text-on-surface">{{ $item->value }}</td>
                                         <td class="px-6 py-4 text-on-surface">{{ $item->label ?? $item->value }}</td>
                                         <td class="px-6 py-4">
                                             <form action="{{ route('master-data.toggleAktif', $item) }}" method="POST" class="inline-flex">
