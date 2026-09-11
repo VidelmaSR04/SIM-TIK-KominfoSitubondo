@@ -283,7 +283,7 @@ class Server extends Model
         }
         $datePart = $date->format('ymd'); // YYMMDD format
 
-        // Hitung urutan harian berdasarkan kode yang sudah ada untuk hari ini
+        // Hitung urutan harian berdasarkan kode yang sudah ada untuk hari ini dan prefix yang sama
         $todayStart = $date->copy()->startOfDay();
         $todayEnd = $date->copy()->endOfDay();
 
@@ -293,12 +293,12 @@ class Server extends Model
             ->pluck('kode_perangkat')
             ->toArray();
 
-        // Ekstrak bagian urutan dari kode yang sudah ada
+        // Ekstrak bagian urutan dari kode yang sudah ada dengan prefix yang sesuai
         $usedSequences = [];
         foreach ($existingCodesToday as $code) {
             // Format: [KO|CO][YYMMDD][sequence]
             // Ambil bagian setelah prefix (2 karakter) dan tanggal (6 karakter)
-            if (strlen($code) >= 9) { // minimal KO/CO(2) + YYMMDD(6) = 8, plus at least 1 sequence char
+            if (strlen($code) >= 9 && substr($code, 0, 2) === $prefix) { // minimal KO/CO(2) + YYMMDD(6) = 8, plus at least 1 sequence char
                 $sequencePart = substr($code, 8); // setelah 8 karakter pertama (prefix+date)
                 $usedSequences[] = $sequencePart;
             }

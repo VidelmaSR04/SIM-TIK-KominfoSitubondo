@@ -63,6 +63,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // Unlock and sync route for admin one-click fix
     Route::post('/server/{id}/unlock-sync', [ServerController::class, 'unlockAndSync'])->name('server.unlockSync');
+
+    // Server resource (admin management)
+    Route::resource('server', ServerController::class)->except(['show']);
 });
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============
@@ -97,6 +100,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/server/next-code', [ServerController::class, 'nextCode'])->name('server.nextCode');
 });
 
 // ============= AUTH REGISTRATION (Separate for admin/user) =============
