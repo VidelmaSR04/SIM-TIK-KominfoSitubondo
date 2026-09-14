@@ -23,8 +23,8 @@ class ServerPhotoController extends Controller
                     ->orWhere('pemilik_perangkat', 'like', "%{$search}%");
             });
 
-        // If user is not admin, only show their own servers
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        // If user is not admin or kepala_bidang_tik, only show their own servers
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik'])) {
             $query->where('user_id', Auth::id());
         }
 

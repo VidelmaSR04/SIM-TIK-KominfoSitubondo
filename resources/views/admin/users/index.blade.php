@@ -78,6 +78,7 @@
                 <option value="">Semua Role</option>
                 <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                 <option value="user" {{ request('role') == 'user' ? 'selected' : '' }}>User OPD</option>
+                <option value="kepala_bidang_tik" {{ request('role') == 'kepala_bidang_tik' ? 'selected' : '' }}>Kepala Bidang TIK</option>
             </select>
 
             <div class="relative ml-auto">
@@ -116,6 +117,10 @@
                         @if ($u->role === 'admin')
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
                                 <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Admin
+                            </span>
+                        @elseif ($u->role === 'kepala_bidang_tik')
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Kepala Bidang TIK
                             </span>
                         @else
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
