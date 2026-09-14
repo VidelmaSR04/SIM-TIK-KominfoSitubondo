@@ -113,6 +113,7 @@
                             <option disabled {{ old('role') ? '' : 'selected' }} value="">-- Pilih Role --</option>
                             <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                             <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User OPD</option>
+                            <option value="kepala_bidang_tik" {{ old('role') == 'kepala_bidang_tik' ? 'selected' : '' }}>Kepala Bidang TIK</option>
                         </select>
                         @error('role')
                             <p class="form-error">{{ $message }}</p>

@@ -6,7 +6,7 @@
         </div>
         <div>
             <p class="text-white font-semibold text-sm leading-tight">SIM TIK</p>
-            <p class="text-xs text-gray-400 leading-tight">Admin Data Center</p>
+            <p class="text-xs text-gray-400 leading-tight">{{ Auth::user()->role === 'admin' ? 'Admin Data Center' : 'Kepala Bidang TIK' }}</p>
         </div>
     </div>
 
@@ -35,6 +35,7 @@
 
             <div x-show="open" class="mt-1 ml-4 space-y-1">
 
+                @if(Auth::user()->role === 'admin')
                 <a href="{{ route('server.index') }}"
                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('server.*') || request()->routeIs('detailserver') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,6 +45,7 @@
                     </svg>
                     Perangkat & Server
                 </a>
+                @endif
 
                 <div x-data="{ dokumenOpen: {{ request()->routeIs(['server.dokumen.*','server.foto.*']) ? 'true' : 'false' }} }">
                     <div class="flex items-center justify-between rounded-lg
@@ -77,6 +79,7 @@
                     </div>
                 </div>
 
+                @if(Auth::user()->role === 'admin')
                 <a href="{{ route('master-data.index') }}"
                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('master-data.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,10 +89,12 @@
                     </svg>
                     Master Data
                 </a>
+                @endif
 
             </div>
         </div>
 
+        @if(Auth::user()->role === 'admin')
         <a href="{{ route('splp') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
                   {{ request()->routeIs('splp') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
@@ -99,7 +104,9 @@
             </svg>
             SPLP
         </a>
+        @endif
 
+        @if(Auth::user()->role === 'admin')
         <a href="{{ route('admin.users.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
                   {{ request()->routeIs('admin.users.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
@@ -109,6 +116,7 @@
             </svg>
             User Management
         </a>
+        @endif
 
     </nav>
 </aside>

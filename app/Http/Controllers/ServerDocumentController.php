@@ -23,8 +23,8 @@ class ServerDocumentController extends Controller
                     ->orWhere('pemilik_perangkat', 'like', "%{$search}%");
             });
 
-        // If user is not admin, only show their own servers
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        // If user is not admin or kepala_bidang_tik, only show their own servers
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik'])) {
             $query->where('user_id', Auth::id());
         }
 
@@ -38,8 +38,8 @@ class ServerDocumentController extends Controller
      */
     public function streamPdf(Server $server)
     {
-        // If user is not admin, verify ownership
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+        // If user is not admin or kepala_bidang_tik, verify ownership
+        if (!Auth::check() || (!in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik']) && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -52,8 +52,8 @@ class ServerDocumentController extends Controller
      */
     public function download(Server $server)
     {
-        // If user is not admin, verify ownership
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+        // If user is not admin or kepala_bidang_tik, verify ownership
+        if (!Auth::check() || (!in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik']) && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 

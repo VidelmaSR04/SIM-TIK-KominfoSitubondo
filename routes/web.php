@@ -24,7 +24,9 @@ Route::get('/register-server', [ServerRegistrationController::class, 'create'])-
 Route::post('/register-server', [ServerRegistrationController::class, 'store'])->name('register.server.store');
 
 // ============= MANAJEMEN SERVER (ADMIN) — dulu bernama "dashboard" =============
-Route::get('/manajemen-server', [ManajemenServerController::class, 'index'])->name('manajemen-server');
+Route::get('/manajemen-server', [ManajemenServerController::class, 'index'])
+    ->middleware(['auth', 'role:admin,kepala_bidang_tik'])
+    ->name('manajemen-server');
 
 // ============= SERVER ROUTES (ADMIN) =============
 Route::delete('/server/{id}/remove-image', [ServerController::class, 'removeImage'])->name('server.removeImage');
@@ -46,7 +48,7 @@ Route::get('/inputdata', function () {
 })->name('inputdata');
 
 // ============= MANAJEMEN SERVER: SUBMENU BARU (ADMIN) =============
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'role:admin,kepala_bidang_tik'])->group(function () {
     Route::get('/server-dokumen', [ServerDocumentController::class, 'index'])->name('server.dokumen.index');
     Route::get('/server-dokumen/{server}/preview', [ServerDocumentController::class, 'streamPdf'])->name('server.dokumen.preview');
     Route::get('/server-dokumen/{server}/download', [ServerDocumentController::class, 'download'])->name('server.dokumen.download');

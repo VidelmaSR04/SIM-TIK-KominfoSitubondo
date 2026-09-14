@@ -54,7 +54,7 @@ class UserManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'role'     => ['required', 'in:admin,user'],
+            'role'     => ['required', 'in:admin,user,kepala_bidang_tik'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -91,7 +91,7 @@ class UserManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role'     => ['required', 'in:admin,user'],
+            'role'     => ['required', 'in:admin,user,kepala_bidang_tik'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
