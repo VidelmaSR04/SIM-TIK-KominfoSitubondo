@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Host: 127.0.0.1:8000
+Connection: close
+X-Powered-By: PHP/8.2.29
+Cache-Control: no-cache, private
+Date: Thu, 17 Sep 2026 07:52:52 GMT
+Content-Type: image/png
+Content-Disposition: attachment; filename="foto-rack-25.png"
+Set-Cookie: XSRF-TOKEN=eyJpdiI6IjRhVEFuUTdRNTZWdllRV29nRmVsQmc9PSIsInZhbHVlIjoidWxiZnR3cnk5cTQrb09DMWFjMkF6TmpmSG1sa0o3eWhuVHBZRUxNUkFDSnZ5dGwwTDg4VTJZcWtqR1djYlpkcmxNSEg4YTU5ZldLMzB4Tmx2S1pGaG5KYyt4YXdrQmxDSWF2bmduRXdNMDl1R1hXSm9aMlgzcUw1WmhUYS9hamoiLCJtYWMiOiJmZmE4MjhjOTgxNTczZTEwM2MzN2QwNmVkZDE1ZmUzOWExZDBkMTA5NTMzYjYwOTYxMmJiYjUzN2NmYTVhZDEzIiwidGFnIjoiIn0%3D; expires=Thu, 17 Sep 2026 09:52:52 GMT; Max-Age=7200; path=/; samesite=lax
+Set-Cookie: laravel-session=eyJpdiI6IjQ0QTBaQThTZ1I5Qk14TU8xYlBkWEE9PSIsInZhbHVlIjoiSDB5b290Z0JvQ2lXNTF5bUErV3ZyR01iRHk3dHRKd0RpanVSa0ZHWUdpeUxOSEQzRm15aTU3NnBCc2pMZTczRFQ2aTU5Q1lqODRqRmxPaE5pR0p6SU1LNlQ4TU1OVmhJMkIyZkpIZGc0cU1lRkVibEVrUGNLNWVNSkFZR0g1Z04iLCJtYWMiOiJjMGViMzUwOGQwYzE2Y2JiMmVkMjhiYjk2YzM1YTZhNmRiOGYxYzVlYjVlYjIyZWMyYzk0ZTgzYTYwZmIyOThmIiwidGFnIjoiIn0%3D; expires=Thu, 17 Sep 2026 09:52:52 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+

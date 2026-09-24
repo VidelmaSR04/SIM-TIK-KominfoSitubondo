@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Server extends Model
 {
@@ -40,7 +41,38 @@ class Server extends Model
 
     protected $casts = [
         'jam_pengisian' => 'datetime',
+        'tanggal_input' => 'date',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updated(function ($server) {
+            // Determine if any of the relevant fields changed
+            $relevantFields = ['status_kepemilikan', 'pemilik_perangkat', 'kode_perangkat', 'nomor_rack', 'jam_pengisian', 'tanggal_input', 'gambar_rack'];
+            $dirty = $server->getDirty();
+            $shouldInvalidate = false;
+            foreach ($relevantFields as $field) {
+                if (array_key_exists($field, $dirty)) {
+                    $shouldInvalidate = true;
+                    break;
+                }
+            }
+            if ($shouldInvalidate) {
+                self::invalidatePhotoCardCache($server->id);
+            }
+        });
+
+        static::deleted(function ($server) {
+            self::invalidatePhotoCardCache($server->id);
+        });
+    }
+
+    protected function invalidatePhotoCardCache($serverId)
+    {
+        Storage::disk('public')->delete('photo-cards/' . $serverId . '.png');
+    }
 
     public function aplikasis()
     {
@@ -211,6 +243,41 @@ class Server extends Model
         }
 
         return '';
+    }
+
+    /**
+     * Get kode perangkat yang sudah ter-generate atau generate baru jika belum ada
+     * Format: [KO|CO][YYMMDD][A-Z|Z1-Z2-Z3...]
+     */
+    public function getKodePerangkatAttribute()
+    {
+        // Jika kolom kode_perangkat ada di database dan terisi, gunakan itu
+        if (!is_null($this->attributes['kode_perangkat']) && $this->attributes['kode_perangkat'] !== '') {
+            return $this->attributes['kode_perangkat'];
+        }
+
+        // Jika belum ada, generate berdasarkan status kepemilikan dan tanggal pembuatan
+        return self::generateKodePerangkat($this->status_kepemilikan, $this->created_at ? $this->created_at->format('Y-m-d') : null);
+    }
+
+    /**
+     * Extract tanggal from kode_perangkat
+     * Format: [KO|CO][YYMMDD][sequence]
+     * @return \Illuminate\Support\Carbon|null
+     */
+    public function getTanggalFromKodeAttribute()
+    {
+        if (!$this->kode_perangkat || strlen($this->kode_perangkat) < 8) {
+            return null;
+        }
+
+        $datePart = substr($this->kode_perangkat, 2, 6);
+
+        try {
+            return \Illuminate\Support\Carbon::createFromFormat('ymd', $datePart);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

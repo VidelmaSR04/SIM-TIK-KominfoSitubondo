@@ -6,7 +6,7 @@ use App\Models\Server;
 use App\Services\PhotoCardService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Response;
 
 class ServerPhotoController extends Controller
 {
@@ -88,4 +88,4 @@ class ServerPhotoController extends Controller
 
         return $this->servePhotoCard($server, $photoCardService, 'inline');
     }
-    }
+}

@@ -53,7 +53,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/server-dokumen/{server}/preview', [ServerDocumentController::class, 'streamPdf'])->name('server.dokumen.preview');
     Route::get('/server-dokumen/{server}/download', [ServerDocumentController::class, 'download'])->name('server.dokumen.download');
     Route::get('/server-dokumen/{server}/foto/download', [ServerPhotoController::class, 'downloadFoto'])->name('server.dokumen.foto.download');
-    Route::get('/server-dokumen/{server}/foto/preview', [ServerPhotoController::class, 'previewFoto'])->name('server.dokumen.foto.preview');
 
     // Master Data routes
     Route::prefix('master-data')->name('master-data.')->group(function () {
@@ -68,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/server/{id}/unlock-sync', [ServerController::class, 'unlockAndSync'])->name('server.unlockSync');
 
     // Server resource (admin management)
-        Route::resource('server', ServerController::class)->except(['show']);
+    Route::resource('server', ServerController::class)->except(['show']);
 });
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============

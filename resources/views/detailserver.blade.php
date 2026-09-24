@@ -313,15 +313,8 @@
     <!-- Modal Preview Gambar -->
     <div id="imageModal" class="fixed inset-0 z-50 hidden bg-black/70 flex items-center justify-center p-4" onclick="closeImageModal()">
         <div class="relative max-w-4xl w-full" onclick="event.stopPropagation()">
-            <button onclick="closeImageModal()"
-                    class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
-                <span class="material-symbols-outlined text-3xl">close</span>
-            </button>
-            <img id="modalImage" src="" alt="Gambar Rack" class="w-full rounded-lg shadow-2xl">
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-lg">
-                Klik di luar gambar untuk menutup
-            </div>
-        </div>
+                        <img id="modalImage" src="" alt="Gambar Rack" class="w-full rounded-lg shadow-2xl">
+                    </div>
     </div>
 
     <script>

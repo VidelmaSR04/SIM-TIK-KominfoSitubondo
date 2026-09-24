@@ -47,11 +47,7 @@
                 </a>
                 @endif
 
-                <div x-data="{ dokumenOpen: {{ request()->routeIs(['server.dokumen.*','server.foto.*']) ? 'true' : 'false' }} }">
-                    <div class="flex items-center justify-between rounded-lg
-                                {{ request()->routeIs(['server.dokumen.*','server.foto.*']) ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
-
-                        <a href="{{ route('server.dokumen.index') }}"
+                <a href="{{ route('server.dokumen.index') }}"
                            class="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm">
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -59,25 +55,6 @@
                             </svg>
                             Manajemen Dokumen
                         </a>
-
-                        <button @click="dokumenOpen = !dokumenOpen" class="px-2 py-2">
-                            <svg :class="dokumenOpen ? 'rotate-180' : ''" class="w-4 h-4 shrink-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div x-show="dokumenOpen" class="mt-1 ml-4 space-y-1">
-                        <a href="{{ route('server.foto.index') }}"
-                           class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('server.foto.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M9 17V7a2 2 0 012-2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h2" />
-                            </svg>
-                            Manajemen Photo
-                        </a>
-                    </div>
-                </div>
 
                 @if(Auth::user()->role === 'admin')
                 <a href="{{ route('master-data.index') }}"

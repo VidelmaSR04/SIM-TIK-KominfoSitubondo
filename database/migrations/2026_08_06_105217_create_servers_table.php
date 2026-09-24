@@ -11,14 +11,14 @@ return new class extends Migration
         Schema::create('servers', function (Blueprint $table) {
             $table->id();
             $table->string('nama_perangkat');
-            $table->enum('jenis_perangkat', ['router', 'switch', 'server'])->nullable();
+            $table->enum('jenis_perangkat', ['Router', 'Switch', 'Server'])->nullable();
             $table->string('serial_number')->nullable();
             $table->string('merk_perangkat')->nullable();
             $table->string('type')->nullable();
             $table->enum('kondisi_tipe', ['Standard', 'High Performance'])->nullable();
             $table->enum('kondisi_status', ['Baru', 'Bekas'])->nullable();
             $table->text('spesifikasi')->nullable();
-            $table->enum('tipe_perangkat', ['RACK MOUNT', 'TOWER', 'BLADE'])->nullable();
+            $table->enum('tipe_perangkat', ['Rack Mount', 'Tower', 'Blade'])->nullable();
             $table->enum('status_kepemilikan', ['Kominfo', 'Colocation'])->nullable();
             $table->string('pemilik_perangkat')->nullable();
             $table->string('ip_server')->nullable();

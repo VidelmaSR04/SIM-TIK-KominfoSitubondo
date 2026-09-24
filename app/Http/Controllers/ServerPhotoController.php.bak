@@ -88,4 +88,4 @@ class ServerPhotoController extends Controller
 
         return $this->servePhotoCard($server, $photoCardService, 'inline');
     }
-    }
+}

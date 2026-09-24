@@ -1,0 +1,11 @@
+HTTP/1.1 302 Found
+Host: 127.0.0.1:8000
+Connection: close
+X-Powered-By: PHP/8.2.29
+Cache-Control: no-cache, private
+Date: Thu, 17 Sep 2026 06:41:06 GMT
+Location: http://127.0.0.1:8000/login
+Content-Type: text/html; charset=utf-8
+Set-Cookie: XSRF-TOKEN=eyJpdiI6InNVZW54T01ZQ2pmR291Rnk5c2FWZkE9PSIsInZhbHVlIjoieUdNamUyY3UzYWxHY1pJaTE5SUpSWjlsVFNqMjVvYmpyZUVpT0IwTUZ5REh3b0I0ZnlPM3Q4cVNzZ045VXFhRGhRclg2TWdPZzZYa1p1UDhZbDFiYjRtU3llUnZCZVVpM1pYRWsrVEZ6WTNpUzFtL3U5WmFuZG1oNEF5Z1NkeWsiLCJtYWMiOiI4MjE1ZmViNjExMzRhOWE3NjNhZDU4NmMxYTU1ZmU5ODBiOTVlZjdkYjU0ZWIwMWU3NWZiZWFlMTYzNmYzMDFkIiwidGFnIjoiIn0%3D; expires=Thu, 17 Sep 2026 08:41:06 GMT; Max-Age=7200; path=/; samesite=lax
+Set-Cookie: laravel-session=eyJpdiI6Im16dVZvenNDc0xGNWdXRS9Cd0czY2c9PSIsInZhbHVlIjoicVY2UE9XOXRkSzQveElyMFhnR01hbklqbElxdzBKRHcrc1A1OXR1Sm53WnA1bngxVlQzV2JrbGpjR0xkS2lzRTBrV2x5a2VIY2RqNlZwdUN6T2drOUI0blcwVThaRnkxNVdCYytCRm1xRUlLdm9lMmVTeHZZcXQ2NC9zRlJ5MnEiLCJtYWMiOiIwZTEyNzgzNjg5MjcxM2MyNGJmMjg1NTQ5MWU3YzUyNGYxZGIzNGE0MzFhMGFkYmI0NTI1YzI1YTdiM2VkMDc3IiwidGFnIjoiIn0%3D; expires=Thu, 17 Sep 2026 08:41:06 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+

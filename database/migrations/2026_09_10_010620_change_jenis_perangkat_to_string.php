@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('servers', function (Blueprint $table) {
-            $table->enum('jenis_perangkat', ['router', 'switch', 'server'])->change();
+            $table->enum('jenis_perangkat', ['Router', 'Switch', 'Server'])->change();
         });
     }
 };
