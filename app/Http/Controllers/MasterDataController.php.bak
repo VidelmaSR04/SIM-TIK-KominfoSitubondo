@@ -49,10 +49,13 @@ class MasterDataController extends Controller
             'is_aktif' => ['boolean'],
             // Additional validation for pejabat category
             'nip' => ['nullable', 'string', 'max:30'],
+            'dokumen_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:5120'], // 5MB
             'pangkat' => ['nullable', 'string', 'max:255', Rule::in(MasterData::PANGKAT_PNS)],
         ], [
             'kategori.in' => 'Kategori tidak valid.',
             'nip.max' => 'NIP maksimal 30 karakter.',
+            'dokumen_pdf.mimes' => 'File harus berformat PDF.',
+            'dokumen_pdf.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         // Ensure unique per kategori and value
@@ -61,7 +64,7 @@ class MasterDataController extends Controller
             ->exists();
 
         if ($existing) {
-            return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->withErrors(['value' => 'Nilai sudah ada untuk kategori ini.'])->withInput();
+            return Redirect::back()->withErrors(['value' => 'Nilai sudah ada untuk kategori ini.'])->withInput();
         }
 
         // For non-pejabat categories, nip and pangkat should be empty
@@ -70,9 +73,17 @@ class MasterDataController extends Controller
             $validated['pangkat'] = null;
         }
 
+        // Handle file upload for dokumen_pdf
+        if ($request->hasFile('dokumen_pdf')) {
+            $file = $request->file('dokumen_pdf');
+            $filename = Str::slug($validated['value']) . '-' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('dokumen_pejabat', $filename, 'local');
+            $validated['dokumen_pdf'] = $path;
+        }
+
         MasterData::create($validated);
 
-        return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->with('success', 'Data berhasil ditambahkan.');
+        return Redirect::back()->with('success', 'Data berhasil ditambahkan.');
     }
 
     /**
@@ -88,10 +99,13 @@ class MasterDataController extends Controller
             'is_aktif' => ['boolean'],
             // Additional validation for pejabat category
             'nip' => ['nullable', 'string', 'max:30'],
+            'dokumen_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:5120'], // 5MB
             'pangkat' => ['nullable', 'string', 'max:255', Rule::in(MasterData::PANGKAT_PNS)],
         ], [
             'kategori.in' => 'Kategori tidak valid.',
             'nip.max' => 'NIP maksimal 30 karakter.',
+            'dokumen_pdf.mimes' => 'File harus berformat PDF.',
+            'dokumen_pdf.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         // Ensure unique per kategori, but ignore current record
@@ -110,9 +124,24 @@ class MasterDataController extends Controller
             $validated['pangkat'] = null;
         }
 
+        // Handle file upload for dokumen_pdf
+        if ($request->hasFile('dokumen_pdf')) {
+            // Delete old file if exists
+            if ($masterDatum->dokumen_pdf && Storage::disk('local')->exists($masterDatum->dokumen_pdf)) {
+                Storage::disk('local')->delete($masterDatum->dokumen_pdf);
+            }
+            $file = $request->file('dokumen_pdf');
+            $filename = Str::slug($validated['value']) . '-' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('dokumen_pejabat', $filename, 'local');
+            $validated['dokumen_pdf'] = $path;
+        } else {
+            // If no new file uploaded, keep the existing dokumen_pdf
+            $validated['dokumen_pdf'] = $masterDatum->dokumen_pdf;
+        }
+
         $masterDatum->update($validated);
 
-        return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->with('success', 'Data berhasil diperbarui.');
+        return Redirect::back()->with('success', 'Data berhasil diperbarui.');
     }
 
     /**
@@ -132,9 +161,36 @@ class MasterDataController extends Controller
      */
     public function destroy(MasterData $masterDatum)
     {
+        // Delete associated file if exists
+        if ($masterDatum->dokumen_pdf && Storage::disk('local')->exists($masterDatum->dokumen_pdf)) {
+            Storage::disk('local')->delete($masterDatum->dokumen_pdf);
+        }
+
         $masterDatum->delete();
 
-        return redirect()->route('master-data.index', ['kategori' => $masterDatum->kategori])->with('success', 'Data berhasil dihapus.');
+        return Redirect::back()->with('success', 'Data berhasil dihapus.');
     }
 
+    /**
+     * Display PDF document for pejabat.
+     */
+    public function dokumen(MasterData $masterDatum)
+    {
+        // Only allow for pejabat category
+        if ($masterDatum->kategori !== MasterData::KATEGORI_PEJABAT) {
+            abort(404);
+        }
+
+        // Check if file exists
+        if (!$masterDatum->dokumen_pdf || !Storage::disk('local')->exists($masterDatum->dokumen_pdf)) {
+            abort(404);
+        }
+
+        // Return inline PDF
+        $file = Storage::disk('local')->get($masterDatum->dokumen_pdf);
+        return new Response($file, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . basename($masterDatum->dokumen_pdf) . '"',
+        ]);
     }
+}

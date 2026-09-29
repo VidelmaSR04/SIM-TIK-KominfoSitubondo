@@ -61,6 +61,10 @@ class MasterDataSeeder extends Seeder
                 ['value' => 'R7', 'label' => null, 'urutan' => 7],
                 ['value' => 'R8', 'label' => null, 'urutan' => 8],
             ],
+            'pejabat' => [
+                ['value' => MasterData::JABATAN_KEPALA_DINAS, 'label' => 'Drs. Sugiyono, M.Pd.I.', 'urutan' => 1, 'nip' => '19671204 199202 1 002', 'pangkat' => 'Pembina Utama Muda (IV/c)'],
+                ['value' => MasterData::JABATAN_KABID_TIK, 'label' => 'Fery Frandana Putra, S.Kom.', 'urutan' => 2, 'nip' => '19910818 201503 1 003', 'pangkat' => 'Penata Tingkat I (III/d)'],
+            ],
         ];
 
         // OPD list (pemilik_perangkat)
@@ -136,6 +140,8 @@ class MasterDataSeeder extends Seeder
                         'label' => $item['label'],
                         'urutan' => $item['urutan'],
                         'is_aktif' => true,
+                        'nip' => array_key_exists('nip', $item) ? $item['nip'] : null,
+                                                'pangkat' => array_key_exists('pangkat', $item) ? $item['pangkat'] : null,
                     ]
                 );
             }
