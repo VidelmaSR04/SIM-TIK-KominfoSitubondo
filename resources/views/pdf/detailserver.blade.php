@@ -862,6 +862,9 @@
              ===================================================== -->
 
         <div class="ttd-wrapper">
+        <?php
+            $pejabat = App\Models\MasterData::pejabat(App\Models\MasterData::JABATAN_KEPALA_DINAS);
+        ?>
 
             <div class="ttd-box">
 
@@ -885,13 +888,17 @@
 
                 <!-- NAMA -->
                 <div class="ttd-nama">
-                    Drs. Sugiyono, M.Pd.I
+                    <?php echo $pejabat ? $pejabat->label : 'Drs. Sugiyono, M.Pd.I.'; ?>
+                </div>
+                <!-- PANGKAT -->
+                <div class="ttd-pangkat">
+                    <?php echo $pejabat ? $pejabat->pangkat : 'Pembina Utama Muda (IV/c)'; ?>
                 </div>
 
 
                 <!-- NIP -->
                 <div class="ttd-nip">
-                    NIP. 19680312 199403 1 001
+                    <?php echo $pejabat ? 'NIP. ' . $pejabat->nip : 'NIP. 19671204 199202 1 002'; ?>
                 </div>
 
             </div>

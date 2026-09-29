@@ -25,6 +25,33 @@ class MasterData extends Model
         'kondisi_tipe' => 'Kondisi Server - Tipe',
         'kondisi_status' => 'Kondisi Server - Status',
         'nomor_rack' => 'Nomor Rack',
+        'pejabat' => 'Pejabat (Kepala Dinas & Kabid TIK)',
+    ];
+
+    // Constants for pejabat category
+    public const KATEGORI_PEJABAT = 'pejabat';
+    public const JABATAN_KEPALA_DINAS = 'Kepala Dinas Komunikasi dan Informatika Kabupaten Situbondo';
+    public const JABATAN_KABID_TIK = 'Kepala Bidang Teknologi Informasi dan Komunikasi';
+
+    // Pangkat / Golongan options for PNS
+    public const PANGKAT_PNS = [
+        'I/a Juru Muda',
+        'I/b Juru Muda Tingkat I',
+        'I/c Juru',
+        'I/d Juru Tingkat I',
+        'II/a Pengatur Muda',
+        'II/b Pengatur Muda Tingkat I',
+        'II/c Pengatur',
+        'II/d Pengatur Tingkat I',
+        'III/a Penata Muda',
+        'III/b Penata Muda Tingkat I',
+        'III/c Penata',
+        'III/d Penata Tingkat I',
+        'IV/a Pembina',
+        'IV/b Pembina Tingkat I',
+        'IV/c Pembina Utama Muda',
+        'IV/d Pembina Utama Madya',
+        'IV/e Pembina Utama',
     ];
 
     protected $fillable = [
@@ -33,6 +60,8 @@ class MasterData extends Model
         'label',
         'urutan',
         'is_aktif',
+        'nip',
+        'pangkat',
     ];
 
     protected $casts = [
@@ -110,5 +139,20 @@ class MasterData extends Model
             $cacheKey = "master_data.select.{$model->kategori}";
             Cache::forget($cacheKey);
         });
+    }
+
+    /**
+     * Get pejabat by jabatan (value) for category pejabat.
+     * Returns the active pejabat record.
+     *
+     * @param string $jabatan
+     * @return static|null
+     */
+    public static function pejabat(string $jabatan): ?self
+    {
+        return static::where('kategori', static::KATEGORI_PEJABAT)
+            ->where('value', $jabatan)
+            ->aktif()
+            ->first();
     }
 }

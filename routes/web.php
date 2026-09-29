@@ -56,13 +56,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/server-dokumen/{server}/foto/preview', [ServerPhotoController::class, 'previewFoto'])->name('server.dokumen.foto.preview');
 
     // Master Data routes
-    Route::prefix('master-data')->name('master-data.')->group(function () {
+    Route::prefix('master-data')->name('master-data.')->middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/', [MasterDataController::class, 'index'])->name('index');
         Route::post('/', [MasterDataController::class, 'store'])->name('store');
         Route::put('/{masterDatum}', [MasterDataController::class, 'update'])->name('update');
         Route::patch('/{masterDatum}/toggle-aktif', [MasterDataController::class, 'toggleAktif'])->name('toggleAktif');
         Route::delete('/{masterDatum}', [MasterDataController::class, 'destroy'])->name('destroy');
-    });
+            });
 
     // Unlock and sync route for admin one-click fix
     Route::post('/server/{id}/unlock-sync', [ServerController::class, 'unlockAndSync'])->name('server.unlockSync');
