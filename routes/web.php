@@ -30,7 +30,6 @@ Route::get('/manajemen-server', [ManajemenServerController::class, 'index'])
 
 // ============= SERVER ROUTES (ADMIN) =============
 Route::delete('/server/{id}/remove-image', [ServerController::class, 'removeImage'])->name('server.removeImage');
-Route::resource('server', ServerController::class)->except(['show']);
 
 // Custom routes untuk server
 Route::get('/server/{id}/pdf', [ServerController::class, 'exportPdf'])->name('server.pdf');
