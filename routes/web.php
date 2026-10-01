@@ -12,6 +12,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ServerDocumentController;
 use App\Http\Controllers\ServerPhotoController;
 use App\Http\Controllers\MasterDataController;
+use App\Models\Server;
 
 // QR Code tampilan (di halaman)
 Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
@@ -32,10 +33,11 @@ Route::get('/manajemen-server', [ManajemenServerController::class, 'index'])
 Route::delete('/server/{id}/remove-image', [ServerController::class, 'removeImage'])->name('server.removeImage');
 
 // Custom routes untuk server
-Route::get('/server/{id}/pdf', [ServerController::class, 'exportPdf'])->name('server.pdf');
+// Jalur lama PDF dialihkan ke jalur dokumen yang sudah punya pengecekan akses
+Route::get('/server/{server}/pdf', function (Server $server) {
+    return redirect()->route('server.dokumen.download', $server);
+})->middleware('auth')->name('server.pdf');
 Route::get('/detailserver/{id}', [ServerController::class, 'show'])->name('detailserver');
-
-// ============= LENGKAPI DATA (Admin melengkapi data dari user) =============
 
 // ============= LENGKAPI DATA (Admin melengkapi data dari user) =============
 Route::get('/server/{id}/lengkapi', [ServerController::class, 'lengkapi'])->name('server.lengkapi');
@@ -54,6 +56,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/server-dokumen/{server}/foto/download', [ServerPhotoController::class, 'downloadFoto'])->name('server.dokumen.foto.download');
     Route::get('/server-dokumen/{server}/foto/preview', [ServerPhotoController::class, 'previewFoto'])->name('server.dokumen.foto.preview');
 
+    // Edit dokumen (surat pengantar, kop, tanda tangan) — khusus admin
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/server-dokumen/{server}/edit', [ServerDocumentController::class, 'edit'])->name('server.dokumen.edit');
+        Route::put('/server-dokumen/{server}', [ServerDocumentController::class, 'update'])->name('server.dokumen.update');
+        Route::post('/server-dokumen/{server}/preview-draft', [ServerDocumentController::class, 'previewDraft'])->name('server.dokumen.preview-draft');
+    });
+
     // Master Data routes
     Route::prefix('master-data')->name('master-data.')->middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/', [MasterDataController::class, 'index'])->name('index');
@@ -61,13 +70,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{masterDatum}', [MasterDataController::class, 'update'])->name('update');
         Route::patch('/{masterDatum}/toggle-aktif', [MasterDataController::class, 'toggleAktif'])->name('toggleAktif');
         Route::delete('/{masterDatum}', [MasterDataController::class, 'destroy'])->name('destroy');
-            });
+    });
 
     // Unlock and sync route for admin one-click fix
     Route::post('/server/{id}/unlock-sync', [ServerController::class, 'unlockAndSync'])->name('server.unlockSync');
 
     // Server resource (admin management)
-        Route::resource('server', ServerController::class)->except(['show']);
+    Route::resource('server', ServerController::class)->except(['show']);
 });
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============

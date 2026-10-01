@@ -214,6 +214,12 @@
                     <td class="p-4 text-gray-500 font-mono text-xs">{{ $server->tanggal_from_kode ? $server->tanggal_from_kode->format('d M Y') : '-' }}</td>
                     <td class="p-4 text-center">
                         <div class="flex items-center justify-center gap-2 text-gray-500">
+                            <!-- Edit dokumen (khusus admin) -->
+                            @if (auth()->user()->role === 'admin')
+                            <a href="{{ route('server.dokumen.edit', $server->id) }}" class="hover:text-amber-600 transition-colors" title="Edit Dokumen">
+                                <span class="material-symbols-outlined text-[19px]">edit</span>
+                            </a>
+                            @endif
                             <!-- Preview button -->
                             <a href="{{ route('server.dokumen.preview', $server->id) }}" class="hover:text-blue-600 transition-colors" title="Preview PDF" target="_blank">
                                 <span class="material-symbols-outlined text-[19px]">visibility</span>
