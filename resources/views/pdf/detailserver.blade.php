@@ -1,939 +1,258 @@
+@php
+    // Cadangan bila view dipanggil tanpa variabel dari controller
+    $dokumen = $dokumen ?? \App\Models\ServerDocument::buatDefault($server);
+    $logo    = $logo ?? public_path('img/logo-situbondo.png');
+
+    $fmt = fn ($v) => filled($v) ? $v : '-';
+    $tgl = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('d M Y, H:i') : '-';
+
+    $rincian = [
+        ['Nama Server',       $server->nama_perangkat,    'Tipe Perangkat',     $server->tipe_perangkat],
+        ['Jenis Perangkat',   $server->jenis_perangkat,   'Serial Number',      $server->serial_number],
+        ['Merk Perangkat',    $server->merk_perangkat,    'Type',               $server->type],
+        ['Kondisi Tipe',      $server->kondisi_tipe,      'Kondisi Status',     $server->kondisi_status],
+        ['Spesifikasi',       $server->spesifikasi,       'Status Kepemilikan', $server->status_kepemilikan],
+        ['Pemilik Perangkat', $server->pemilik_perangkat, 'IP Server',          $server->ip_server],
+        ['IP VPS',            $server->ip_vps,            'Status Server',      $server->status],
+        ['Ukuran HDD',        $server->ukuran_hdd,        'Ukuran RAM',         $server->ukuran_ram],
+        ['Nomor RACK',        $server->nomor_rack,        'Jumlah Core',        $server->jumlah_core],
+        ['Peruntukan',        $server->peruntukan,        'Nama Pengirim',      $server->nama_pengirim],
+        ['Nama Penerima',     $server->nama_penerima,     'Jam Pengisian',      $tgl($server->jam_pengisian)],
+        ['Tanggal Dibuat',    $tgl($server->created_at),  'Terakhir Update',    $tgl($server->updated_at)],
+        ['ID Server',         $server->id,                '',                   ''],
+    ];
+
+    $ttd = [
+        'kiri' => [
+            'judul'   => $dokumen->ttd_kiri_judul,
+            'nama'    => $dokumen->ttd_kiri_nama,
+            'pangkat' => $dokumen->ttd_kiri_pangkat,
+            'nip'     => $dokumen->ttd_kiri_nip,
+        ],
+        'kanan' => [
+            'judul'   => $dokumen->ttd_kanan_judul,
+            'nama'    => $dokumen->ttd_kanan_nama,
+            'pangkat' => $dokumen->ttd_kanan_pangkat,
+            'nip'     => $dokumen->ttd_kanan_nip,
+        ],
+    ];
+@endphp
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-
     <title>Rincian Server - {{ $server->nama_perangkat }}</title>
 
     <style>
-
-        /* =========================================================
-           PENGATURAN HALAMAN
-           ========================================================= */
-
+        /* ===== HALAMAN (Folio/F4, margin sesuai Format_Surat_Dinas.docx) ===== */
         @page {
             size: 8.5in 13in;
-
             margin-top: 0.394in;
             margin-right: 0.7875in;
             margin-bottom: 1.181in;
             margin-left: 1.181in;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /*
+         * JANGAN memakai `* { margin:0 }` atau `html { margin:0 }`.
+         * Di dompdf, style @page dipakai sebagai style elemen <html>, jadi selector
+         * yang cocok dengan <html> akan menimpa margin halaman menjadi 0.
+         */
+        body, div, p, table, td, th, ul, ol, li, h1, h2, h3, h4, hr { margin: 0; padding: 0; }
 
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
-            padding: 0;
             background: #fff;
             color: #1e293b;
             line-height: 1.5;
         }
 
+        /* ===== KOP SURAT ===== */
+        .kop { position: relative; }
+        .kop-logo { position: absolute; top: 0; left: 0; width: 1.64cm; height: 2.32cm; }
+        .kop-teks { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.15; color: #000; }
+        .kop-teks p { margin: 0; }
+        /* garis bawah kop: selebar area teks (sedikit melebihi, seperti border paragraf di Word) */
+        .kop-garis { height: 0; border-top: 1.5pt solid #000; margin: 0 -2.5pt 14pt -2.5pt; }
 
-        /* =========================================================
-           KOP SURAT
-           ========================================================= */
+        /* ===== HALAMAN 1 : ISI SURAT PENGANTAR ===== */
+        .isi-surat { color: #000; }
+        .isi-surat p { margin: 0 0 12pt 0; }
+        .isi-surat ul, .isi-surat ol { margin: 0 0 12pt 0; padding-left: 1.25cm; }
+        .isi-surat table { border-collapse: collapse; margin: 0 0 12pt 0; }
+        .isi-surat td, .isi-surat th { padding: 1pt 2pt; vertical-align: top; }
+        .isi-surat h1 { font-size: 16pt; margin: 0 0 8pt 0; }
+        .isi-surat h2 { font-size: 14pt; margin: 0 0 8pt 0; }
+        .isi-surat h3, .isi-surat h4 { font-size: 12pt; margin: 0 0 8pt 0; }
 
-        .kop-image {
-            width: 100%;
-            display: block;
-            margin-bottom: 12px;
-        }
-
-
-        /* =========================================================
-           AREA ISI SURAT
-           
-           Dibuat mengikuti garis horizontal pada kop surat.
-           Semua isi halaman 2 berada di dalam area ini.
-           ========================================================= */
-
-        .content-surat {
-            width: 77.8%;
-            margin-left: 13.4%;
-            margin-right: 8.8%;
-        }
-
-
-        /* =========================================================
-           PEMISAH HALAMAN
-           ========================================================= */
-
-        .page-break {
-            page-break-after: always;
-            break-after: page;
-        }
-
-
-        /* =========================================================
-           HALAMAN 1
-           ========================================================= */
-
-        .halaman-pertama {
-            min-height: 100%;
-        }
-
-
-        /* =========================================================
-           JUDUL LAMPIRAN
-           ========================================================= */
+        /* ===== HALAMAN 2 : LAMPIRAN ===== */
+        .halaman-lampiran { page-break-before: always; }
 
         .judul {
             text-align: center;
-
-            font-family: 'Times New Roman', Times, serif;
-
             font-size: 14pt;
-
             font-weight: bold;
-
             letter-spacing: 1px;
-
             color: #004ac6;
-
             margin: 0 0 4px 0;
-
-            text-transform: none;
         }
-
-
-        /* =========================================================
-           TABEL RINCIAN SERVER
-           ========================================================= */
 
         .table-rincian {
             width: 100%;
-
             border-collapse: collapse;
-
             border-spacing: 0;
-
             margin: 0 0 16px 0;
-
             table-layout: fixed;
-
-            font-family: 'Times New Roman', Times, serif;
-
             font-size: 10pt;
         }
-
         .table-rincian td {
             padding: 3px 5px;
-
             border: 1px solid #cbd5e1;
-
             vertical-align: top;
-
             word-wrap: break-word;
-
             overflow-wrap: break-word;
         }
+        .table-rincian .label { font-weight: bold; }
+        .table-rincian .col-left  { width: 20%; }
+        .table-rincian td:nth-child(2) { width: 30%; }
+        .table-rincian .col-right { width: 20%; }
+        .table-rincian td:nth-child(4) { width: 30%; }
+        .table-rincian tr, .table-aplikasi tr { page-break-inside: avoid; }
 
-
-        /* =========================================================
-           KOLOM LABEL
-           ========================================================= */
-
-        .table-rincian .label {
-            font-weight: bold;
-        }
-
-
-        /* Kolom 1 - Label kiri */
-        .table-rincian .col-left {
-            width: 20%;
-        }
-
-
-        /* Kolom 2 - Nilai kiri */
-        .table-rincian td:nth-child(2) {
-            width: 30%;
-        }
-
-
-        /* Kolom 3 - Label kanan */
-        .table-rincian .col-right {
-            width: 20%;
-        }
-
-
-        /* Kolom 4 - Nilai kanan */
-        .table-rincian td:nth-child(4) {
-            width: 30%;
-        }
-
-
-        /* =========================================================
-           APLIKASI TERPASANG
-           ========================================================= */
-
-        .aplikasi-wrapper {
-            width: 100%;
-
-            margin: 8px 0 10px 0;
-
-            page-break-inside: avoid;
-
-            break-inside: avoid;
-        }
-
-        .aplikasi-title {
-            font-size: 10pt;
-
-            font-weight: bold;
-
-            margin-bottom: 4px;
-        }
-
+        .aplikasi-wrapper { width: 100%; margin: 8px 0 10px 0; page-break-inside: avoid; }
+        .aplikasi-title { font-size: 10pt; font-weight: bold; margin-bottom: 4px; }
         .table-aplikasi {
             width: 100%;
-
             border-collapse: collapse;
-
             border-spacing: 0;
-
             table-layout: fixed;
-
-            font-family: 'Times New Roman', Times, serif;
-
             font-size: 9pt;
         }
-
         .table-aplikasi th {
             padding: 3px 5px;
-
             border: 1px solid #cbd5e1;
-
             background: #f1f5f9;
-
             text-align: center;
-
             font-weight: bold;
-
             word-wrap: break-word;
         }
-
         .table-aplikasi td {
             padding: 3px 5px;
-
             border: 1px solid #cbd5e1;
-
             vertical-align: top;
-
             word-wrap: break-word;
-
             overflow-wrap: break-word;
         }
 
-
-        /* =========================================================
-           TANDA TANGAN
-           ========================================================= */
-
-        .ttd-wrapper {
-            width: 100%;
-
-            margin-top: 25px;
-
-            text-align: right;
-
-            page-break-inside: avoid;
-
-            break-inside: avoid;
-        }
-
-        .ttd-box {
-            display: inline-block;
-
-            width: 220px;
-
-            max-width: 100%;
-
-            text-align: center;
-
-            vertical-align: top;
-        }
-
-        .ttd-box .ttd-label {
-            font-size: 10pt;
-
-            font-weight: bold;
-
-            line-height: 1.25;
-        }
-
-        .ttd-box .ttd-ruang {
-            height: 65px;
-        }
-
-        .ttd-box .ttd-garis {
-            width: 100%;
-
-            margin: 5px 0 0 0;
-
-            border-top: 1px solid #1e293b;
-        }
-
-        .ttd-box .ttd-nama {
-            font-size: 10pt;
-
-            font-weight: bold;
-
-            margin: 2px 0;
-        }
-
-        .ttd-box .ttd-nip {
-            font-size: 9pt;
-
-            color: #475569;
-        }
-
-
-        /* =========================================================
-           FOOTER
-           ========================================================= */
-
-        .footer {
-            width: 100%;
-
-            margin-top: 20px;
-
-            padding-top: 8px;
-
-            border-top: 1px solid #cbd5e1;
-
-            font-family: 'Times New Roman', Times, serif;
-
-            font-size: 8pt;
-
-            color: #64748b;
-        }
-
-        .footer-table {
-            width: 100%;
-
-            border-collapse: collapse;
-
-            border-spacing: 0;
-        }
-
-        .footer-table td {
-            padding: 0;
-
-            border: none;
-
-            vertical-align: top;
-        }
-
-        .footer-left {
-            width: 60%;
-
-            text-align: left;
-        }
-
-        .footer-right {
-            width: 40%;
-
-            text-align: right;
-        }
-
-
-        /* =========================================================
-           MENCEGAH TABEL TERPOTONG
-           ========================================================= */
-
-        .table-rincian tr,
-        .table-aplikasi tr {
-            page-break-inside: avoid;
-
-            break-inside: avoid;
-        }
-
-
-        /* =========================================================
-           PRINT
-           ========================================================= */
-
-        @media print {
-
-            body {
-                background: #fff;
-            }
-
-            .page-break {
-                page-break-after: always;
-            }
-
-        }
-
+        /* ===== TANDA TANGAN (kiri & kanan) ===== */
+        .ttd-tabel { width: 100%; margin-top: 25px; border-collapse: collapse; page-break-inside: avoid; }
+        .ttd-sel { width: 50%; text-align: center; vertical-align: top; padding: 0 0.3cm; }
+        .ttd-ruang { height: 65px; }
+        .ttd-label { font-size: 10pt; font-weight: bold; line-height: 1.25; }
+        .ttd-garis { width: 80%; margin: 0 auto 3px auto; border-top: 1px solid #1e293b; }
+        .ttd-nama { font-size: 10pt; font-weight: bold; margin: 2px 0; }
+        .ttd-pangkat { font-size: 10pt; }
+        .ttd-nip { font-size: 9pt; color: #475569; }
     </style>
 </head>
-
-
 <body>
 
+    {{-- ================= HALAMAN 1 : KOP + SURAT PENGANTAR ================= --}}
+    @include('pdf.partials.kop', ['dokumen' => $dokumen, 'logo' => $logo])
 
-    <!-- =========================================================
-         HALAMAN 1
-         KOP SURAT SAJA
-         ========================================================= -->
-
-    <div class="halaman-pertama">
-
-        <img
-            src="{{ public_path('img/kop-surat.png') }}"
-            class="kop-image"
-            alt="Kop Surat Dinas Kominfo Situbondo"
-        >
-
+    <div class="isi-surat">
+        {!! $dokumen->isi_surat !!}
     </div>
 
 
-    <!-- =========================================================
-         PAKSA PINDAH KE HALAMAN 2
-         ========================================================= -->
+    {{-- ================= HALAMAN 2 : LAMPIRAN (otomatis dari data perangkat) ================= --}}
+    <div class="halaman-lampiran">
 
-    <div class="page-break"></div>
+        @include('pdf.partials.kop', ['dokumen' => $dokumen, 'logo' => $logo])
 
-
-    <!-- =========================================================
-         HALAMAN 2
-         KOP SURAT
-         ========================================================= -->
-
-    <img
-        src="{{ public_path('img/kop-surat.png') }}"
-        class="kop-image"
-        alt="Kop Surat Dinas Kominfo Situbondo"
-    >
-
-
-    <!-- =========================================================
-         SELURUH ISI MENGIKUTI LEBAR GARIS KOP
-         ========================================================= -->
-
-    <div class="content-surat">
-
-
-        <!-- =====================================================
-             JUDUL
-             ===================================================== -->
-
-        <div class="judul">
-            Lampiran Rincian Server
-        </div>
-
-
-        <!-- =====================================================
-             TABEL RINCIAN SERVER
-             ===================================================== -->
+        <div class="judul">Lampiran Rincian Server</div>
 
         <table class="table-rincian">
-
-            <!-- BARIS 1 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Nama Server
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->nama_perangkat }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Tipe Perangkat
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->tipe_perangkat ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 2 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Jenis Perangkat
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->jenis_perangkat ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Serial Number
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->serial_number ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 3 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Merk Perangkat
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->merk_perangkat ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Type
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->type ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 4 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Kondisi Tipe
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->kondisi_tipe ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Kondisi Status
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->kondisi_status ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 5 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Spesifikasi
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->spesifikasi ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Status Kepemilikan
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->status_kepemilikan ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 6 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Pemilik Perangkat
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->pemilik_perangkat ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        IP Server
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->ip_server ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 7 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        IP VPS
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->ip_vps ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Status Server
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->status ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 8 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Ukuran HDD
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->ukuran_hdd ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Ukuran RAM
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->ukuran_ram ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 9 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Nomor RACK
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->nomor_rack ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Jumlah Core
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->jumlah_core ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 10 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Peruntukan
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->peruntukan ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Nama Pengirim
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->nama_pengirim ?? '-' }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 11 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Nama Penerima
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->nama_penerima ?? '-' }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Jam Pengisian
-                    </span>
-                </td>
-
-                <td>
-                    {{
-                        $server->jam_pengisian
-                        ? \Carbon\Carbon::parse($server->jam_pengisian)->format('d M Y, H:i')
-                        : '-'
-                    }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 12 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        Tanggal Dibuat
-                    </span>
-                </td>
-
-                <td>
-                    {{
-                        $server->created_at
-                        ? $server->created_at->format('d M Y, H:i')
-                        : '-'
-                    }}
-                </td>
-
-                <td class="col-right">
-                    <span class="label">
-                        Terakhir Update
-                    </span>
-                </td>
-
-                <td>
-                    {{
-                        $server->updated_at
-                        ? $server->updated_at->format('d M Y, H:i')
-                        : '-'
-                    }}
-                </td>
-
-            </tr>
-
-
-            <!-- BARIS 13 -->
-            <tr>
-
-                <td class="col-left">
-                    <span class="label">
-                        ID Server
-                    </span>
-                </td>
-
-                <td>
-                    {{ $server->id }}
-                </td>
-
-                <td class="col-right"></td>
-
-                <td></td>
-
-            </tr>
-
+            @foreach ($rincian as $r)
+                <tr>
+                    <td class="col-left"><span class="label">{{ $r[0] }}</span></td>
+                    <td>{{ $fmt($r[1]) }}</td>
+                    <td class="col-right">
+                        @if ($r[2] !== '')
+                            <span class="label">{{ $r[2] }}</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if ($r[2] !== '')
+                            {{ $fmt($r[3]) }}
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
         </table>
 
-
-        <!-- =====================================================
-             APLIKASI TERPASANG
-             ===================================================== -->
-
-        @if(isset($server->aplikasis) && $server->aplikasis->count() > 0)
-
+        @if (isset($server->aplikasis) && $server->aplikasis->count() > 0)
             <div class="aplikasi-wrapper">
-
-                <div class="aplikasi-title">
-                    Aplikasi Terpasang :
-                </div>
-
-
+                <div class="aplikasi-title">Aplikasi Terpasang :</div>
                 <table class="table-aplikasi">
-
                     <thead>
-
                         <tr>
-
-                            <th>
-                                IP Local
-                            </th>
-
-                            <th>
-                                IP Public
-                            </th>
-
-                            <th>
-                                Nama Aplikasi
-                            </th>
-
-                            <th>
-                                URL
-                            </th>
-
+                            <th>IP Local</th>
+                            <th>IP Public</th>
+                            <th>Nama Aplikasi</th>
+                            <th>URL</th>
                         </tr>
-
                     </thead>
-
-
                     <tbody>
-
-                        @foreach($server->aplikasis as $app)
-
+                        @foreach ($server->aplikasis as $app)
                             <tr>
-
-                                <td>
-                                    {{ $app->pivot->ip_local ?? '-' }}
-                                </td>
-
-                                <td>
-                                    {{ $app->pivot->ip_public ?? '-' }}
-                                </td>
-
-                                <td>
-                                    {{ $app->nama }}
-                                </td>
-
-                                <td>
-                                    {{ $app->pivot->url ?? '-' }}
-                                </td>
-
+                                <td>{{ $app->pivot->ip_local ?? '-' }}</td>
+                                <td>{{ $app->pivot->ip_public ?? '-' }}</td>
+                                <td>{{ $app->nama }}</td>
+                                <td>{{ $app->pivot->url ?? '-' }}</td>
                             </tr>
-
                         @endforeach
-
                     </tbody>
-
                 </table>
-
             </div>
-
         @endif
 
-
-        <!-- =====================================================
-             TANDA TANGAN
-             ===================================================== -->
-
-        <div class="ttd-wrapper">
-        <?php
-            $pejabat = App\Models\MasterData::pejabat(App\Models\MasterData::JABATAN_KEPALA_DINAS);
-        ?>
-
-            <div class="ttd-box">
-
-                <div class="ttd-label">
-                    Mengetahui,
-                </div>
-
-                <div class="ttd-label">
-                    Kepala Dinas Komunikasi dan Informatika<br>
-                    Kabupaten Situbondo
-                </div>
-
-
-                <!-- RUANG TANDA TANGAN -->
-                <div class="ttd-ruang"></div>
-
-
-                <!-- GARIS TTD -->
-                <div class="ttd-garis"></div>
-
-
-                <!-- NAMA -->
-                <div class="ttd-nama">
-                    <?php echo $pejabat ? $pejabat->label : 'Drs. Sugiyono, M.Pd.I.'; ?>
-                </div>
-                <!-- PANGKAT -->
-                <div class="ttd-pangkat">
-                    <?php echo $pejabat ? $pejabat->pangkat : 'Pembina Utama Muda (IV/c)'; ?>
-                </div>
-
-
-                <!-- NIP -->
-                <div class="ttd-nip">
-                    <?php echo $pejabat ? 'NIP. ' . $pejabat->nip : 'NIP. 19671204 199202 1 002'; ?>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             FOOTER
-             ===================================================== -->
-
-        <div class="footer">
-
-            <table class="footer-table">
-
-                <tr>
-
-                    <td class="footer-left">
-                        Dokumen ini dicetak dari SIM TIK – Kominfo Situbondo
+        {{-- TANDA TANGAN: kiri & kanan, dipilih dari Master Data pejabat --}}
+        <table class="ttd-tabel">
+            <tr>
+                @foreach ($ttd as $t)
+                    <td class="ttd-sel">
+                        @if (filled($t['judul']))
+                            <div class="ttd-label">{!! nl2br(e($t['judul'])) !!}</div>
+                        @endif
                     </td>
-
-                    <td class="footer-right">
-                        Tanggal Cetak :
-                        {{ now()->format('d M Y H:i') }}
+                @endforeach
+            </tr>
+            <tr>
+                @foreach ($ttd as $t)
+                    <td class="ttd-sel ttd-ruang"></td>
+                @endforeach
+            </tr>
+            <tr>
+                @foreach ($ttd as $t)
+                    <td class="ttd-sel">
+                        @if (filled($t['nama']))
+                            <div class="ttd-garis"></div>
+                            <div class="ttd-nama">{{ $t['nama'] }}</div>
+                            @if (filled($t['pangkat']))
+                                <div class="ttd-pangkat">{{ $t['pangkat'] }}</div>
+                            @endif
+                            @if (filled($t['nip']))
+                                <div class="ttd-nip">NIP. {{ $t['nip'] }}</div>
+                            @endif
+                        @endif
                     </td>
-
-                </tr>
-
-            </table>
-
-        </div>
-
+                @endforeach
+            </tr>
+        </table>
 
     </div>
-
 
 </body>
 </html>
