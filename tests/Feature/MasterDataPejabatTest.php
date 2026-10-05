@@ -32,12 +32,12 @@ class MasterDataPejabatTest extends TestCase
             'value' => MasterData::JABATAN_KEPALA_DINAS,
             'label' => 'Drs. Sugiyono, M.Pd.I',
             'nip' => '19680312 199403 1 001',
-            'pangkat' => 'Pembina Utama Muda (IV/c)',
+            'pangkat' => 'IV/c Pembina Utama Muda',
             'urutan' => 1,
             'is_aktif' => true,
         ]);
 
-        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT']));
+        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT]));
         $response->assertSessionHas('success', 'Data berhasil ditambahkan.');
 
         $this->assertDatabaseHas('master_data', [
@@ -45,7 +45,7 @@ class MasterDataPejabatTest extends TestCase
             'value' => MasterData::JABATAN_KEPALA_DINAS,
             'label' => 'Drs. Sugiyono, M.Pd.I',
             'nip' => '19680312 199403 1 001',
-            'pangkat' => 'Pembina Utama Muda (IV/c)',
+            'pangkat' => 'IV/c Pembina Utama Muda',
             'urutan' => 1,
             'is_aktif' => true,
             'dokumen_pdf' => null,
@@ -61,7 +61,7 @@ class MasterDataPejabatTest extends TestCase
             'value' => MasterData::JABATAN_KEPALA_DINAS,
             'label' => 'Drs. Sugiyono, M.Pd.I',
             'nip' => '19680312 199403 1 001',
-            'pangkat' => 'Pembina Utama Muda (IV/c)',
+            'pangkat' => 'IV/c Pembina Utama Muda',
             'urutan' => 1,
             'is_aktif' => true,
         ]);
@@ -71,18 +71,18 @@ class MasterDataPejabatTest extends TestCase
             'value' => MasterData::JABATAN_KEPALA_DINAS,
             'label' => 'Drs. Sugiyono, M.Pd.I (updated)',
             'nip' => '19680312 199403 1 002',
-            'pangkat' => 'Penata Tingkat I (III/d)',
+            'pangkat' => 'III/d Penata Tingkat I',
             'urutan' => 2,
             'is_aktif' => false,
         ]);
 
-        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT']));
+        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT]));
         $response->assertSessionHas('success', 'Data berhasil diperbarui.');
 
         $pejabat->refresh();
         $this->assertEquals('Drs. Sugiyono, M.Pd.I (updated)', $pejabat->label);
         $this->assertEquals('19680312 199403 1 002', $pejabat->nip);
-        $this->assertEquals('Penata Tingkat I (III/d)', $pejabat->pangkat);
+        $this->assertEquals('III/d Penata Tingkat I', $pejabat->pangkat);
         $this->assertEquals(2, $pejabat->urutan);
         $this->assertFalse($pejabat->is_aktif);
         $this->assertNull($pejabat->dokumen_pdf);
@@ -96,14 +96,14 @@ class MasterDataPejabatTest extends TestCase
             'value' => MasterData::JABATAN_KEPALA_DINAS,
             'label' => 'Drs. Sugiyono, M.Pd.I',
             'nip' => '19680312 199403 1 001',
-            'pangkat' => 'Pembina Utama Muda (IV/c)',
+            'pangkat' => 'IV/c Pembina Utama Muda',
             'urutan' => 1,
             'is_aktif' => true,
         ]);
 
         $response = $this->delete(route('master-data.destroy', $pejabat));
 
-        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT']));
+        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT]));
         $response->assertSessionHas('success', 'Data berhasil dihapus.');
 
         $this->assertNull(MasterData::find($pejabat->id));

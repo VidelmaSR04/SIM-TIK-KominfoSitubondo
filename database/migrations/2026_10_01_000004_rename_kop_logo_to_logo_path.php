@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('document_settings', function (Blueprint $table) {
-            $table->renameColumn('kop_logo', 'logo_path');
-        });
+        if (Schema::hasColumn('document_settings', 'kop_logo')) {
+            Schema::table('document_settings', function (Blueprint $table) {
+                $table->renameColumn('kop_logo', 'logo_path');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('document_settings', function (Blueprint $table) {
-            $table->renameColumn('logo_path', 'kop_logo');
-        });
+        if (Schema::hasColumn('document_settings', 'logo_path')) {
+            Schema::table('document_settings', function (Blueprint $table) {
+                $table->renameColumn('logo_path', 'kop_logo');
+            });
+        }
     }
 };

@@ -27,6 +27,7 @@ class Server extends Model
         'ip_server',
         'ip_vps',
         'status',
+        'status_locked',
         'ukuran_hdd',
         'ukuran_ram',
         'nomor_rack',
@@ -60,12 +61,12 @@ class Server extends Model
                 }
             }
             if ($shouldInvalidate) {
-                self::invalidatePhotoCardCache($server->id);
+                $server->invalidatePhotoCardCache($server->id);
             }
         });
 
         static::deleted(function ($server) {
-            self::invalidatePhotoCardCache($server->id);
+            $server->invalidatePhotoCardCache($server->id);
         });
     }
 

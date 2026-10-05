@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ManajemenServerController;
 use App\Http\Controllers\ServerController;
 use App\Http\Controllers\QrCodeController;
-use App\Http\Controllers\ServerRegistrationController;
 use App\Http\Controllers\User\DashboardUserController;
 use App\Http\Controllers\User\InputDataUserController;
 use App\Http\Controllers\UserManagementController;
@@ -21,8 +20,7 @@ Route::get('/qr/show/{id}', [QrCodeController::class, 'show'])->name('qr.show');
 Route::get('/qr/download/{id}', [QrCodeController::class, 'download'])->name('qr.download');
 
 // ============= REGISTER SERVER =============
-Route::get('/register-server', [ServerRegistrationController::class, 'create'])->name('register.server');
-Route::post('/register-server', [ServerRegistrationController::class, 'store'])->name('register.server.store');
+// Routes removed - functionality not implemented
 
 // ============= MANAJEMEN SERVER (ADMIN) — dulu bernama "dashboard" =============
 Route::get('/manajemen-server', [ManajemenServerController::class, 'index'])
@@ -81,6 +79,7 @@ Route::middleware(['auth'])->group(function () {
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============
 Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/dashboard', [DashboardUserController::class, 'index'])->name('dashboard');
     Route::get('/dashboarduser', [DashboardUserController::class, 'index'])->name('user.dashboarduser');
     Route::get('/inputdatauser', [InputDataUserController::class, 'create'])->name('inputdatauser.create');
     Route::post('/inputdatauser', [InputDataUserController::class, 'store'])->name('inputdatauser.store');
