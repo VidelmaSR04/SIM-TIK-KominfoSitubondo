@@ -22,20 +22,44 @@
         ['ID Server',         $server->id,                '',                   ''],
     ];
 
+    // Pangkat dicetak tanpa golongan ("Pembina Utama Muda"). Ubah ke true bila golongan ingin ikut tampil.
+    $tampilkanGolongan = false;
+
+    // Path file QR Code tanda tangan (disk 'public'); null bila tidak ada / file hilang
+    $qrPath = function (?string $relatif) {
+        if (blank($relatif)) {
+            return null;
+        }
+        $abs = storage_path('app/public/' . ltrim($relatif, '/'));
+
+        return file_exists($abs) ? $abs : null;
+    };
+
+    // Snapshot di dokumen dipakai lebih dulu; bila kosong (mis. QR baru diunggah belakangan)
+    // dipakai QR terbaru milik pejabat di Master Data.
+    $qrDari = function ($snapshot, $masterId) use ($qrPath) {
+        return $qrPath($snapshot) ?: ($masterId ? $qrPath(\App\Models\MasterData::find($masterId)?->qrcode_path) : null);
+    };
+
     $ttd = [
         'kiri' => [
             'judul'   => $dokumen->ttd_kiri_judul,
             'nama'    => $dokumen->ttd_kiri_nama,
             'pangkat' => $dokumen->ttd_kiri_pangkat,
             'nip'     => $dokumen->ttd_kiri_nip,
+            'qrcode'  => $qrDari($dokumen->ttd_kiri_qrcode, $dokumen->ttd_kiri_master_id),
         ],
         'kanan' => [
             'judul'   => $dokumen->ttd_kanan_judul,
             'nama'    => $dokumen->ttd_kanan_nama,
             'pangkat' => $dokumen->ttd_kanan_pangkat,
             'nip'     => $dokumen->ttd_kanan_nip,
+            'qrcode'  => $qrDari($dokumen->ttd_kanan_qrcode, $dokumen->ttd_kanan_master_id),
         ],
     ];
+
+    // Catatan BSrE di kaki halaman hanya muncul bila ada penandatangan ber-QR
+    $adaQr = collect($ttd)->contains(fn ($t) => filled($t['nama']) && $t['qrcode']);
 @endphp
 <!DOCTYPE html>
 <html>
@@ -145,18 +169,48 @@
             overflow-wrap: break-word;
         }
 
-        /* ===== TANDA TANGAN (kiri & kanan) ===== */
+        /* ===== TANDA TANGAN (format BSrE: jabatan, QR, nama bergaris bawah, pangkat, NIP) ===== */
         .ttd-tabel { width: 100%; margin-top: 25px; border-collapse: collapse; page-break-inside: avoid; }
-        .ttd-sel { width: 50%; text-align: center; vertical-align: top; padding: 0 0.3cm; }
-        .ttd-ruang { height: 65px; }
-        .ttd-label { font-size: 10pt; font-weight: bold; line-height: 1.25; }
-        .ttd-garis { width: 80%; margin: 0 auto 3px auto; border-top: 1px solid #1e293b; }
-        .ttd-nama { font-size: 10pt; font-weight: bold; margin: 2px 0; }
-        .ttd-pangkat { font-size: 10pt; }
-        .ttd-nip { font-size: 9pt; color: #475569; }
+        .ttd-sel {
+            width: 50%;
+            text-align: left;
+            vertical-align: top;
+            padding: 0 0.3cm;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            line-height: 1.2;
+            color: #000;
+        }
+        .ttd-pembuka { font-weight: normal; }
+        .ttd-jabatan { font-weight: bold; text-transform: uppercase; }
+        .ttd-qr { margin: 8pt 0 14pt 0.65cm; }
+        .ttd-qr img { width: 2.3cm; }
+        .ttd-ruang { height: 60pt; }
+        .ttd-nama { font-weight: bold; text-decoration: underline; }
+        .ttd-pangkat, .ttd-nip { font-weight: normal; }
+
+        /* Catatan BSrE: di kaki setiap halaman (area margin bawah) */
+        .catatan-bsre {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: -62pt;
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            line-height: 1.25;
+            color: #000;
+        }
     </style>
 </head>
 <body>
+
+    @if ($adaQr)
+        <div class="catatan-bsre">
+            Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik<br>
+            yang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara (BSSN).
+        </div>
+    @endif
 
     {{-- ================= HALAMAN 1 : KOP + SURAT PENGANTAR ================= --}}
     @include('pdf.partials.kop', ['dokumen' => $dokumen, 'logo' => $logo])
@@ -220,28 +274,42 @@
 
         {{-- TANDA TANGAN: kiri & kanan, dipilih dari Master Data pejabat --}}
         <table class="ttd-tabel">
+            {{-- Baris 1: jabatan (huruf besar tebal); "Mengetahui," tidak tebal --}}
             <tr>
                 @foreach ($ttd as $t)
                     <td class="ttd-sel">
                         @if (filled($t['judul']))
-                            <div class="ttd-label">{!! nl2br(e($t['judul'])) !!}</div>
+                            @foreach (preg_split('/\r\n|\r|\n/', trim($t['judul'])) as $baris)
+                                @if (filled(trim($baris)))
+                                    <div class="{{ preg_match('/^mengetahui,?$/i', trim($baris)) ? 'ttd-pembuka' : 'ttd-jabatan' }}">{{ trim($baris) }}</div>
+                                @endif
+                            @endforeach
                         @endif
                     </td>
                 @endforeach
             </tr>
-            <tr>
-                @foreach ($ttd as $t)
-                    <td class="ttd-sel ttd-ruang"></td>
-                @endforeach
-            </tr>
+            {{-- Baris 2: gambar QR Code (atau ruang kosong untuk tanda tangan basah) --}}
             <tr>
                 @foreach ($ttd as $t)
                     <td class="ttd-sel">
                         @if (filled($t['nama']))
-                            <div class="ttd-garis"></div>
+                            @if ($t['qrcode'])
+                                <div class="ttd-qr"><img src="{{ $t['qrcode'] }}" alt="QR Code tanda tangan"></div>
+                            @else
+                                <div class="ttd-ruang"></div>
+                            @endif
+                        @endif
+                    </td>
+                @endforeach
+            </tr>
+            {{-- Baris 3: nama (tebal, bergaris bawah), pangkat, NIP --}}
+            <tr>
+                @foreach ($ttd as $t)
+                    <td class="ttd-sel">
+                        @if (filled($t['nama']))
                             <div class="ttd-nama">{{ $t['nama'] }}</div>
                             @if (filled($t['pangkat']))
-                                <div class="ttd-pangkat">{{ $t['pangkat'] }}</div>
+                                <div class="ttd-pangkat">{{ \App\Models\MasterData::pangkatTampil($t['pangkat'], $tampilkanGolongan) }}</div>
                             @endif
                             @if (filled($t['nip']))
                                 <div class="ttd-nip">NIP. {{ $t['nip'] }}</div>

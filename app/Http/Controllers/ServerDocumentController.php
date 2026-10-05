@@ -79,7 +79,9 @@ class ServerDocumentController extends Controller
         ServerDocument::updateOrCreate(['server_id' => $server->id], $atribut);
 
         if ($request->boolean('jadikan_bawaan')) {
-            $setting = DocumentSetting::first() ?? new DocumentSetting(DocumentSetting::BAWAAN);
+            // Hanya kolom kop_html yang disimpan; logo memakai nilai bawaan
+            // (tidak bergantung pada kolom logo_path di tabel document_settings)
+            $setting = DocumentSetting::first() ?? new DocumentSetting();
             $setting->fill(['kop_html' => $atribut['kop_html']])->save();
         }
 
@@ -174,7 +176,7 @@ class ServerDocumentController extends Controller
 
     /**
      * Susun atribut dokumen dari input form.
-     * Nama/pangkat/NIP penandatangan selalu diambil dari master data di server,
+     * Nama/pangkat/NIP/QR Code penandatangan selalu diambil dari master data di server,
      * bukan dari input form, lalu disalin (snapshot) ke dokumen.
      */
     private function susunAtribut(array $v): array
@@ -193,6 +195,7 @@ class ServerDocumentController extends Controller
             $atribut["ttd_{$sisi}_nama"]      = $pejabat?->label;
             $atribut["ttd_{$sisi}_pangkat"]   = $pejabat?->pangkat;
             $atribut["ttd_{$sisi}_nip"]       = $pejabat?->nip;
+            $atribut["ttd_{$sisi}_qrcode"]    = $pejabat?->qrcode_path;
         }
 
         return $atribut;

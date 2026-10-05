@@ -62,6 +62,8 @@ class MasterData extends Model
         'is_aktif',
         'nip',
         'pangkat',
+        'jabatan_ttd',
+        'qrcode_path',
     ];
 
     protected $casts = [
@@ -154,5 +156,38 @@ class MasterData extends Model
             ->where('value', $jabatan)
             ->aktif()
             ->first();
+    }
+
+    /**
+     * Jabatan untuk blok tanda tangan di PDF.
+     * Memakai kolom jabatan_ttd bila diisi (satu baris = satu baris di PDF);
+     * kalau kosong, memakai Jabatan (value) dalam huruf besar.
+     */
+    public function jabatanTtd(): string
+    {
+        $khusus = trim((string) $this->jabatan_ttd);
+
+        return $khusus !== '' ? $khusus : mb_strtoupper((string) $this->value);
+    }
+
+    /**
+     * Pangkat untuk tampilan PDF. Contoh: "IV/c Pembina Utama Muda" -> "Pembina Utama Muda".
+     * Isi $denganGolongan = true bila golongan ingin ikut dicetak.
+     */
+    public static function pangkatTampil(?string $pangkat, bool $denganGolongan = false): string
+    {
+        $pangkat = trim((string) $pangkat);
+
+        if ($denganGolongan || $pangkat === '') {
+            return $pangkat;
+        }
+
+        return trim(preg_replace('/^[IVX]+\/[a-e]\s+/i', '', $pangkat));
+    }
+
+    /** URL publik gambar QR Code (butuh `php artisan storage:link`). */
+    public function qrcodeUrl(): ?string
+    {
+        return $this->qrcode_path ? asset('storage/' . $this->qrcode_path) : null;
     }
 }

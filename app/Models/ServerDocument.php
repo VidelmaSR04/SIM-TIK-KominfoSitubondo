@@ -17,11 +17,13 @@ class ServerDocument extends Model
         'ttd_kiri_nama',
         'ttd_kiri_pangkat',
         'ttd_kiri_nip',
+        'ttd_kiri_qrcode',
         'ttd_kanan_master_id',
         'ttd_kanan_judul',
         'ttd_kanan_nama',
         'ttd_kanan_pangkat',
         'ttd_kanan_nip',
+        'ttd_kanan_qrcode',
         'updated_by',
     ];
 
@@ -48,16 +50,18 @@ class ServerDocument extends Model
             'isi_surat'   => static::isiSuratAwal($server),
 
             'ttd_kiri_master_id' => $kadis?->id,
-            'ttd_kiri_judul'     => $kadis ? "Mengetahui,\n" . $kadis->value : null,
+            'ttd_kiri_judul'     => $kadis ? "Mengetahui,\n" . $kadis->jabatanTtd() : null,
             'ttd_kiri_nama'      => $kadis?->label,
             'ttd_kiri_pangkat'   => $kadis?->pangkat,
             'ttd_kiri_nip'       => $kadis?->nip,
+            'ttd_kiri_qrcode'    => $kadis?->qrcode_path,
 
             'ttd_kanan_master_id' => $kabid?->id,
-            'ttd_kanan_judul'     => $kabid?->value,
+            'ttd_kanan_judul'     => $kabid?->jabatanTtd(),
             'ttd_kanan_nama'      => $kabid?->label,
             'ttd_kanan_pangkat'   => $kabid?->pangkat,
             'ttd_kanan_nip'       => $kabid?->nip,
+            'ttd_kanan_qrcode'    => $kabid?->qrcode_path,
         ]);
     }
 

@@ -65,12 +65,13 @@
                             class="select-pejabat w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                         <option value="">&mdash; Kosongkan &mdash;</option>
                         @foreach ($pejabatList as $p)
-                            <option value="{{ $p->id }}" data-jabatan="{{ $p->value }}"
+                            <option value="{{ $p->id }}" data-jabatan="{{ $p->jabatanTtd() }}" data-qr="{{ filled($p->qrcode_path) ? '1' : '0' }}"
                                 @selected((string) old("ttd_{$sisi}_master_id", $dokumen->{"ttd_{$sisi}_master_id"}) === (string) $p->id)>
                                 {{ $p->label }} &mdash; {{ $p->value }}
                             </option>
                         @endforeach
                     </select>
+                    <p id="ttd_{{ $sisi }}_qr_info" class="text-xs"></p>
 
                     <label class="block text-xs text-gray-500" for="ttd_{{ $sisi }}_judul">Teks di atas tanda tangan</label>
                     <textarea id="ttd_{{ $sisi }}_judul" name="ttd_{{ $sisi }}_judul" rows="3" maxlength="500"
@@ -78,7 +79,7 @@
                 </div>
             @endforeach
 
-            <p class="text-xs text-gray-500">Nama, pangkat, dan NIP diambil otomatis dari Master Data (kategori Pejabat).</p>
+            <p class="text-xs text-gray-500">Nama, pangkat, NIP, dan QR Code diambil otomatis dari Master Data (kategori Pejabat).</p>
         </section>
 
         <div class="flex items-center gap-3">
@@ -234,15 +235,37 @@
         }
     });
 
+    // Info ketersediaan QR Code untuk pejabat yang dipilih
+    function infoQr(sel) {
+        const el  = document.getElementById(sel.id.replace('_master_id', '_qr_info'));
+        const opt = sel.selectedOptions[0];
+        if (!el) { return; }
+
+        if (!sel.value || !opt) {
+            el.textContent = '';
+            return;
+        }
+
+        if (opt.dataset.qr === '1') {
+            el.textContent = 'QR Code tanda tangan pejabat ini akan dicetak di PDF.';
+            el.className   = 'text-xs text-green-800';
+        } else {
+            el.textContent = 'Pejabat ini belum punya QR Code (unggah di Master Data > Pejabat). PDF memberi ruang kosong untuk tanda tangan.';
+            el.className   = 'text-xs text-red-500';
+        }
+    }
+
     // Saat pejabat diganti, isi teks di atas tanda tangan mengikuti jabatannya
     // (awalan "Mengetahui," dipertahankan bila sudah ada).
     document.querySelectorAll('.select-pejabat').forEach(function (sel) {
+        infoQr(sel);
         sel.addEventListener('change', function () {
             const judul   = document.getElementById(sel.dataset.judul);
             const jabatan = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.jabatan || '') : '';
             const baris   = judul.value.split('\n');
             const awalan  = /^mengetahui,?$/i.test((baris[0] || '').trim()) ? baris[0].trim() + '\n' : '';
             judul.value   = jabatan ? awalan + jabatan : '';
+            infoQr(sel);
         });
     });
 </script>
