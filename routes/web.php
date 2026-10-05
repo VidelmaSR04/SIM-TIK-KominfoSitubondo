@@ -79,6 +79,7 @@ Route::middleware(['auth'])->group(function () {
 
 // ============= USER DASHBOARD & INPUT DATA (USER) =============
 Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/dashboard', [DashboardUserController::class, 'index'])->name('dashboard');
     Route::get('/dashboarduser', [DashboardUserController::class, 'index'])->name('user.dashboarduser');
     Route::get('/inputdatauser', [InputDataUserController::class, 'create'])->name('inputdatauser.create');
     Route::post('/inputdatauser', [InputDataUserController::class, 'store'])->name('inputdatauser.store');

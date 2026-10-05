@@ -53,10 +53,10 @@ class RegisteredUserController extends Controller
 
         // Redirect based on role
         if ($isAdminRegistration) {
-            return redirect()->route('admin.dashboard')->with('success', 'Admin registered successfully.');
+            return redirect()->route('admin.manajemen-server')->with('success', 'Admin registered successfully.');
         }
 
-        // For regular users, redirect to input data page after registration
-        return redirect()->route('inputdatauser.create')->with('success', 'Registered successfully. Please input your server data.');
+        // For regular users, redirect to dashboard after registration
+        return redirect()->route('dashboard')->with('success', 'Registered successfully.');
     }
 }
