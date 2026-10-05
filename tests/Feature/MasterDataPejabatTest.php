@@ -37,7 +37,7 @@ class MasterDataPejabatTest extends TestCase
             'is_aktif' => true,
         ]);
 
-        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT']));
+        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT]));
         $response->assertSessionHas('success', 'Data berhasil ditambahkan.');
 
         $this->assertDatabaseHas('master_data', [
@@ -76,7 +76,7 @@ class MasterDataPejabatTest extends TestCase
             'is_aktif' => false,
         ]);
 
-        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT']));
+        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT]));
         $response->assertSessionHas('success', 'Data berhasil diperbarui.');
 
         $pejabat->refresh();
@@ -103,7 +103,7 @@ class MasterDataPejabatTest extends TestCase
 
         $response = $this->delete(route('master-data.destroy', $pejabat));
 
-        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT']));
+        $response->assertRedirect(route('master-data.index', ['kategori' => MasterData::KATEGORI_PEJABAT]));
         $response->assertSessionHas('success', 'Data berhasil dihapus.');
 
         $this->assertNull(MasterData::find($pejabat->id));
