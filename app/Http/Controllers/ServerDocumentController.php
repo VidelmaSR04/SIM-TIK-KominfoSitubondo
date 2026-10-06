@@ -143,8 +143,36 @@ class ServerDocumentController extends Controller
 
     private function dokumenUntuk(Server $server): ServerDocument
     {
-        return ServerDocument::where('server_id', $server->id)->first()
-            ?? ServerDocument::buatDefault($server);
+        $dokumen = ServerDocument::where('server_id', $server->id)->first();
+
+        return $dokumen
+            ? $this->segarkanPenandatangan($dokumen)
+            : ServerDocument::buatDefault($server);
+    }
+
+    /**
+     * Samakan data penandatangan dengan Master Data terbaru (nama, pangkat, NIP, QR Code),
+     * persis seperti preview di halaman edit. Hanya untuk tampilan: tidak disimpan ke database.
+     * Judul/jabatan tetap memakai isi yang sudah disimpan. Bila pejabatnya sudah dihapus
+     * dari Master Data, salinan lama yang dipakai.
+     */
+    private function segarkanPenandatangan(ServerDocument $dokumen): ServerDocument
+    {
+        foreach (['kiri', 'kanan'] as $sisi) {
+            $id      = $dokumen->{"ttd_{$sisi}_master_id"};
+            $pejabat = $id ? MasterData::find($id) : null;
+
+            if (!$pejabat) {
+                continue;
+            }
+
+            $dokumen->{"ttd_{$sisi}_nama"}    = $pejabat->label;
+            $dokumen->{"ttd_{$sisi}_pangkat"} = $pejabat->pangkat;
+            $dokumen->{"ttd_{$sisi}_nip"}     = $pejabat->nip;
+            $dokumen->{"ttd_{$sisi}_qrcode"}  = $pejabat->qrcode_path;
+        }
+
+        return $dokumen;
     }
 
     private function buatPdf(Server $server, ServerDocument $dokumen)

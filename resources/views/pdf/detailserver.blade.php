@@ -22,6 +22,23 @@
         ['ID Server',         $server->id,                '',                   ''],
     ];
 
+    // Nomor & tanggal pada kepala lampiran mengikuti surat pengantar (halaman 1).
+    // Bila belum diisi di surat, tampil titik-titik / tanggal hari ini.
+    $ambilDariSurat = function (string $pola) use ($dokumen) {
+        if (preg_match($pola, (string) $dokumen->isi_surat, $m)) {
+            $teks = html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8');
+            $teks = trim(str_replace("\xC2\xA0", ' ', $teks));
+
+            return $teks !== '' ? $teks : null;
+        }
+
+        return null;
+    };
+    $lampiranNomor   = $ambilDariSurat('/<td[^>]*>\s*Nomor\s*<\/td>\s*<td[^>]*>\s*:\s*<\/td>\s*<td[^>]*>(.*?)<\/td>/is')
+        ?? '..............................';
+    $lampiranTanggal = $ambilDariSurat('/>\s*Situbondo,\s*(\d{1,2}\s+[A-Za-z]+\s+\d{4})\s*</i')
+        ?? \Carbon\Carbon::now()->locale('id')->translatedFormat('j F Y');
+
     // Pangkat dicetak tanpa golongan ("Pembina Utama Muda"). Ubah ke true bila golongan ingin ikut tampil.
     $tampilkanGolongan = false;
 
@@ -113,13 +130,19 @@
         /* ===== HALAMAN 2 : LAMPIRAN ===== */
         .halaman-lampiran { page-break-before: always; }
 
+        /* Kepala lampiran (format surat dinas): blok rata kiri, lalu judul di tengah */
+        .lampiran-kepala { width: 100%; border-collapse: collapse; margin: 0 0 14pt 0; color: #000; }
+        .lampiran-kepala td { padding: 0; vertical-align: top; font-size: 12pt; line-height: 1.3; }
+        .lampiran-kepala .lk-label  { width: 2.8cm; white-space: nowrap; }
+        .lampiran-kepala .lk-titik  { width: 0.5cm; }
+
         .judul {
             text-align: center;
-            font-size: 14pt;
+            font-size: 12pt;
             font-weight: bold;
-            letter-spacing: 1px;
-            color: #004ac6;
-            margin: 0 0 4px 0;
+            text-transform: uppercase;
+            color: #000;
+            margin: 0 0 10pt 0;
         }
 
         .table-rincian {
@@ -225,7 +248,25 @@
 
         @include('pdf.partials.kop', ['dokumen' => $dokumen, 'logo' => $logo])
 
-        <div class="judul">Lampiran Rincian Server</div>
+        <table class="lampiran-kepala">
+            <tr>
+                <td class="lk-label">LAMPIRAN</td>
+                <td class="lk-titik">:</td>
+                <td>Surat Kepala Dinas Komunikasi dan Informatika Kabupaten Situbondo</td>
+            </tr>
+            <tr>
+                <td class="lk-label">NOMOR</td>
+                <td class="lk-titik">:</td>
+                <td>{{ $lampiranNomor }}</td>
+            </tr>
+            <tr>
+                <td class="lk-label">TANGGAL</td>
+                <td class="lk-titik">:</td>
+                <td>{{ $lampiranTanggal }}</td>
+            </tr>
+        </table>
+
+        <div class="judul">Rincian Server</div>
 
         <table class="table-rincian">
             @foreach ($rincian as $r)
