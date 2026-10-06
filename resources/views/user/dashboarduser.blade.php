@@ -238,12 +238,24 @@ Keluar
 </td>
 <td class="px-6 py-4 whitespace-nowrap text-center">
 <div class="flex justify-center space-x-3">
-<a href="#" class="text-on-surface-variant hover:text-primary transition-colors" title="Lihat detail">
+@if($device->is_lengkap)
+{{-- Lihat dokumen (PDF dibuka di tab baru) --}}
+<a href="{{ route('server.dokumen.preview', $device->id) }}" target="_blank" rel="noopener" class="text-on-surface-variant hover:text-primary transition-colors" title="Lihat dokumen">
 <span class="material-symbols-outlined">visibility</span>
 </a>
-<a href="#" class="text-on-surface-variant hover:text-primary transition-colors" title="Unduh">
+{{-- Unduh dokumen (PDF) --}}
+<a href="{{ route('server.dokumen.download', $device->id) }}" class="text-on-surface-variant hover:text-primary transition-colors" title="Unduh dokumen">
 <span class="material-symbols-outlined">download</span>
 </a>
+@else
+{{-- Data belum dilengkapi admin: dokumen belum bisa dibuka --}}
+<span class="text-on-surface-variant/40 cursor-not-allowed" title="Dokumen tersedia setelah data dilengkapi admin">
+<span class="material-symbols-outlined">visibility</span>
+</span>
+<span class="text-on-surface-variant/40 cursor-not-allowed" title="Dokumen tersedia setelah data dilengkapi admin">
+<span class="material-symbols-outlined">download</span>
+</span>
+@endif
 </div>
 </td>
 </tr>
