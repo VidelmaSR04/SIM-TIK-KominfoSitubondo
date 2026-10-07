@@ -12,9 +12,24 @@
 
     <nav class="flex-1 px-3 py-4 space-y-1">
 
-        <div x-data="{ open: {{ request()->routeIs(['manajemen-server','server.*','detailserver']) ? 'true' : 'false' }} }">
+        @php
+            // Halaman yang termasuk grup "Manajemen Server"
+            $dalamGrupServer = request()->routeIs(['manajemen-server','server.*','detailserver','master-data.*']);
+        @endphp
+
+        {{-- Status buka/tutup grup diingat di browser, jadi tidak menutup sendiri saat pindah ke menu lain (mis. User Management) --}}
+        <div x-data="{
+                open: {{ $dalamGrupServer ? 'true' : 'false' }} || (function () { try { return localStorage.getItem('sidebarServerOpen') === '1'; } catch (e) { return false; } })(),
+                init() {
+                    this.save();
+                    this.$watch('open', () => this.save());
+                },
+                save() {
+                    try { localStorage.setItem('sidebarServerOpen', this.open ? '1' : '0'); } catch (e) {}
+                }
+             }">
             <div class="flex items-center justify-between rounded-lg
-                        {{ request()->routeIs(['manajemen-server','server.*','detailserver']) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
+                        {{ $dalamGrupServer ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
 
                 <a href="{{ route('manajemen-server') }}"
                    @click="open = true"
@@ -37,7 +52,7 @@
 
                 @if(Auth::user()->role === 'admin')
                 <a href="{{ route('server.index') }}"
-                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('server.*') || request()->routeIs('detailserver') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
+                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs(['server.*', 'detailserver']) && !request()->routeIs('server.dokumen.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <rect x="3" y="4" width="18" height="7" rx="1.5" stroke-width="2" />
                         <rect x="3" y="13" width="18" height="7" rx="1.5" stroke-width="2" />
@@ -48,13 +63,13 @@
                 @endif
 
                 <a href="{{ route('server.dokumen.index') }}"
-                           class="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-                            </svg>
-                            Manajemen Dokumen
-                        </a>
+                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('server.dokumen.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                    </svg>
+                    Manajemen Dokumen
+                </a>
 
                 @if(Auth::user()->role === 'admin')
                 <a href="{{ route('master-data.index') }}"
@@ -70,18 +85,6 @@
 
             </div>
         </div>
-
-        @if(Auth::user()->role === 'admin')
-        <a href="{{ route('splp') }}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                  {{ request()->routeIs('splp') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
-            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            SPLP
-        </a>
-        @endif
 
         @if(Auth::user()->role === 'admin')
         <a href="{{ route('admin.users.index') }}"

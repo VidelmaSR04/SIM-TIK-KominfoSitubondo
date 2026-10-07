@@ -46,6 +46,10 @@
     </script>
 
     <style>
+        /* Sembunyikan elemen ber-x-cloak (modal, dropdown) sampai Alpine selesai dimuat,
+           supaya tidak muncul sekilas saat halaman baru dibuka */
+        [x-cloak] { display: none !important; }
+
         /* Menyembunyikan elemen saat mencetak PDF */
         @media print {
             .no-print { display: none !important; }
