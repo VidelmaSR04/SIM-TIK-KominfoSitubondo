@@ -22,22 +22,11 @@
         ['ID Server',         $server->id,                '',                   ''],
     ];
 
-    // Nomor & tanggal pada kepala lampiran mengikuti surat pengantar (halaman 1).
-    // Bila belum diisi di surat, tampil titik-titik / tanggal hari ini.
-    $ambilDariSurat = function (string $pola) use ($dokumen) {
-        if (preg_match($pola, (string) $dokumen->isi_surat, $m)) {
-            $teks = html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8');
-            $teks = trim(str_replace("\xC2\xA0", ' ', $teks));
-
-            return $teks !== '' ? $teks : null;
-        }
-
-        return null;
-    };
-    $lampiranNomor   = $ambilDariSurat('/<td[^>]*>\s*Nomor\s*<\/td>\s*<td[^>]*>\s*:\s*<\/td>\s*<td[^>]*>(.*?)<\/td>/is')
-        ?? '..............................';
-    $lampiranTanggal = $ambilDariSurat('/>\s*Situbondo,\s*(\d{1,2}\s+[A-Za-z]+\s+\d{4})\s*</i')
-        ?? \Carbon\Carbon::now()->locale('id')->translatedFormat('j F Y');
+    // Isian kepala lampiran dari form edit. Kosong = titik-titik (diisi manual setelah dicetak).
+    $titik           = '..............................';
+    $lampiranLabel   = filled($dokumen->lampiran_label)   ? $dokumen->lampiran_label   : 'Lampiran ..........';
+    $lampiranNomor   = filled($dokumen->lampiran_nomor)   ? $dokumen->lampiran_nomor   : $titik;
+    $lampiranTanggal = filled($dokumen->lampiran_tanggal) ? $dokumen->lampiran_tanggal : $titik;
 
     // Pangkat dicetak tanpa golongan ("Pembina Utama Muda"). Ubah ke true bila golongan ingin ikut tampil.
     $tampilkanGolongan = false;
@@ -74,9 +63,6 @@
             'qrcode'  => $qrDari($dokumen->ttd_kanan_qrcode, $dokumen->ttd_kanan_master_id),
         ],
     ];
-
-    // Catatan BSrE di kaki halaman hanya muncul bila ada penandatangan ber-QR
-    $adaQr = collect($ttd)->contains(fn ($t) => filled($t['nama']) && $t['qrcode']);
 @endphp
 <!DOCTYPE html>
 <html>
@@ -128,21 +114,32 @@
         .isi-surat h3, .isi-surat h4 { font-size: 12pt; margin: 0 0 8pt 0; }
 
         /* ===== HALAMAN 2 : LAMPIRAN ===== */
-        .halaman-lampiran { page-break-before: always; }
+        .halaman-lampiran { page-break-before: always; padding-top: 1.5cm; }
 
-        /* Kepala lampiran (format surat dinas): blok rata kiri, lalu judul di tengah */
-        .lampiran-kepala { width: 100%; border-collapse: collapse; margin: 0 0 14pt 0; color: #000; }
-        .lampiran-kepala td { padding: 0; vertical-align: top; font-size: 12pt; line-height: 1.3; }
-        .lampiran-kepala .lk-label  { width: 2.8cm; white-space: nowrap; }
-        .lampiran-kepala .lk-titik  { width: 0.5cm; }
+        /* Kepala lampiran (tanpa kop): blok rata kiri di separuh kanan, bergaris bawah, lalu judul di tengah */
+        .lampiran-kepala { width: 100%; border-collapse: collapse; margin: 0 0 20pt 0; color: #000; }
+        .lampiran-kepala td { padding: 0; vertical-align: top; }
+        .lampiran-kepala .lk-spasi { width: 51%; }
+        .lk-kotak {
+            width: 92%;
+            padding-bottom: 1.5pt;
+            border-bottom: 0.75pt solid #000;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            line-height: 1.25;
+        }
+        .lk-dalam { border-collapse: collapse; width: 100%; }
+        .lk-dalam td { padding: 0; vertical-align: top; font-size: 12pt; line-height: 1.25; }
+        .lk-dalam .lk-label { width: 2.7cm; }
 
         .judul {
             text-align: center;
-            font-size: 12pt;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14pt;
             font-weight: bold;
             text-transform: uppercase;
             color: #000;
-            margin: 0 0 10pt 0;
+            margin: 0 0 12pt 0;
         }
 
         .table-rincian {
@@ -192,7 +189,7 @@
             overflow-wrap: break-word;
         }
 
-        /* ===== TANDA TANGAN (format BSrE: jabatan, QR, nama bergaris bawah, pangkat, NIP) ===== */
+        /* ===== TANDA TANGAN (jabatan, QR, nama bergaris bawah, pangkat, NIP) ===== */
         .ttd-tabel { width: 100%; margin-top: 25px; border-collapse: collapse; page-break-inside: avoid; }
         .ttd-sel {
             width: 50%;
@@ -211,29 +208,9 @@
         .ttd-ruang { height: 60pt; }
         .ttd-nama { font-weight: bold; text-decoration: underline; }
         .ttd-pangkat, .ttd-nip { font-weight: normal; }
-
-        /* Catatan BSrE: di kaki setiap halaman (area margin bawah) */
-        .catatan-bsre {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: -62pt;
-            text-align: center;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 8pt;
-            line-height: 1.25;
-            color: #000;
-        }
     </style>
 </head>
 <body>
-
-    @if ($adaQr)
-        <div class="catatan-bsre">
-            Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik<br>
-            yang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara (BSSN).
-        </div>
-    @endif
 
     {{-- ================= HALAMAN 1 : KOP + SURAT PENGANTAR ================= --}}
     @include('pdf.partials.kop', ['dokumen' => $dokumen, 'logo' => $logo])
@@ -246,23 +223,25 @@
     {{-- ================= HALAMAN 2 : LAMPIRAN (otomatis dari data perangkat) ================= --}}
     <div class="halaman-lampiran">
 
-        @include('pdf.partials.kop', ['dokumen' => $dokumen, 'logo' => $logo])
-
+        {{-- Halaman lampiran tidak memakai kop surat --}}
         <table class="lampiran-kepala">
             <tr>
-                <td class="lk-label">LAMPIRAN</td>
-                <td class="lk-titik">:</td>
-                <td>Surat Kepala Dinas Komunikasi dan Informatika Kabupaten Situbondo</td>
-            </tr>
-            <tr>
-                <td class="lk-label">NOMOR</td>
-                <td class="lk-titik">:</td>
-                <td>{{ $lampiranNomor }}</td>
-            </tr>
-            <tr>
-                <td class="lk-label">TANGGAL</td>
-                <td class="lk-titik">:</td>
-                <td>{{ $lampiranTanggal }}</td>
+                <td class="lk-spasi"></td>
+                <td>
+                    <div class="lk-kotak">
+                        <div>{{ $lampiranLabel }}</div>
+                        <table class="lk-dalam">
+                            <tr>
+                                <td class="lk-label">Surat Nomor</td>
+                                <td>: {{ $lampiranNomor }}</td>
+                            </tr>
+                            <tr>
+                                <td class="lk-label">Tanggal</td>
+                                <td>: {{ $lampiranTanggal }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
             </tr>
         </table>
 

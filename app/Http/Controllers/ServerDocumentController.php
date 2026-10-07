@@ -193,6 +193,10 @@ class ServerDocumentController extends Controller
             'kop_html'  => ['required', 'string', 'max:20000'],
             'isi_surat' => ['nullable', 'string', 'max:100000'],
 
+            'lampiran_label'   => ['nullable', 'string', 'max:100'],
+            'lampiran_nomor'   => ['nullable', 'string', 'max:150'],
+            'lampiran_tanggal' => ['nullable', 'string', 'max:100'],
+
             'ttd_kiri_master_id'  => ['nullable', 'integer', $pejabat],
             'ttd_kiri_judul'      => ['nullable', 'string', 'max:500'],
             'ttd_kanan_master_id' => ['nullable', 'integer', $pejabat],
@@ -212,6 +216,10 @@ class ServerDocumentController extends Controller
         $atribut = [
             'kop_html'  => $this->sanitizer->bersihkan($v['kop_html']),
             'isi_surat' => $this->sanitizer->bersihkan($v['isi_surat'] ?? ''),
+
+            'lampiran_label'   => filled($v['lampiran_label'] ?? null)   ? trim($v['lampiran_label'])   : null,
+            'lampiran_nomor'   => filled($v['lampiran_nomor'] ?? null)   ? trim($v['lampiran_nomor'])   : null,
+            'lampiran_tanggal' => filled($v['lampiran_tanggal'] ?? null) ? trim($v['lampiran_tanggal']) : null,
         ];
 
         foreach (['kiri', 'kanan'] as $sisi) {
