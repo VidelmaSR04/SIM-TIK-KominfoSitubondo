@@ -88,12 +88,15 @@
         body, div, p, table, td, th, ul, ol, li, h1, h2, h3, h4, hr { margin: 0; padding: 0; }
 
         body {
-            font-family: 'Times New Roman', Times, serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: 12pt;
             background: #fff;
             color: #1e293b;
             line-height: 1.5;
         }
+
+        /* Semua teks dokumen memakai Arial (termasuk isi lama yang tersimpan dengan font lain) */
+        .kop-teks, .kop-teks *, .isi-surat, .isi-surat * { font-family: Arial, Helvetica, sans-serif !important; }
 
         /* ===== KOP SURAT ===== */
         .kop { position: relative; }

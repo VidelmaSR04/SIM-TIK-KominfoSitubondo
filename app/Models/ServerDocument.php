@@ -68,26 +68,32 @@ class ServerDocument extends Model
         ]);
     }
 
-    /** Draf awal surat pengantar. Isinya bisa diubah sepenuhnya di editor. */
+    /**
+     * Draf awal surat pengantar (halaman 1). Isinya bisa diubah sepenuhnya di editor.
+     * Susunan: tanggal di kanan, blok Nomor/Sifat/Lampiran/Hal bertitik dua sejajar, lalu "Yth.".
+     */
     public static function isiSuratAwal(Server $server): string
     {
         $tanggal = Carbon::now()->locale('id')->translatedFormat('j F Y');
         $nama    = e($server->nama_perangkat);
         $kode    = e($server->kode_perangkat);
+        $titik   = '..............................';
+
         $tujuan  = ($server->status_kepemilikan === 'Colocation' && $server->pemilik_perangkat)
-            ? 'Yth. Kepala ' . e($server->pemilik_perangkat)
-            : 'Yth. ..............................';
+            ? 'Kepala ' . e($server->pemilik_perangkat)
+            : '<em>(Daftar terlampir)</em>';
 
         return <<<HTML
 <p style="text-align: right;">Situbondo, {$tanggal}</p>
 <table style="width: 100%; border-collapse: collapse;">
 <tbody>
-<tr><td style="width: 18%;">Nomor</td><td style="width: 3%;">:</td><td>&nbsp;</td></tr>
+<tr><td style="width: 20%;">Nomor</td><td style="width: 3%;">:</td><td>{$titik}</td></tr>
+<tr><td>Sifat</td><td>:</td><td>Penting</td></tr>
 <tr><td>Lampiran</td><td>:</td><td>1 (satu) berkas</td></tr>
 <tr><td>Hal</td><td>:</td><td>Penyampaian Rincian Perangkat {$nama}</td></tr>
 </tbody>
 </table>
-<p>{$tujuan}<br>di<br>Tempat</p>
+<p>Yth.&nbsp;&nbsp;&nbsp;{$tujuan}</p>
 <p style="text-indent: 1.25cm; text-align: justify;">Dengan hormat,</p>
 <p style="text-indent: 1.25cm; text-align: justify;">Sehubungan dengan pendataan perangkat teknologi informasi pada Dinas Komunikasi dan Informatika Kabupaten Situbondo, bersama ini kami sampaikan rincian perangkat {$nama} dengan kode {$kode} sebagaimana terlampir.</p>
 <p style="text-indent: 1.25cm; text-align: justify;">Demikian surat ini kami sampaikan, atas perhatian dan kerja samanya diucapkan terima kasih.</p>
