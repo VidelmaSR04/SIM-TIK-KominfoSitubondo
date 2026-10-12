@@ -90,7 +90,7 @@
     <div class="edit-dok__split">
 
         {{-- ================= FORM (scroll sendiri) ================= --}}
-        <form id="formDokumen" method="POST" action="{{ route('server.dokumen.update', $server) }}" class="edit-dok__pane edit-dok__form space-y-6">
+        <form id="formDokumen" method="POST" enctype="multipart/form-data" action="{{ route('server.dokumen.update', $server) }}" class="edit-dok__pane edit-dok__form space-y-6">
             @csrf
             @method('PUT')
 
@@ -100,10 +100,24 @@
                 <textarea id="kop_html" name="kop_html">{{ old('kop_html', $dokumen->kop_html) }}</textarea>
                 <p class="text-xs text-gray-500">Logo dipasang otomatis di kiri. Garis bawah kop selalu ditambahkan.</p>
 
-                <label class="flex items-center gap-2 text-sm text-secondary">
-                    <input type="checkbox" name="jadikan_bawaan" value="1" class="rounded border-outline-variant text-primary focus:ring-primary">
-                    Jadikan kop ini sebagai bawaan untuk dokumen baru
-                </label>
+                {{-- LOGO KOP --}}
+                <div class="rounded-lg border border-outline-variant p-3 flex items-start gap-4">
+                    <div class="w-16 h-20 shrink-0 rounded border border-outline-variant bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <img id="logoThumb" src="{{ $logoUrl }}" alt="Logo kop" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <div class="flex-1 min-w-0 space-y-2">
+                        <label for="logo" class="block text-sm font-medium text-secondary">Logo kop</label>
+                        <input type="file" id="logo" name="logo" accept="image/png,image/jpeg"
+                               class="block w-full text-sm text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-primary-container">
+                        <p class="text-xs text-gray-500">PNG atau JPG, maksimal 2 MB, disarankan latar transparan. Logo berlaku untuk semua dokumen dan baru tersimpan setelah klik Simpan.</p>
+                        @if ($logoKustom)
+                            <label class="flex items-center gap-2 text-sm text-secondary">
+                                <input type="checkbox" id="hapus_logo" name="hapus_logo" value="1" class="rounded border-outline-variant text-primary focus:ring-primary">
+                                Kembalikan ke logo bawaan
+                            </label>
+                        @endif
+                    </div>
+                </div>
             </section>
 
             {{-- SURAT PENGANTAR --}}
@@ -182,12 +196,11 @@
         {{-- ================= PREVIEW PDF (tetap di tempat) ================= --}}
         <div class="edit-dok__pane edit-dok__preview">
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-on-surface">Preview PDF</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="font-semibold text-on-surface">Preview PDF</h2>
+                    <span id="statusPreview" class="text-xs text-gray-500"></span>
+                </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="perbaruiPreview()" class="inline-flex items-center gap-1 border border-outline-variant bg-white text-sm px-3 py-2 rounded-lg hover:bg-gray-50">
-                        <span class="material-symbols-outlined text-[18px]">refresh</span>
-                        Perbarui preview
-                    </button>
                     <a href="{{ route('server.dokumen.download', $server) }}" class="inline-flex items-center gap-1 border border-outline-variant bg-white text-sm px-3 py-2 rounded-lg hover:bg-gray-50" title="Mengunduh versi yang sudah disimpan">
                         <span class="material-symbols-outlined text-[18px]">download</span>
                         Unduh PDF
@@ -195,7 +208,7 @@
                 </div>
             </div>
             <iframe name="previewFrame" id="previewFrame" class="rounded-lg border border-outline-variant bg-gray-100"></iframe>
-            <p class="text-xs text-gray-500">Preview memakai isi form saat ini (belum perlu disimpan). Tombol Unduh PDF memakai versi yang sudah disimpan.</p>
+            <p class="text-xs text-gray-500">Preview diperbarui otomatis saat Anda mengetik atau mengubah isian (belum perlu disimpan). Tombol Unduh PDF memakai versi yang sudah disimpan.</p>
         </div>
     </div>
 </div>
@@ -206,12 +219,19 @@
 <script>
     const PREVIEW_URL = @js(route('server.dokumen.preview-draft', $server));
 
+    const formDokumen = document.getElementById('formDokumen');
+    const statusPreview = document.getElementById('statusPreview');
+    let timerPreview = null;
+
     function perbaruiPreview() {
+        clearTimeout(timerPreview);
         if (window.tinymce) { tinymce.triggerSave(); }
 
-        const form   = document.getElementById('formDokumen');
+        const form   = formDokumen;
         const method = form.querySelector('input[name="_method"]');
         const asli   = { action: form.action, target: form.target };
+
+        statusPreview.textContent = 'Memperbarui preview…';
 
         form.action     = PREVIEW_URL;
         form.target     = 'previewFrame';
@@ -223,6 +243,59 @@
         method.disabled = false;
     }
 
+    // Preview otomatis: dijadwalkan setelah berhenti mengetik / mengubah isian (debounce)
+    function jadwalkanPreview(jeda) {
+        clearTimeout(timerPreview);
+        timerPreview = setTimeout(perbaruiPreview, jeda || 900);
+    }
+
+    document.getElementById('previewFrame').addEventListener('load', function () {
+        statusPreview.textContent = '';
+    });
+
+    // Isian biasa (input teks, textarea, pilihan pejabat). Logo ditangani terpisah di bawah.
+    ['input', 'change'].forEach(function (jenis) {
+        formDokumen.addEventListener(jenis, function (e) {
+            if (e.target.id === 'logo' || e.target.id === 'hapus_logo') { return; }
+            jadwalkanPreview(jenis === 'input' ? 900 : 300);
+        });
+    });
+
+    // Editor TinyMCE (isinya ada di dalam iframe, jadi tidak lewat event form)
+    function pantauEditor(editor) {
+        editor.on('input change Undo Redo', function () { jadwalkanPreview(900); });
+        editor.on('ExecCommand', function (e) {
+            if (!/^mce(Focus|Repaint)/i.test(e.command)) { jadwalkanPreview(600); }
+        });
+    }
+
+    // Logo kop: tampilkan miniatur file yang dipilih, lalu perbarui preview PDF
+    (function () {
+        const inputLogo = document.getElementById('logo');
+        const hapusLogo = document.getElementById('hapus_logo');
+        const thumb     = document.getElementById('logoThumb');
+
+        if (inputLogo) {
+            inputLogo.addEventListener('change', function () {
+                const berkas = inputLogo.files[0];
+                if (!berkas) { return; }
+
+                if (berkas.size > 2 * 1024 * 1024) {
+                    alert('Ukuran logo maksimal 2 MB.');
+                    inputLogo.value = '';
+                    return;
+                }
+
+                thumb.src = URL.createObjectURL(berkas);
+                perbaruiPreview();
+            });
+        }
+
+        if (hapusLogo) {
+            hapusLogo.addEventListener('change', perbaruiPreview);
+        }
+    })();
+
     const pengaturanDasar = {
         menubar: false,
         statusbar: false,
@@ -230,7 +303,7 @@
         promotion: false,
         entity_encoding: 'raw',
         plugins: 'lists table',
-        font_family_formats: 'Times New Roman=times new roman,times,serif; Arial=arial,helvetica,sans-serif',
+        font_family_formats: 'Arial=arial,helvetica,sans-serif',   // semua dokumen memakai Arial
         font_size_formats: '10pt 11pt 12pt 14pt 16pt',
         line_height_formats: '1 1.15 1.3 1.5 2',
     };
@@ -295,8 +368,11 @@
         ...pengaturanDasar,
         selector: '#kop_html',
         height: 300,
-        toolbar: 'undo redo | fontfamily fontsize lineheight spasisebelum spasisesudah | bold italic underline | alignleft aligncenter alignright | outdent indent | removeformat',
-        setup: tambahTombolSpasi,
+        toolbar: 'undo redo | fontsize lineheight spasisebelum spasisesudah | bold italic underline | alignleft aligncenter alignright | outdent indent | removeformat',
+        setup: function (editor) {
+            tambahTombolSpasi(editor);
+            pantauEditor(editor);
+        },
         content_style: `
             body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.15;
                    max-width: 16.59cm; margin: 12px auto; padding: 0 6px; }
@@ -309,9 +385,9 @@
         ...pengaturanDasar,
         selector: '#isi_surat',
         height: 560,
-        toolbar: 'undo redo | fontfamily fontsize lineheight spasisebelum spasisesudah | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | removeformat',
+        toolbar: 'undo redo | fontsize lineheight spasisebelum spasisesudah | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | removeformat',
         content_style: `
-            body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5;
+            body { font-family: Arial, Helvetica, sans-serif; font-size: 12pt; line-height: 1.5;
                    max-width: 16.59cm; margin: 12px auto; padding: 0 6px; }
             p { margin: 0 0 12pt 0; }
             ul, ol { margin: 0 0 12pt 0; padding-left: 1.25cm; }
@@ -320,6 +396,7 @@
         `,
         setup: function (editor) {
             tambahTombolSpasi(editor);
+            pantauEditor(editor);
             editor.on('init', perbaruiPreview);
         }
     });

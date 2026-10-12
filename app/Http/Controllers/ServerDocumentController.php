@@ -10,6 +10,7 @@ use App\Services\SuratHtmlSanitizer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ServerDocumentController extends Controller
@@ -64,7 +65,10 @@ class ServerDocumentController extends Controller
             ->orderBy('urutan')
             ->get();
 
-        return view('server-dokumen.edit', compact('server', 'dokumen', 'pejabatList'));
+        $logoUrl    = DocumentSetting::logoUrl();
+        $logoKustom = DocumentSetting::logoKustom();
+
+        return view('server-dokumen.edit', compact('server', 'dokumen', 'pejabatList', 'logoUrl', 'logoKustom'));
     }
 
     /**
@@ -78,12 +82,7 @@ class ServerDocumentController extends Controller
 
         ServerDocument::updateOrCreate(['server_id' => $server->id], $atribut);
 
-        if ($request->boolean('jadikan_bawaan')) {
-            // Hanya kolom kop_html yang disimpan; logo memakai nilai bawaan
-            // (tidak bergantung pada kolom logo_path di tabel document_settings)
-            $setting = DocumentSetting::first() ?? new DocumentSetting();
-            $setting->fill(['kop_html' => $atribut['kop_html']])->save();
-        }
+        $this->perbaruiLogo($request);
 
         return redirect()
             ->route('server.dokumen.edit', $server)
@@ -99,7 +98,17 @@ class ServerDocumentController extends Controller
         $dokumen = new ServerDocument($this->susunAtribut($data));
         $dokumen->server_id = $server->id;
 
-        return $this->buatPdf($server, $dokumen)
+        // Logo yang baru dipilih / dikembalikan ke bawaan ikut tampil di preview (belum disimpan)
+        $logo = null;
+        if ($request->hasFile('logo')) {
+            $berkas = $request->file('logo');
+            $logo   = 'data:' . $berkas->getMimeType() . ';base64,'
+                    . base64_encode((string) file_get_contents($berkas->getRealPath()));
+        } elseif ($request->boolean('hapus_logo')) {
+            $logo = public_path(DocumentSetting::BAWAAN['logo_path']);
+        }
+
+        return $this->buatPdf($server, $dokumen, $logo)
             ->stream('draft-server-' . $server->id . '.pdf');
     }
 
@@ -175,10 +184,33 @@ class ServerDocumentController extends Controller
         return $dokumen;
     }
 
-    private function buatPdf(Server $server, ServerDocument $dokumen)
+    /**
+     * Simpan logo kop yang diunggah (berlaku untuk semua dokumen) atau kembalikan ke logo bawaan.
+     */
+    private function perbaruiLogo(Request $request): void
+    {
+        $berkas = $request->file('logo');
+
+        if (!$berkas && !$request->boolean('hapus_logo')) {
+            return;
+        }
+
+        $setting = DocumentSetting::first() ?? new DocumentSetting();
+        $lama    = $setting->logo_path;
+
+        $setting->logo_path = $berkas ? $berkas->store(DocumentSetting::LOGO_DIR, 'public') : null;
+        $setting->save();
+
+        // Hapus file unggahan lama (logo bawaan di public/img tidak pernah dihapus)
+        if (filled($lama) && str_starts_with($lama, DocumentSetting::LOGO_DIR . '/')) {
+            Storage::disk('public')->delete($lama);
+        }
+    }
+
+    private function buatPdf(Server $server, ServerDocument $dokumen, ?string $logo = null)
     {
         $server->loadMissing('aplikasis');
-        $logo = public_path(DocumentSetting::saatIni()->logo_path ?: DocumentSetting::BAWAAN['logo_path']);
+        $logo ??= DocumentSetting::logoFile();
 
         // Folio / F4: 8,5 x 13 inci = 612 x 936 pt
         return Pdf::loadView('pdf.detailserver', compact('server', 'dokumen', 'logo'))
@@ -193,6 +225,9 @@ class ServerDocumentController extends Controller
             'kop_html'  => ['required', 'string', 'max:20000'],
             'isi_surat' => ['nullable', 'string', 'max:100000'],
 
+            'logo'       => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'hapus_logo' => ['nullable', 'boolean'],
+
             'lampiran_label'   => ['nullable', 'string', 'max:100'],
             'lampiran_nomor'   => ['nullable', 'string', 'max:150'],
             'lampiran_tanggal' => ['nullable', 'string', 'max:100'],
@@ -201,8 +236,6 @@ class ServerDocumentController extends Controller
             'ttd_kiri_judul'      => ['nullable', 'string', 'max:500'],
             'ttd_kanan_master_id' => ['nullable', 'integer', $pejabat],
             'ttd_kanan_judul'     => ['nullable', 'string', 'max:500'],
-
-            'jadikan_bawaan'      => ['nullable', 'boolean'],
         ];
     }
 
