@@ -22,45 +22,18 @@
         ['ID Server',         $server->id,                '',                   ''],
     ];
 
-    // Isian kepala lampiran dari form edit. Kosong = titik-titik (diisi manual setelah dicetak).
-    $titik           = '..............................';
-    $lampiranLabel   = filled($dokumen->lampiran_label)   ? $dokumen->lampiran_label   : 'Lampiran ..........';
-    $lampiranNomor   = filled($dokumen->lampiran_nomor)   ? $dokumen->lampiran_nomor   : $titik;
-    $lampiranTanggal = filled($dokumen->lampiran_tanggal) ? $dokumen->lampiran_tanggal : $titik;
-
-    // Pangkat dicetak tanpa golongan ("Pembina Utama Muda"). Ubah ke true bila golongan ingin ikut tampil.
-    $tampilkanGolongan = false;
-
-    // Path file QR Code tanda tangan (disk 'public'); null bila tidak ada / file hilang
-    $qrPath = function (?string $relatif) {
-        if (blank($relatif)) {
-            return null;
-        }
-        $abs = storage_path('app/public/' . ltrim($relatif, '/'));
-
-        return file_exists($abs) ? $abs : null;
-    };
-
-    // Snapshot di dokumen dipakai lebih dulu; bila kosong (mis. QR baru diunggah belakangan)
-    // dipakai QR terbaru milik pejabat di Master Data.
-    $qrDari = function ($snapshot, $masterId) use ($qrPath) {
-        return $qrPath($snapshot) ?: ($masterId ? $qrPath(\App\Models\MasterData::find($masterId)?->qrcode_path) : null);
-    };
-
     $ttd = [
         'kiri' => [
             'judul'   => $dokumen->ttd_kiri_judul,
             'nama'    => $dokumen->ttd_kiri_nama,
             'pangkat' => $dokumen->ttd_kiri_pangkat,
             'nip'     => $dokumen->ttd_kiri_nip,
-            'qrcode'  => $qrDari($dokumen->ttd_kiri_qrcode, $dokumen->ttd_kiri_master_id),
         ],
         'kanan' => [
             'judul'   => $dokumen->ttd_kanan_judul,
             'nama'    => $dokumen->ttd_kanan_nama,
             'pangkat' => $dokumen->ttd_kanan_pangkat,
             'nip'     => $dokumen->ttd_kanan_nip,
-            'qrcode'  => $qrDari($dokumen->ttd_kanan_qrcode, $dokumen->ttd_kanan_master_id),
         ],
     ];
 @endphp
@@ -120,25 +93,28 @@
         .halaman-lampiran { page-break-before: always; padding-top: 1.5cm; }
 
         /* Kepala lampiran (tanpa kop): blok rata kiri di separuh kanan, bergaris bawah, lalu judul di tengah */
+        .halaman-lampiran, .halaman-lampiran * { font-size: 12pt !important; }
         .lampiran-kepala { width: 100%; border-collapse: collapse; margin: 0 0 20pt 0; color: #000; }
         .lampiran-kepala td { padding: 0; vertical-align: top; }
         .lampiran-kepala .lk-spasi { width: 51%; }
+        .lampiran-repeat { width: 100%; border-collapse: collapse; border-spacing: 0; }
+        .lampiran-repeat > tbody > tr > td { padding: 0; border: 0; vertical-align: top; }
+        .lampiran-repeat > tbody > tr.lampiran-ttd-row { page-break-inside: avoid; }
         .lk-kotak {
             width: 92%;
             padding-bottom: 1.5pt;
             border-bottom: 0.75pt solid #000;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 12pt;
             line-height: 1.25;
         }
         .lk-dalam { border-collapse: collapse; width: 100%; }
-        .lk-dalam td { padding: 0; vertical-align: top; font-size: 12pt; line-height: 1.25; }
+        .lk-dalam td { padding: 0; vertical-align: top; line-height: 1.25; }
         .lk-dalam .lk-label { width: 2.7cm; }
 
         .judul {
-            text-align: center;
+            width: 100%;
+            text-align: center !important;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 14pt;
             font-weight: bold;
             text-transform: uppercase;
             color: #000;
@@ -151,8 +127,9 @@
             border-spacing: 0;
             margin: 0 0 16px 0;
             table-layout: fixed;
-            font-size: 10pt;
+            font-size: 11pt !important;
         }
+        .table-rincian * { font-size: 11pt !important; }
         .table-rincian td {
             padding: 3px 5px;
             border: 1px solid #cbd5e1;
@@ -206,9 +183,7 @@
         }
         .ttd-pembuka { font-weight: normal; }
         .ttd-jabatan { font-weight: bold; text-transform: uppercase; }
-        .ttd-qr { margin: 8pt 0 14pt 0.65cm; }
-        .ttd-qr img { width: 2.3cm; }
-        .ttd-ruang { height: 60pt; }
+        .ttd-ruang { height: 115.2pt; }
         .ttd-nama { font-weight: bold; text-decoration: underline; }
         .ttd-pangkat, .ttd-nip { font-weight: normal; }
     </style>
@@ -219,128 +194,154 @@
     @include('pdf.partials.kop', ['dokumen' => $dokumen, 'logo' => $logo])
 
     <div class="isi-surat">
+        <p style="text-align:right;">Situbondo, {{ $dokumen->surat_tanggal }}</p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:12pt;">
+            <tbody>
+                <tr><td style="width:20%;">Nomor</td><td style="width:3%;">:</td><td>{{ $dokumen->surat_nomor }}</td></tr>
+                <tr><td>Sifat</td><td>:</td><td>{{ $dokumen->surat_sifat }}</td></tr>
+                <tr><td>Lampiran</td><td>:</td><td>{{ $dokumen->surat_lampiran }}</td></tr>
+                <tr><td>Hal</td><td>:</td><td>{{ $dokumen->surat_hal }}</td></tr>
+            </tbody>
+        </table>
+        <p>Yth.&nbsp;&nbsp;&nbsp;{{ $dokumen->surat_yth }}</p>
         {!! $dokumen->isi_surat !!}
     </div>
 
 
-    {{-- ================= HALAMAN 2 : LAMPIRAN (otomatis dari data perangkat) ================= --}}
+    {{-- ================= HALAMAN 2 : LAMPIRAN ================= --}}
     <div class="halaman-lampiran">
 
         {{-- Halaman lampiran tidak memakai kop surat --}}
-        <table class="lampiran-kepala">
+        <table class="lampiran-repeat">
+            <tbody>
+                <tr>
+                    <td>
+                        <table class="lampiran-kepala">
+                            <tr>
+                                <td class="lk-spasi"></td>
+                                <td>
+                                    <div class="lk-kotak">
+                                        <div>Lampiran I</div>
+                                        <table class="lk-dalam">
+                                            <tr>
+                                                <td class="lk-label">Surat Nomor</td>
+                                                <td>: {{ $dokumen->surat_nomor }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="lk-label">Tanggal</td>
+                                                <td>: {{ $dokumen->surat_tanggal }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+        <tr>
+            <td>
+                <div class="judul">Rincian Server</div>
+
+                <table class="table-rincian">
+                    @foreach ($rincian as $r)
+                        <tr>
+                            <td class="col-left"><span class="label">{{ $r[0] }}</span></td>
+                            <td>{{ $fmt($r[1]) }}</td>
+                            <td class="col-right">
+                                @if ($r[2] !== '')
+                                    <span class="label">{{ $r[2] }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($r[2] !== '')
+                                    {{ $fmt($r[3]) }}
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
+            </td>
+        </tr>
+
+        @if (isset($server->aplikasis) && $server->aplikasis->count() > 0)
             <tr>
-                <td class="lk-spasi"></td>
                 <td>
-                    <div class="lk-kotak">
-                        <div>{{ $lampiranLabel }}</div>
-                        <table class="lk-dalam">
-                            <tr>
-                                <td class="lk-label">Surat Nomor</td>
-                                <td>: {{ $lampiranNomor }}</td>
-                            </tr>
-                            <tr>
-                                <td class="lk-label">Tanggal</td>
-                                <td>: {{ $lampiranTanggal }}</td>
-                            </tr>
+                    <div class="aplikasi-wrapper">
+                        <div class="aplikasi-title">Aplikasi Terpasang :</div>
+                        <table class="table-aplikasi">
+                            <thead>
+                                <tr>
+                                    <th>IP Local</th>
+                                    <th>IP Public</th>
+                                    <th>Nama Aplikasi</th>
+                                    <th>URL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach ($server->aplikasis as $app)
+                                <tr>
+                                    <td>{{ $app->pivot->ip_local ?? '-' }}</td>
+                                    <td>{{ $app->pivot->ip_public ?? '-' }}</td>
+                                    <td>{{ $app->nama }}</td>
+                                    <td>{{ $app->pivot->url ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
                         </table>
                     </div>
                 </td>
             </tr>
-        </table>
-
-        <div class="judul">Rincian Server</div>
-
-        <table class="table-rincian">
-            @foreach ($rincian as $r)
-                <tr>
-                    <td class="col-left"><span class="label">{{ $r[0] }}</span></td>
-                    <td>{{ $fmt($r[1]) }}</td>
-                    <td class="col-right">
-                        @if ($r[2] !== '')
-                            <span class="label">{{ $r[2] }}</span>
-                        @endif
-                    </td>
-                    <td>
-                        @if ($r[2] !== '')
-                            {{ $fmt($r[3]) }}
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-        </table>
-
-        @if (isset($server->aplikasis) && $server->aplikasis->count() > 0)
-            <div class="aplikasi-wrapper">
-                <div class="aplikasi-title">Aplikasi Terpasang :</div>
-                <table class="table-aplikasi">
-                    <thead>
-                        <tr>
-                            <th>IP Local</th>
-                            <th>IP Public</th>
-                            <th>Nama Aplikasi</th>
-                            <th>URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($server->aplikasis as $app)
-                            <tr>
-                                <td>{{ $app->pivot->ip_local ?? '-' }}</td>
-                                <td>{{ $app->pivot->ip_public ?? '-' }}</td>
-                                <td>{{ $app->nama }}</td>
-                                <td>{{ $app->pivot->url ?? '-' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
         @endif
 
         {{-- TANDA TANGAN: kiri & kanan, dipilih dari Master Data pejabat --}}
-        <table class="ttd-tabel">
-            {{-- Baris 1: jabatan (huruf besar tebal); "Mengetahui," tidak tebal --}}
-            <tr>
-                @foreach ($ttd as $t)
-                    <td class="ttd-sel">
-                        @if (filled($t['judul']))
-                            @foreach (preg_split('/\r\n|\r|\n/', trim($t['judul'])) as $baris)
-                                @if (filled(trim($baris)))
-                                    <div class="{{ preg_match('/^mengetahui,?$/i', trim($baris)) ? 'ttd-pembuka' : 'ttd-jabatan' }}">{{ trim($baris) }}</div>
+        <tr class="lampiran-ttd-row">
+            <td>
+                <table class="ttd-tabel">
+                    {{-- Baris 1: jabatan pejabat --}}
+                    <tr>
+                        @foreach ($ttd as $t)
+                            <td class="ttd-sel">
+                                @if (filled($t['judul']))
+                                    <div class="ttd-pembuka">Mengetahui,</div>
+                                    @foreach (preg_split('/\r\n|\r|\n/', trim($t['judul'])) as $baris)
+                                        @if (filled(trim($baris)) && !preg_match('/^mengetahui,?$/i', trim($baris)))
+                                            <div class="ttd-jabatan">{{ trim($baris) }}</div>
+                                        @endif
+                                    @endforeach
                                 @endif
-                            @endforeach
-                        @endif
-                    </td>
-                @endforeach
-            </tr>
-            {{-- Baris 2: gambar QR Code (atau ruang kosong untuk tanda tangan basah) --}}
-            <tr>
-                @foreach ($ttd as $t)
-                    <td class="ttd-sel">
-                        @if (filled($t['nama']))
-                            @if ($t['qrcode'])
-                                <div class="ttd-qr"><img src="{{ $t['qrcode'] }}" alt="QR Code tanda tangan"></div>
-                            @else
-                                <div class="ttd-ruang"></div>
-                            @endif
-                        @endif
-                    </td>
-                @endforeach
-            </tr>
-            {{-- Baris 3: nama (tebal, bergaris bawah), pangkat, NIP --}}
-            <tr>
-                @foreach ($ttd as $t)
-                    <td class="ttd-sel">
-                        @if (filled($t['nama']))
-                            <div class="ttd-nama">{{ $t['nama'] }}</div>
-                            @if (filled($t['pangkat']))
-                                <div class="ttd-pangkat">{{ \App\Models\MasterData::pangkatTampil($t['pangkat'], $tampilkanGolongan) }}</div>
-                            @endif
-                            @if (filled($t['nip']))
-                                <div class="ttd-nip">NIP. {{ $t['nip'] }}</div>
-                            @endif
-                        @endif
-                    </td>
-                @endforeach
-            </tr>
+                            </td>
+                        @endforeach
+                    </tr>
+                    {{-- Baris 2: ruang delapan baris untuk QR TTD digital yang akan diisi pejabat --}}
+                    <tr>
+                        @foreach ($ttd as $t)
+                            <td class="ttd-sel">
+                                @if (filled($t['nama']))
+                                    <div class="ttd-ruang"></div>
+                                @endif
+                            </td>
+                        @endforeach
+                    </tr>
+                    {{-- Baris 3: nama (tebal, bergaris bawah), pangkat, NIP --}}
+                    <tr>
+                        @foreach ($ttd as $t)
+                            <td class="ttd-sel">
+                                @if (filled($t['nama']))
+                                    <div class="ttd-nama">{{ $t['nama'] }}</div>
+                                    @if (filled($t['pangkat']))
+                                        <div class="ttd-pangkat">{{ \App\Models\MasterData::pangkatTampil($t['pangkat']) }}</div>
+                                    @endif
+                                    @if (filled($t['nip']))
+                                        <div class="ttd-nip">NIP. {{ $t['nip'] }}</div>
+                                    @endif
+                                @endif
+                            </td>
+                        @endforeach
+                    </tr>
+                </table>
+            </td>
+        </tr>
+            </tbody>
         </table>
 
     </div>

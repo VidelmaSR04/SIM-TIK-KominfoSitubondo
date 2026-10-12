@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 
 class MasterData extends Model
@@ -63,7 +62,6 @@ class MasterData extends Model
         'nip',
         'pangkat',
         'jabatan_ttd',
-        'qrcode_path',
     ];
 
     protected $casts = [
@@ -166,8 +164,17 @@ class MasterData extends Model
     public function jabatanTtd(): string
     {
         $khusus = trim((string) $this->jabatan_ttd);
+        $jabatan = mb_strtoupper($khusus !== '' ? $khusus : (string) $this->value);
 
-        return $khusus !== '' ? $khusus : mb_strtoupper((string) $this->value);
+        if (str_contains($jabatan, 'KEPALA DINAS')) {
+            return "KEPALA DINAS\nKOMUNIKASI DAN INFORMATIKA\nKABUPATEN SITUBONDO";
+        }
+
+        if (str_contains($jabatan, 'KEPALA BIDANG')) {
+            return "KEPALA BIDANG\nTEKNOLOGI INFORMASI\nDAN KOMUNIKASI";
+        }
+
+        return $jabatan;
     }
 
     /**
@@ -183,11 +190,5 @@ class MasterData extends Model
         }
 
         return trim(preg_replace('/^[IVX]+\/[a-e]\s+/i', '', $pangkat));
-    }
-
-    /** URL publik gambar QR Code (butuh `php artisan storage:link`). */
-    public function qrcodeUrl(): ?string
-    {
-        return $this->qrcode_path ? asset('storage/' . $this->qrcode_path) : null;
     }
 }

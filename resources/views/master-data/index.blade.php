@@ -104,8 +104,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">Nama</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">Jabatan</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">NIP</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">Pangkat</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">QR TTD</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">Pangkat / Golongan</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-on-surface-variant tracking-wide w-28">Aksi</th>
                                 @else
                                     <th class="px-6 py-3 text-left text-xs font-medium text-on-surface-variant tracking-wide">Urutan</th>
@@ -121,7 +120,7 @@
                             @if ($items->isEmpty())
                                 <tr>
                                     @php $isPejabat = $kategoriAktifKey === 'pejabat'; @endphp
-                                    <td colspan="{{ $isPejabat ? 7 : 5 }}" class="px-6 py-16 text-center">
+                                    <td colspan="{{ $isPejabat ? 6 : 5 }}" class="px-6 py-16 text-center">
                                         <span class="material-symbols-outlined text-3xl text-on-surface-variant/50 block mb-2">inbox</span>
                                         <p class="text-on-surface-variant text-sm">Belum ada data untuk kategori "{{ $kategoriAktifLabel }}".</p>
                                         <p class="text-on-surface-variant text-xs mt-1">Klik "Tambah Data" untuk menambahkan entri pertama.</p>
@@ -138,15 +137,6 @@
                                             <td class="px-6 py-4 text-on-surface">{{ $item->nip ?? '' }}</td>
                                             <td class="px-6 py-4 text-on-surface">{{ $item->pangkat ?? '' }}</td>
                                             <td class="px-6 py-4">
-                                                @if ($item->qrcode_path)
-                                                    <img src="{{ $item->qrcodeUrl() }}" alt="QR {{ $item->label }}"
-                                                         style="height:44px;width:44px;object-fit:contain;"
-                                                         class="rounded border border-outline-variant bg-white">
-                                                @else
-                                                    <span class="text-xs text-on-surface-variant">Belum ada</span>
-                                                @endif
-                                            </td>
-                                            <td class="px-6 py-4">
                                                 <div class="flex items-center justify-end gap-1">
                                                     <button type="button"
                                                             title="Edit"
@@ -160,8 +150,7 @@
                                                             data-edit-is-aktif="{{ $item->is_aktif ? '1' : '0' }}"
                                                             data-edit-pangkat="{{ $item->pangkat }}"
                                                             data-edit-nip="{{ $item->nip }}"
-                                                            data-edit-jabatan-ttd="{{ $item->jabatan_ttd }}"
-                                                            data-edit-qrcode-url="{{ $item->qrcodeUrl() }}">
+                                                            data-edit-jabatan-ttd="{{ $item->jabatan_ttd }}">
                                                         <span class="material-symbols-outlined text-lg">edit</span>
                                                     </button>
                                                     <form action="{{ route('master-data.destroy', $item) }}" method="POST">
@@ -197,8 +186,7 @@
                                                             data-edit-is-aktif="{{ $item->is_aktif ? '1' : '0' }}"
                                                             data-edit-pangkat=""
                                                             data-edit-nip=""
-                                                            data-edit-jabatan-ttd=""
-                                                            data-edit-qrcode-url="">
+                                                            data-edit-jabatan-ttd="">
                                                         <span class="material-symbols-outlined text-lg">edit</span>
                                                     </button>
                                                     <form action="{{ route('master-data.destroy', $item) }}" method="POST">
@@ -286,7 +274,7 @@
 
                     <!-- Pangkat (only for pejabat) -->
                     <div id="pangkat-field">
-                        <label for="form-pangkat" class="mb-2 block text-sm font-medium text-on-surface-variant">Pangkat</label>
+                        <label for="form-pangkat" class="mb-2 block text-sm font-medium text-on-surface-variant">Pangkat / Golongan</label>
                         <select id="form-pangkat" name="pangkat" class="block w-full rounded-lg border border-outline-variant bg-surface-bright px-4 py-3 text-sm font-medium text-on-surface placeholder-on-surface-variant focus:border-primary focus:ring-primary/20 focus:ring-2 focus:outline-none @error('pangkat') border-red-500 @enderror">
                             <option value="">&mdash; Pilih pangkat &mdash;</option>
                             @foreach (\App\Models\MasterData::PANGKAT_PNS as $pangkatOpsi)
@@ -296,7 +284,7 @@
                         @error('pangkat')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
-                        <p class="mt-1 text-xs text-on-surface-variant">Di PDF yang dicetak hanya nama pangkatnya, misalnya &quot;Pembina Utama Muda&quot;.</p>
+                        <p class="mt-1 text-xs text-on-surface-variant">Pangkat dan golongan akan dicetak di bawah nama pejabat.</p>
                     </div>
 
                     <!-- Jabatan pada tanda tangan (only for pejabat) -->
@@ -309,27 +297,6 @@
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                         <p class="mt-1 text-xs text-on-surface-variant">Satu baris di sini = satu baris di PDF. Kosongkan untuk memakai Jabatan di atas (huruf besar).</p>
-                    </div>
-
-                    <!-- QR Code tanda tangan (only for pejabat) -->
-                    <div id="qrcode-field">
-                        <label for="form-qrcode" class="mb-2 block text-sm font-medium text-on-surface-variant">QR Code Tanda Tangan (gambar)</label>
-                        <div id="qrcode-preview-wrap" style="display:none;" class="mb-3 items-center gap-3">
-                            <img id="qrcode-preview" src="" alt="QR Code"
-                                 style="height:96px;width:96px;object-fit:contain;"
-                                 class="rounded border border-outline-variant bg-white p-1">
-                            <label class="flex items-center gap-2 text-sm text-on-surface-variant">
-                                <input type="checkbox" id="form-hapus-qrcode" name="hapus_qrcode" value="1"
-                                       class="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded">
-                                Hapus QR
-                            </label>
-                        </div>
-                        <input type="file" id="form-qrcode" name="qrcode" accept="image/png,image/jpeg"
-                               class="block w-full text-sm text-on-surface-variant">
-                        @error('qrcode')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-xs text-on-surface-variant">PNG atau JPG, maksimal 2 MB. Dicetak di atas nama pejabat pada PDF.</p>
                     </div>
 
                                         <!-- Urutan -->
@@ -381,26 +348,6 @@
             const formPangkat = document.getElementById('form-pangkat');
             const formNip = document.getElementById('form-nip');
             const formJabatanTtd = document.getElementById('form-jabatan-ttd');
-            const formQr = document.getElementById('form-qrcode');
-            const formHapusQr = document.getElementById('form-hapus-qrcode');
-            const qrPreview = document.getElementById('qrcode-preview');
-            const qrPreviewWrap = document.getElementById('qrcode-preview-wrap');
-
-            // Tampilkan / sembunyikan pratinjau QR Code di modal
-            function tampilkanQr(url) {
-                qrPreviewWrap.style.display = url ? 'flex' : 'none';
-                qrPreview.src = url || '';
-                formHapusQr.checked = false;
-            }
-
-            // Pratinjau langsung saat file QR baru dipilih
-            formQr.addEventListener('change', function () {
-                if (this.files && this.files[0]) {
-                    qrPreview.src = URL.createObjectURL(this.files[0]);
-                    qrPreviewWrap.style.display = 'flex';
-                    formHapusQr.checked = false;
-                }
-            });
             const modalSubmitBtn = document.getElementById('modal-submit-btn');
 
             // Open modal for editing
@@ -429,9 +376,6 @@
                     const nip = this.getAttribute('data-edit-nip');
                     formNip.value = nip;
                     formJabatanTtd.value = this.getAttribute('data-edit-jabatan-ttd') || '';
-                    formQr.value = '';
-                    tampilkanQr(this.getAttribute('data-edit-qrcode-url') || '');
-
                     modal.classList.remove('hidden');
                     modal.setAttribute('aria-hidden', 'false');
                 });
@@ -454,9 +398,6 @@
                 formNip.value = '';
                 formPangkat.value = '';
                 formJabatanTtd.value = '';
-                formQr.value = '';
-                tampilkanQr('');
-
                 modal.classList.remove('hidden');
                 modal.setAttribute('aria-hidden', 'false');
             });
@@ -466,7 +407,6 @@
                 modal.classList.add('hidden');
                 modal.setAttribute('aria-hidden', 'true');
                 form.reset();
-                tampilkanQr('');
                 formMethod.value = 'POST';
                 formId.value = '';
                 modalTitle.textContent = 'Tambah Data Master';
@@ -485,7 +425,6 @@
                                 document.getElementById('pangkat-field').style.display = isPejabat ? 'block' : 'none';
                 document.getElementById('urutan-field').style.display = isPejabat ? 'none' : 'block';
                 document.getElementById('jabatan-ttd-field').style.display = isPejabat ? 'block' : 'none';
-                document.getElementById('qrcode-field').style.display = isPejabat ? 'block' : 'none';
                 document.getElementById('is-aktif-field').style.display = 'block';
 
                 // Change labels for Value and Label if pejabat

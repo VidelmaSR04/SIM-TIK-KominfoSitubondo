@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class ServerDocumentController extends Controller
@@ -67,8 +68,11 @@ class ServerDocumentController extends Controller
 
         $logoUrl    = DocumentSetting::logoUrl();
         $logoKustom = DocumentSetting::logoKustom();
+        $tanggalSurat = filled($dokumen->surat_tanggal)
+            ? Carbon::createFromLocaleFormat('j F Y', 'id', $dokumen->surat_tanggal)?->toDateString()
+            : null;
 
-        return view('server-dokumen.edit', compact('server', 'dokumen', 'pejabatList', 'logoUrl', 'logoKustom'));
+        return view('server-dokumen.edit', compact('server', 'dokumen', 'pejabatList', 'logoUrl', 'logoKustom', 'tanggalSurat'));
     }
 
     /**
@@ -160,7 +164,7 @@ class ServerDocumentController extends Controller
     }
 
     /**
-     * Samakan data penandatangan dengan Master Data terbaru (nama, pangkat, NIP, QR Code),
+     * Samakan data penandatangan dengan Master Data terbaru (nama, pangkat, dan NIP),
      * persis seperti preview di halaman edit. Hanya untuk tampilan: tidak disimpan ke database.
      * Judul/jabatan tetap memakai isi yang sudah disimpan. Bila pejabatnya sudah dihapus
      * dari Master Data, salinan lama yang dipakai.
@@ -175,10 +179,10 @@ class ServerDocumentController extends Controller
                 continue;
             }
 
+            $dokumen->{"ttd_{$sisi}_judul"}   = $pejabat->jabatanTtd();
             $dokumen->{"ttd_{$sisi}_nama"}    = $pejabat->label;
             $dokumen->{"ttd_{$sisi}_pangkat"} = $pejabat->pangkat;
             $dokumen->{"ttd_{$sisi}_nip"}     = $pejabat->nip;
-            $dokumen->{"ttd_{$sisi}_qrcode"}  = $pejabat->qrcode_path;
         }
 
         return $dokumen;
@@ -224,18 +228,18 @@ class ServerDocumentController extends Controller
         return [
             'kop_html'  => ['required', 'string', 'max:20000'],
             'isi_surat' => ['nullable', 'string', 'max:100000'],
+            'surat_tanggal' => ['required', 'date_format:Y-m-d'],
+            'surat_nomor' => ['required', 'string', 'max:150'],
+            'surat_sifat' => ['required', 'string', 'max:100'],
+            'surat_lampiran' => ['required', 'string', 'max:100'],
+            'surat_hal' => ['required', 'string', 'max:255'],
+            'surat_yth' => ['required', 'string', 'max:500'],
 
             'logo'       => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'hapus_logo' => ['nullable', 'boolean'],
 
-            'lampiran_label'   => ['nullable', 'string', 'max:100'],
-            'lampiran_nomor'   => ['nullable', 'string', 'max:150'],
-            'lampiran_tanggal' => ['nullable', 'string', 'max:100'],
-
             'ttd_kiri_master_id'  => ['nullable', 'integer', $pejabat],
-            'ttd_kiri_judul'      => ['nullable', 'string', 'max:500'],
             'ttd_kanan_master_id' => ['nullable', 'integer', $pejabat],
-            'ttd_kanan_judul'     => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -249,10 +253,14 @@ class ServerDocumentController extends Controller
         $atribut = [
             'kop_html'  => $this->sanitizer->bersihkan($v['kop_html']),
             'isi_surat' => $this->sanitizer->bersihkan($v['isi_surat'] ?? ''),
-
-            'lampiran_label'   => filled($v['lampiran_label'] ?? null)   ? trim($v['lampiran_label'])   : null,
-            'lampiran_nomor'   => filled($v['lampiran_nomor'] ?? null)   ? trim($v['lampiran_nomor'])   : null,
-            'lampiran_tanggal' => filled($v['lampiran_tanggal'] ?? null) ? trim($v['lampiran_tanggal']) : null,
+            'surat_tanggal' => Carbon::createFromFormat('!Y-m-d', $v['surat_tanggal'])
+                ->locale('id')
+                ->translatedFormat('j F Y'),
+            'surat_nomor' => trim($v['surat_nomor']),
+            'surat_sifat' => trim($v['surat_sifat']),
+            'surat_lampiran' => trim($v['surat_lampiran']),
+            'surat_hal' => trim($v['surat_hal']),
+            'surat_yth' => trim($v['surat_yth']),
         ];
 
         foreach (['kiri', 'kanan'] as $sisi) {
@@ -260,11 +268,10 @@ class ServerDocumentController extends Controller
             $pejabat = $id ? MasterData::find($id) : null;
 
             $atribut["ttd_{$sisi}_master_id"] = $pejabat?->id;
-            $atribut["ttd_{$sisi}_judul"]     = $v["ttd_{$sisi}_judul"] ?? null;
+            $atribut["ttd_{$sisi}_judul"]     = $pejabat?->jabatanTtd();
             $atribut["ttd_{$sisi}_nama"]      = $pejabat?->label;
             $atribut["ttd_{$sisi}_pangkat"]   = $pejabat?->pangkat;
             $atribut["ttd_{$sisi}_nip"]       = $pejabat?->nip;
-            $atribut["ttd_{$sisi}_qrcode"]    = $pejabat?->qrcode_path;
         }
 
         return $atribut;
