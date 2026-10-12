@@ -121,38 +121,34 @@
             </section>
 
             {{-- SURAT PENGANTAR --}}
-            <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-5 space-y-3">
-                <h2 class="font-semibold text-on-surface">Surat Pengantar (Halaman 1)</h2>
-                <textarea id="isi_surat" name="isi_surat">{{ old('isi_surat', $dokumen->isi_surat) }}</textarea>
-            </section>
-
-            {{-- LAMPIRAN --}}
             <section class="bg-white rounded-xl border border-outline-variant shadow-sm p-5 space-y-4">
-                <h2 class="font-semibold text-on-surface">Lampiran (Halaman 2)</h2>
-
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-secondary" for="lampiran_label">Lampiran</label>
-                    <input type="text" id="lampiran_label" name="lampiran_label" maxlength="100" placeholder="Contoh: Lampiran I"
-                           value="{{ old('lampiran_label', $dokumen->lampiran_label) }}"
-                           class="w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
-                    <p class="text-xs text-gray-500">Kosongkan: di PDF tercetak titik-titik untuk diisi manual.</p>
+                <h2 class="font-semibold text-on-surface">Surat Pengantar (Halaman 1)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-sm font-medium text-secondary" for="surat_tanggal">Tanggal</label>
+                        <input type="date" id="surat_tanggal" name="surat_tanggal"
+                               value="{{ old('surat_tanggal', $tanggalSurat) }}"
+                               class="w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                    </div>
+                    @foreach ([
+                        'surat_nomor' => ['Nomor', 150, 'Masukkan nomor surat'],
+                        'surat_sifat' => ['Sifat', 100, 'Masukkan sifat surat'],
+                        'surat_lampiran' => ['Lampiran', 100, 'Masukkan keterangan lampiran'],
+                        'surat_hal' => ['Hal', 255, 'Masukkan perihal surat'],
+                        'surat_yth' => ['Yth.', 500, 'Masukkan tujuan surat'],
+                    ] as $field => [$label, $maxlength, $placeholder])
+                        <div class="space-y-1">
+                            <label class="block text-sm font-medium text-secondary" for="{{ $field }}">{{ $label }}</label>
+                            <input type="text" id="{{ $field }}" name="{{ $field }}" maxlength="{{ $maxlength }}"
+                                   placeholder="{{ $placeholder }}"
+                                   value="{{ old($field, $dokumen->{$field} ?? '') }}"
+                                   data-clear-placeholder
+                                   class="w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                        </div>
+                    @endforeach
                 </div>
-
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-secondary" for="lampiran_nomor">Surat Nomor</label>
-                    <input type="text" id="lampiran_nomor" name="lampiran_nomor" maxlength="150" placeholder="Contoh: 500.12.6/88/431.313/2026"
-                           value="{{ old('lampiran_nomor', $dokumen->lampiran_nomor) }}"
-                           class="w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
-                    <p class="text-xs text-gray-500">Kosongkan: di PDF tercetak titik-titik untuk diisi manual.</p>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-secondary" for="lampiran_tanggal">Tanggal</label>
-                    <input type="text" id="lampiran_tanggal" name="lampiran_tanggal" maxlength="100" placeholder="Contoh: 24 September 2026"
-                           value="{{ old('lampiran_tanggal', $dokumen->lampiran_tanggal) }}"
-                           class="w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
-                    <p class="text-xs text-gray-500">Kosongkan: di PDF tercetak titik-titik untuk diisi manual.</p>
-                </div>
+                <label class="block text-sm font-medium text-secondary" for="isi_surat">Isi surat</label>
+                <textarea id="isi_surat" name="isi_surat">{{ old('isi_surat', $dokumen->isi_surat) }}</textarea>
             </section>
 
             {{-- TANDA TANGAN --}}
@@ -163,25 +159,20 @@
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-secondary" for="ttd_{{ $sisi }}_master_id">{{ $label }}</label>
 
-                        <select id="ttd_{{ $sisi }}_master_id" name="ttd_{{ $sisi }}_master_id" data-judul="ttd_{{ $sisi }}_judul"
+                        <select id="ttd_{{ $sisi }}_master_id" name="ttd_{{ $sisi }}_master_id"
                                 class="select-pejabat w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                             <option value="">&mdash; Kosongkan &mdash;</option>
                             @foreach ($pejabatList as $p)
-                                <option value="{{ $p->id }}" data-jabatan="{{ $p->jabatanTtd() }}" data-qr="{{ filled($p->qrcode_path) ? '1' : '0' }}"
+                                <option value="{{ $p->id }}" data-jabatan="{{ $p->jabatanTtd() }}"
                                     @selected((string) old("ttd_{$sisi}_master_id", $dokumen->{"ttd_{$sisi}_master_id"}) === (string) $p->id)>
                                     {{ $p->label }} &mdash; {{ $p->value }}
                                 </option>
                             @endforeach
                         </select>
-                        <p id="ttd_{{ $sisi }}_qr_info" class="text-xs"></p>
-
-                        <label class="block text-xs text-gray-500" for="ttd_{{ $sisi }}_judul">Teks di atas tanda tangan</label>
-                        <textarea id="ttd_{{ $sisi }}_judul" name="ttd_{{ $sisi }}_judul" rows="3" maxlength="500"
-                                  class="w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">{{ old("ttd_{$sisi}_judul", $dokumen->{"ttd_{$sisi}_judul"}) }}</textarea>
                     </div>
                 @endforeach
 
-                <p class="text-xs text-gray-500">Nama, pangkat, NIP, dan QR Code diambil otomatis dari Master Data (kategori Pejabat).</p>
+                <p class="text-xs text-gray-500">Jabatan, nama, pangkat/golongan, dan NIP diambil otomatis dari Master Data. Area kosong di atas nama disediakan untuk QR TTD digital.</p>
             </section>
 
             <div class="edit-dok__actions flex items-center gap-3">
@@ -251,6 +242,16 @@
 
     document.getElementById('previewFrame').addEventListener('load', function () {
         statusPreview.textContent = '';
+    });
+
+    document.querySelectorAll('[data-clear-placeholder]').forEach(function (input) {
+        const placeholder = input.getAttribute('placeholder');
+        input.addEventListener('focus', function () {
+            input.setAttribute('placeholder', '');
+        });
+        input.addEventListener('blur', function () {
+            if (!input.value) { input.setAttribute('placeholder', placeholder); }
+        });
     });
 
     // Isian biasa (input teks, textarea, pilihan pejabat). Logo ditangani terpisah di bawah.
@@ -401,38 +402,9 @@
         }
     });
 
-    // Info ketersediaan QR Code untuk pejabat yang dipilih
-    function infoQr(sel) {
-        const el  = document.getElementById(sel.id.replace('_master_id', '_qr_info'));
-        const opt = sel.selectedOptions[0];
-        if (!el) { return; }
-
-        if (!sel.value || !opt) {
-            el.textContent = '';
-            return;
-        }
-
-        if (opt.dataset.qr === '1') {
-            el.textContent = 'QR Code tanda tangan pejabat ini akan dicetak di PDF.';
-            el.className   = 'text-xs text-green-800';
-        } else {
-            el.textContent = 'Pejabat ini belum punya QR Code (unggah di Master Data > Pejabat). PDF memberi ruang kosong untuk tanda tangan.';
-            el.className   = 'text-xs text-red-500';
-        }
-    }
-
-    // Saat pejabat diganti, isi teks di atas tanda tangan mengikuti jabatannya
-    // (awalan "Mengetahui," dipertahankan bila sudah ada).
+    // Jabatan tanda tangan mengikuti pilihan pejabat dan tidak diedit di form dokumen.
     document.querySelectorAll('.select-pejabat').forEach(function (sel) {
-        infoQr(sel);
-        sel.addEventListener('change', function () {
-            const judul   = document.getElementById(sel.dataset.judul);
-            const jabatan = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.jabatan || '') : '';
-            const baris   = judul.value.split('\n');
-            const awalan  = /^mengetahui,?$/i.test((baris[0] || '').trim()) ? baris[0].trim() + '\n' : '';
-            judul.value   = jabatan ? awalan + jabatan : '';
-            infoQr(sel);
-        });
+        sel.addEventListener('change', function () { jadwalkanPreview(300); });
     });
 </script>
 @endpush

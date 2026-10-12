@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\MasterData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class MasterDataController extends Controller
@@ -56,7 +55,7 @@ class MasterDataController extends Controller
             return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->withErrors(['value' => 'Nilai sudah ada untuk kategori ini.'])->withInput();
         }
 
-        MasterData::create($this->olahData($request, $validated));
+        MasterData::create($this->olahData($validated));
 
         return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->with('success', 'Data berhasil ditambahkan.');
     }
@@ -85,7 +84,7 @@ class MasterDataController extends Controller
             return Redirect::back()->withErrors(['value' => 'Nilai sudah ada untuk kategori ini.'])->withInput();
         }
 
-        $masterDatum->update($this->olahData($request, $validated));
+        $masterDatum->update($this->olahData($validated));
 
         return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->with('success', 'Data berhasil diperbarui.');
     }
@@ -105,8 +104,6 @@ class MasterDataController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * File QR Code sengaja tidak dihapus dari storage: dokumen yang sudah
-     * disimpan masih menyalin path-nya (snapshot) dan tetap harus bisa dicetak.
      */
     public function destroy(MasterData $masterDatum)
     {
@@ -132,8 +129,6 @@ class MasterDataController extends Controller
             'nip' => ['nullable', 'string', 'max:30'],
             'pangkat' => ['nullable', 'string', 'max:255', Rule::in(MasterData::PANGKAT_PNS)],
             'jabatan_ttd' => ['nullable', 'string', 'max:500'],
-            'qrcode' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
-            'hapus_qrcode' => ['nullable', 'boolean'],
         ];
     }
 
@@ -144,28 +139,17 @@ class MasterDataController extends Controller
             'nip.max' => 'NIP maksimal 30 karakter.',
             'pangkat.in' => 'Pangkat tidak valid. Pilih salah satu dari daftar.',
             'jabatan_ttd.max' => 'Jabatan di tanda tangan maksimal 500 karakter.',
-            'qrcode.image' => 'File QR Code harus berupa gambar.',
-            'qrcode.mimes' => 'QR Code harus berformat PNG atau JPG.',
-            'qrcode.max' => 'Ukuran file QR Code maksimal 2 MB.',
         ];
     }
 
-    /**
-     * Siapkan data untuk disimpan: tangani unggahan QR Code dan
-     * kosongkan kolom khusus pejabat untuk kategori lain.
-     */
-    private function olahData(Request $request, array $validated): array
+    /** Siapkan data untuk disimpan dan kosongkan kolom khusus pejabat untuk kategori lain. */
+    private function olahData(array $validated): array
     {
-        $file  = $request->file('qrcode');
-        $hapus = (bool) ($validated['hapus_qrcode'] ?? false);
-        unset($validated['qrcode'], $validated['hapus_qrcode']);
-
         // Kolom khusus pejabat tidak dipakai kategori lain
         if ($validated['kategori'] !== MasterData::KATEGORI_PEJABAT) {
             $validated['nip'] = null;
             $validated['pangkat'] = null;
             $validated['jabatan_ttd'] = null;
-            $validated['qrcode_path'] = null;
             $validated['urutan'] = (int)($validated['urutan'] ?? 0);
 
             return $validated;
@@ -173,15 +157,6 @@ class MasterDataController extends Controller
 
         // Untuk kategori pejabat, pastikan urutan adalah integer
         $validated['urutan'] = (int)($validated['urutan'] ?? 0);
-
-        if ($file) {
-            $nama = 'qrcode_' . (Str::slug($validated['label'] ?? '') ?: 'pejabat')
-                . '_' . time() . '.' . $file->extension();
-            $validated['qrcode_path'] = $file->storeAs('qrcode_ttd', $nama, 'public');
-        } elseif ($hapus) {
-            $validated['qrcode_path'] = null;
-        }
-        // Selain itu qrcode_path tidak disentuh (QR lama tetap dipakai)
 
         return $validated;
     }
