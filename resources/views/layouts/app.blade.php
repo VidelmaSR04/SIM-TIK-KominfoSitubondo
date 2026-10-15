@@ -63,7 +63,7 @@
     @include('partials.sidebar')
     <div class="flex-1 flex flex-col min-w-0">
         @include('partials.navbar')
-        <main class="flex-1 px-container-padding py-8 space-y-8 max-w-[1400px] w-full mx-auto">
+        <main class="flex-1 w-full px-container-padding py-8 space-y-8">
             {{ $slot ?? '' }}
             @yield('content')
         </main>
