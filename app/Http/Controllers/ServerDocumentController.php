@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ServerDocumentController extends Controller
 {
@@ -48,14 +49,51 @@ class ServerDocumentController extends Controller
             $query->where('user_id', Auth::id());
         }
 
+        // Urutan tanggal
+        $urutan = $request->input('urutan', 'terbaru');
+        if (!in_array($urutan, ['terbaru', 'terlama'], true)) {
+            $urutan = 'terbaru';
+        }
+        if ($urutan === 'terbaru') {
+            $query->orderBy('kode_perangkat', 'desc');
+        } else {
+            $query->orderBy('kode_perangkat', 'asc');
+        }
+
+        // Filter tanggal, bulan, tahun
+        $tanggal = $request->input('tanggal');
+        $bulan   = $request->input('bulan');
+        $tahun   = $request->input('tahun');
+
+        if ($tanggal && in_array((int)$tanggal, range(1,31), true)) {
+            $query->whereRaw("SUBSTRING(kode_perangkat,7,2) = ?", [str_pad((int)$tanggal,2,'0',STR_PAD_LEFT)]);
+        }
+        if ($bulan && in_array((int)$bulan, range(1,12), true)) {
+            $query->whereRaw("SUBSTRING(kode_perangkat,5,2) = ?", [str_pad((int)$bulan,2,'0',STR_PAD_LEFT)]);
+        }
+        if ($tahun && is_numeric($tahun)) {
+            $yy = substr($tahun,-2);
+            $query->whereRaw("SUBSTRING(kode_perangkat,3,2) = ?", [$yy]);
+        }
+
+        // Daftar tahun untuk dropdown (distinct tahun dari kode_perangkat, dua digit, lalu tambahkan '20' depan)
+        $tahunList = Server::where('status_kelengkapan', 'lengkap')
+            ->pluck(\DB::raw('SUBSTRING(kode_perangkat,3,2)'))
+            ->unique()
+            ->sortDesc()
+            ->map(fn($y) => '20'.$y)
+            ->all();
+
         $servers = $query->paginate($perPage)->withQueryString();
 
-        return view('server-dokumen.index', compact('servers'));
+        return view('server-dokumen.index', compact(
+            'servers',
+            'tahunList',
+            'tanggal',
+            'bulan',
+            'tahun'
+        ));
     }
-
-    /**
-     * Halaman edit dokumen (admin).
-     */
     public function edit(Server $server)
     {
         $dokumen = ServerDocument::where('server_id', $server->id)->first()

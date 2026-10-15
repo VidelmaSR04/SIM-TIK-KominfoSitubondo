@@ -180,6 +180,44 @@
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
                 <input name="search" value="{{ request('search') }}" class="pl-9 pr-3 py-2 w-64 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Cari nama perangkat atau pemilik..." type="text" onkeypress="if(event.keyCode==13) this.form.submit()" />
             </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">arrow_downward</span>
+                <select name="urutan" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                    <option value="terbaru" {{ request('urutan') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                    <option value="terlama" {{ request('urutan') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                </select>
+            </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">calendar_today</span>
+                <select name="tanggal" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-32 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                    <option value="">Semua</option>
+                    @for ($i = 1; $i <= 31; $i++)
+                        <option value="{{ $i }}" {{ request('tanggal') == $i ? 'selected' : '' }}> {{ str_pad($i,2,'0',STR_PAD_LEFT) }} </option>
+                    @endfor
+                </select>
+            </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">date_range</span>
+                <select name="bulan" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                    <option value="">Semua</option>
+                    @php
+                    $bulanArr = [1=>'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                    @endphp
+                    @foreach ($bulanArr as $key => $nama)
+                        <option value="{{ $key }}" {{ request('bulan') == $key ? 'selected' : '' }}> {{ $nama }} </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">update</span>
+                <select name="tahun" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                    <option value="">Semua</option>
+                    @foreach ($tahunList as $tahun)
+                        <option value="{{ $tahun }}" {{ request('tahun') == $tahun ? 'selected' : '' }}> {{ $tahun }} </option>
+                    @endforeach
+                </select>
+            </div>
+            <a href="{{ route('server.dokumen.index') }}" class="ml-2 px-3 py-1.5 text-sm font-medium border border-outline-variant rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">Reset</a>
         </form>
     </div>
 
@@ -267,7 +305,6 @@
             {{ $servers->appends(request()->query())->links('pagination::tailwind') }}
         </div>
     </div>
-</div>
     <!-- Modal Preview Foto -->
     <div x-show="showPhotoModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/70" @keydown.escape.window="showPhotoModal = false; photo = {}" @click.self="showPhotoModal = false; photo = {}">
         <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -294,5 +331,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 @endsection
