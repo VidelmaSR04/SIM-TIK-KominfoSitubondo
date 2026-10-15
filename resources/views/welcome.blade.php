@@ -204,6 +204,105 @@
     .cta-box{flex-direction:column;align-items:flex-start;}
     .hero{padding:70px 0 44px;}
   }
+
+  /* ---------- SIMTIK landing page ---------- */
+  :root{
+    --navy-950:#03132b;
+    --navy-800:#08234a;
+    --navy-700:#0b3470;
+    --teal-400:#00d8d0;
+    --teal-300:#38e4dc;
+    --amber-500:#00a8ff;
+    --paper:#03132b;
+    --ink:#f4f8ff;
+    --slate-500:#b5c8e4;
+    --slate-300:#c9d9ef;
+    --line:rgba(62,155,255,.2);
+    --line-dark:rgba(62,155,255,.2);
+    --radius:16px;
+  }
+  body{background:#03132b;color:#f4f8ff;}
+  header{background:rgba(2,15,35,.88);border-color:rgba(69,161,255,.18);}
+  .nav{min-height:68px;padding:10px 28px;gap:22px;}
+  .brand{font-size:1.08rem;line-height:1.2;white-space:nowrap;}
+  .brand .mark{width:36px;height:36px;background:linear-gradient(135deg,#00e6dc,#0079ed);color:#03214a;}
+  nav ul{gap:8px;}
+  nav ul a{display:block;padding:8px 12px;border-radius:999px;font-size:.83rem;color:#c1d5ef;}
+  nav ul a:hover,nav ul a[href="#beranda"]{background:rgba(0,120,255,.28);color:#0bbdff;}
+  .mobile-register{display:none;}
+  .nav-actions{gap:8px;}
+  .nav-actions .btn{font-size:.76rem;padding:8px 13px;}
+  .nav-actions .btn-ghost:first-child{border-color:transparent;}
+  .nav-actions #daftar-server-btn{border-color:#008cff;color:#f4f8ff;background:rgba(0,125,255,.06);}
+  .nav-actions #daftar-server-btn:hover{background:rgba(0,150,255,.17);box-shadow:0 0 22px rgba(0,151,255,.18);}
+  .menu-toggle{font-size:0;width:34px;height:34px;position:relative;flex:0 0 34px;}
+  .menu-toggle::before,.menu-toggle::after{content:"";position:absolute;left:6px;width:22px;height:1.5px;background:#d5e5f8;}
+  .menu-toggle::before{top:11px;box-shadow:0 6px 0 #d5e5f8;}
+  .menu-toggle::after{top:23px;}
+  main{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse 80% 55% at 50% 0%,#092c64 0%,#03132b 76%);}
+  .rings-bg{inset:0;z-index:-1;}
+  .rings-bg canvas{opacity:.9;}
+  .hero{padding:32px 0 24px;background:transparent;overflow:visible;}
+  .hero-grid{max-width:850px;}
+  .eyebrow{margin-bottom:15px;font-size:.67rem;color:#27e8e0;border-color:rgba(0,216,208,.38);background:rgba(0,216,208,.08);}
+  .hero h1{max-width:830px;margin:0 auto 14px;font-size:clamp(2.15rem,4.4vw,3.35rem);line-height:1.08;letter-spacing:-.035em;}
+  .hero h1 em{color:#38e4dc;}
+  .hero p.lead{max-width:740px;margin:0 auto 19px;font-size:.98rem;line-height:1.62;color:#c5d8ef;}
+  .hero-ctas{margin:0;gap:0;}
+  .hero-ctas .btn-primary{background:#00a8ff;color:#03132b;padding:10px 22px;box-shadow:0 0 24px rgba(0,157,255,.22);}
+  .section-head{max-width:none;margin:0 auto 12px;text-align:center;}
+  .section-head h2{font-size:1.42rem;line-height:1.2;margin:0;}
+  .section-head .eyebrow-dark{display:none;}
+  .konteks,.layanan{position:relative;padding:16px 0;background:transparent;color:#f4f8ff;}
+  .konteks-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+  .kartu{
+    min-height:126px;padding:17px 18px;display:grid;grid-template-columns:56px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:14px;
+    position:relative;overflow:hidden;border:1px solid rgba(0,137,255,.48);border-radius:15px;
+    background:linear-gradient(125deg,rgba(5,43,96,.78),rgba(5,28,66,.72));box-shadow:inset 0 1px rgba(255,255,255,.025);
+  }
+  .kartu:nth-child(2){border-color:rgba(0,208,190,.43);}
+  .kartu .ic{width:56px;height:56px;grid-row:1 / span 2;margin:0;border-radius:16px;background:rgba(0,121,255,.3);color:#16b8ff;box-shadow:0 0 18px rgba(0,118,255,.15);}
+  .kartu:nth-child(2) .ic{background:rgba(0,198,174,.22);color:#16e5cc;box-shadow:0 0 18px rgba(0,211,186,.12);}
+  .kartu:nth-child(3) .ic{background:rgba(255,140,44,.2);color:#ffae4d;box-shadow:0 0 18px rgba(255,140,44,.12);}
+  .kartu h3{align-self:center;margin:0 0 5px;font-size:.96rem;color:#f7faff;}
+  .kartu p{font-size:.77rem;line-height:1.48;color:#bfd1e9;}
+  .informasi{padding:4px 0 24px;}
+  .informasi-panel{max-width:960px;margin:0 auto;display:grid;grid-template-columns:56px minmax(130px,180px) 1fr;align-items:center;gap:16px;padding:12px 20px;border:1px solid rgba(0,137,255,.46);border-radius:15px;background:linear-gradient(110deg,rgba(5,43,96,.8),rgba(5,28,66,.78));}
+  .informasi-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:rgba(0,121,255,.32);color:#e5f5ff;box-shadow:0 0 18px rgba(0,140,255,.22);}
+  .informasi-panel h2{font-family:'Space Grotesk',sans-serif;font-size:.96rem;line-height:1.3;}
+  .informasi-panel p{border-left:1px solid rgba(0,145,255,.55);padding-left:20px;color:#c4d7ef;font-size:.79rem;line-height:1.55;}
+  @media (max-width:980px){
+    nav ul{display:none;position:absolute;top:100%;left:0;right:0;padding:12px 20px 18px;background:rgba(2,15,35,.97);border-bottom:1px solid var(--line);flex-direction:column;gap:4px;}
+    nav ul.is-open{display:flex;}
+    .nav-actions .btn-ghost:first-child{display:none;}
+      .nav-actions #daftar-server-btn{display:inline-flex;}
+      .menu-toggle{display:block;}
+      .konteks-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+    }
+    @media (max-width:700px){
+    .wrap{padding:0 20px;}
+    .nav{padding:10px 18px;gap:10px;}
+    .brand small{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .nav-actions #daftar-server-btn{display:none;}
+    .mobile-register{display:block;}
+    .mobile-register a{margin-top:8px;border:1px solid #008cff;color:#f4f8ff;background:rgba(0,125,255,.08);}
+    .nav-actions #daftar-server-btn{font-size:.68rem;padding:8px 10px;gap:5px;}
+    .nav-actions #daftar-server-btn svg{width:14px;height:14px;}
+    .hero{padding:38px 0 22px;}
+    .hero h1{font-size:clamp(2rem,7vw,2.65rem);}
+    .hero p.lead{font-size:.91rem;}
+    .konteks-grid{grid-template-columns:1fr;gap:12px;}
+    .kartu{min-height:unset;padding:16px;}
+    .informasi-panel{grid-template-columns:46px 1fr;gap:12px;padding:15px;}
+    .informasi-icon{width:42px;height:42px;grid-row:1;}
+    .informasi-panel p{grid-column:1 / -1;border-left:0;border-top:1px solid rgba(0,145,255,.45);padding:11px 0 0;}
+  }
+  @media (max-width:380px){
+    .brand small{font-size:.58rem;}
+    .nav-actions #daftar-server-btn{font-size:.61rem;padding:7px 8px;}
+    .nav-actions #daftar-server-btn svg{display:none;}
+    .wrap{padding:0 16px;}
+  }
 </style>
 </head>
 <body>
@@ -215,253 +314,112 @@
       <span>SIMTIK<small>Diskominfo Kabupaten Situbondo</small></span>
     </div>
     <nav><ul>
-      <li><a href="#konteks">Kenapa SIMTIK</a></li>
-      <li><a href="#layanan">Layanan</a></li>
-      <li><a href="#alur">Alur Kerja</a></li>
-      <li><a href="#statistik">Cakupan</a></li>
-      <li><a href="#kontak">Kontak</a></li>
+      <li class="mobile-register"><a href="/register">Daftar untuk Tiap Server</a></li>
     </ul></nav>
     <div class="nav-actions">
       <a href="/login" class="btn btn-ghost">Masuk</a>
-      <a href="/register" class="btn btn-primary">Daftar untuk Titip Server</a>
+      <a href="/register" class="btn btn-ghost" id="daftar-server-btn">
+        <!-- Simple server icon: rectangle with two lines inside -->
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="4" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="4" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="4" y1="10" x2="12" y2="10" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        Daftar untuk Tiap Server
+      </a>
     </div>
-    <button class="menu-toggle" aria-label="Buka menu">☰</button>
+    <button class="menu-toggle" type="button" aria-label="Buka menu" aria-expanded="false">Menu</button>
   </div>
 </header>
 
-<section class="hero">
+<main>
   <div class="rings-bg" id="hero-rings-bg" aria-hidden="true"></div>
-  <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow"><span class="dot"></span> Sistem Informasi Manajemen SDTIK</span>
-      <h1>Kelola tenaga teknis, server, dan aplikasi TIK Situbondo <em>dalam satu sistem.</em></h1>
-      <p class="lead">SDTIK menghimpun data tenaga teknis TIK, server, hingga aplikasi dari seluruh OPD Kabupaten Situbondo — kini penitipan server pun bisa diisi mandiri oleh pengirim, admin tinggal melengkapi datanya.</p>
+  <section class="hero" id="beranda">
+    <div class="wrap hero-grid">
+      <span class="eyebrow"><span class="dot"></span> SISTEM INFORMASI MANAJEMEN SDTIK</span>
+      <h1>Sistem Informasi Manajemen <em>Infrastruktur dan Aset TIK</em></h1>
+      <p class="lead">Pantau dan kelola informasi Jaringan Intra, Server, dan Aset TIK Kabupaten Situbondo melalui satu dashboard terintegrasi untuk mendukung pengelolaan infrastruktur digital yang efektif, tertata, dan berkelanjutan.</p>
       <div class="hero-ctas">
-        <a href="/login" class="btn btn-primary">Mulai</a>
-        <a href="/register" class="btn btn-ghost">Daftar untuk Titip Server →</a>
-      </div>
-      <div class="hero-meta">
-        <div><div class="num">17</div><div class="lbl">Kecamatan tercakup</div></div>
-        <div><div class="num">1</div><div class="lbl">Basis data terpusat</div></div>
-        <div><div class="num">24/7</div><div class="lbl">Akses status data</div></div>
+        <a href="/login" class="btn btn-primary">Mulai <span aria-hidden="true">→</span></a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="konteks" id="konteks">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow-dark">Kenapa SIMTIK dibutuhkan</span>
-      <h2>Sebelumnya, data tenaga teknis TIK tersebar di banyak tempat.</h2>
-      <p>Setiap OPD mencatat tenaga teknisnya sendiri-sendiri — sebagian di kertas, sebagian di spreadsheet, sebagian hanya di grup WhatsApp. Diskominfo kesulitan melihat gambaran utuh.</p>
+  <section class="konteks" id="cakupan">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Cakupan Pengelolaan</h2>
+      </div>
+      <div class="konteks-grid">
+        <article class="kartu">
+          <div class="ic" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="6" r="3" stroke="currentColor" stroke-width="2"/>
+              <circle cx="18" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="18" r="3" stroke="currentColor" stroke-width="2"/>
+              <path d="m8.5 10.5 1.4-2.1m4.2 0 1.4 2.1m-7 3 1.4 2.1m4.2 0 1.4-2.1" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3>Jaringan Intra</h3>
+          <p>Informasi jaringan intra pemerintah daerah untuk mendukung pemantauan infrastruktur konektivitas dan keterhubungan antarperangkat atau lokasi layanan.</p>
+        </article>
+        <article class="kartu">
+          <div class="ic" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="4" width="16" height="7" rx="2" stroke="currentColor" stroke-width="2"/>
+              <rect x="4" y="13" width="16" height="7" rx="2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="8" cy="7.5" r="1" fill="currentColor"/><circle cx="8" cy="16.5" r="1" fill="currentColor"/>
+              <path d="M12 7.5h5M12 16.5h5" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <h3>Server</h3>
+          <p>Pengelolaan informasi server, meliputi identitas, spesifikasi teknis, penempatan, dan status data server.</p>
+        </article>
+        <article class="kartu">
+          <div class="ic" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="4" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M8 21h8m-4-4v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Aset TIK</h3>
+          <p>Pendataan dan pemantauan aset teknologi informasi dan komunikasi untuk mendukung pengelolaan inventaris yang tertib dan terstruktur.</p>
+        </article>
+      </div>
     </div>
-    <div class="konteks-grid">
-      <div class="kartu">
-        <div class="ic">⌗</div>
-        <h3>Data tercecer</h3>
-        <p>Setiap OPD menyimpan data tenaga teknisnya sendiri, dengan format dan tingkat kelengkapan yang berbeda-beda.</p>
-      </div>
-      <div class="kartu">
-        <div class="ic">↻</div>
-        <h3>Update manual</h3>
-        <p>Perubahan data — penempatan, kontak, keahlian — sering hanya dikabarkan lewat pesan singkat, mudah terlewat.</p>
-      </div>
-      <div class="kartu">
-        <div class="ic">◎</div>
-        <h3>Sulit dipantau</h3>
-        <p>Diskominfo tidak punya cara cepat untuk melihat sebaran dan ketersediaan tenaga teknis di seluruh kecamatan.</p>
-      </div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<section class="layanan" id="layanan">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow-dark">Modul dalam SDTIK</span>
-      <h2>Enam modul, satu Sistem Informasi Manajemen SDTIK.</h2>
-      <p>Dari data tenaga teknis, server, dan aplikasi, sampai pemantauan NOC — semua berjalan di satu sistem milik Diskominfo Situbondo.</p>
-    </div>
-    <div class="fitur-grid">
-      <a href="/login" class="fitur">
-        <span class="tag">01</span>
-        <h3>SDM Tenaga TIK</h3>
-        <p>Pengelolaan data Tenaga Teknis TIK Dinas Komunikasi dan Informatika Kabupaten Situbondo.</p>
-      </a>
-      <a href="/register" class="fitur">
-        <span class="tag">02<span class="badge-new">Baru</span></span>
-        <h3>Server &amp; Aplikasi</h3>
-        <p>Pengelolaan data aplikasi dan server pada Pusat Server Kabupaten Situbondo — kini bisa dititipkan sendiri oleh pengirim server, admin tinggal melengkapi.</p>
-      </a>
-      <a href="/aplikasi" class="fitur">
-        <span class="tag">03</span>
-        <h3>Asesmen Aplikasi</h3>
-        <p>Pengukuran kebutuhan sistem suatu aplikasi dengan melakukan wawancara kepada penanggung jawab aplikasi.</p>
-      </a>
-      <a href="/laporan-tugas" class="fitur">
-        <span class="tag">04</span>
-        <h3>Assignment</h3>
-        <p>Pengelolaan penugasan dari Pejabat Struktural kepada Tenaga Teknis TIK Dinas Komunikasi dan Informatika Kabupaten Situbondo.</p>
-      </a>
-      <a href="/laporan-noc" class="fitur">
-        <span class="tag">05</span>
-        <h3>Monitoring NOC</h3>
-        <p>Penjadwalan dan laporan kondisi Network Operation Control (NOC).</p>
-      </a>
-      <div class="fitur fitur-disabled">
-        <span class="tag">06</span>
-        <h3>Coming Soon</h3>
-        <p>Modul berikutnya sedang disiapkan Diskominfo Situbondo.</p>
+  <section class="informasi" id="informasi">
+    <div class="wrap">
+      <div class="informasi-panel">
+        <div class="informasi-icon" aria-hidden="true">
+          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18h6m-5 3h4m-2-20a7 7 0 0 0-4 12.745c.63.42 1 1.12 1 1.755h6c0-.635.37-1.335 1-1.755A7 7 0 0 0 12 1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>Informasi Terpadu</h2>
+        <p>SIMTIK menyediakan akses terpusat terhadap informasi infrastruktur dan aset TIK sebagai dukungan bagi pemantauan, evaluasi, perencanaan, dan pengambilan keputusan.</p>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="alur" id="alur">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow-dark">Alur kerja</span>
-      <h2>Dari input mandiri sampai data resmi, empat langkah.</h2>
-    </div>
-    <div class="alur-list">
-      <div class="langkah">
-        <div class="idx">01</div>
-        <h3>Input Mandiri</h3>
-        <p>Tenaga teknis maupun pengirim server mendaftar akun terlebih dahulu, baru bisa mengisi data awal lewat sistem.</p>
-      </div>
-      <div class="langkah">
-        <div class="idx">02</div>
-        <h3>Masuk Antrean</h3>
-        <p>Data awal — jenis, dinas, penanggung jawab — otomatis tersimpan dan menunggu dilengkapi.</p>
-      </div>
-      <div class="langkah">
-        <div class="idx">03</div>
-        <h3>Admin Melengkapi</h3>
-        <p>Tim Diskominfo mengisi field teknis (serial number, IP, RAM, dst.) lewat menu Lengkapi Data.</p>
-      </div>
-      <div class="langkah">
-        <div class="idx">04</div>
-        <h3>Status Resmi</h3>
-        <p>Status kelengkapan otomatis berubah dari "Dilengkapi" menjadi "Lengkap" begitu semua data terisi.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="statistik" id="statistik">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow-dark">Cakupan wilayah</span>
-      <h2>Dirancang untuk seluruh Kabupaten Situbondo.</h2>
-    </div>
-    <div class="cakupan-visual">
-      <div class="netmap" aria-hidden="true">
-        <svg viewBox="0 0 400 400">
-        <defs>
-          <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#2DD4BF" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#2DD4BF" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <circle cx="200" cy="200" r="110" fill="url(#hubGlow)"/>
-        <!-- connecting lines from outer nodes to hub -->
-        <g stroke="#2DD4BF" stroke-opacity="0.5" stroke-width="1.4" fill="none">
-          <path class="flow-line" d="M60,90 L200,200"/>
-          <path class="flow-line" d="M340,80 L200,200"/>
-          <path class="flow-line" d="M60,320 L200,200"/>
-          <path class="flow-line" d="M350,310 L200,200"/>
-          <path class="flow-line" d="M40,200 L200,200"/>
-          <path class="flow-line" d="M200,30 L200,200"/>
-        </g>
-        <!-- outer nodes: OPD -->
-        <g fill="#7FE9DA">
-          <circle class="node-pulse" cx="60" cy="90" r="6"/>
-          <circle class="node-pulse" cx="340" cy="80" r="6" style="animation-delay:.4s"/>
-          <circle class="node-pulse" cx="60" cy="320" r="6" style="animation-delay:.8s"/>
-          <circle class="node-pulse" cx="350" cy="310" r="6" style="animation-delay:1.2s"/>
-          <circle class="node-pulse" cx="40" cy="200" r="6" style="animation-delay:1.6s"/>
-          <circle class="node-pulse" cx="200" cy="30" r="6" style="animation-delay:2s"/>
-        </g>
-        <text x="60" y="75" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9C2D0">OPD</text>
-        <text x="340" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9C2D0">OPD</text>
-        <text x="60" y="342" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9C2D0">OPD</text>
-        <text x="350" y="332" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9C2D0">OPD</text>
-        <text x="40" y="188" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9C2D0">OPD</text>
-        <text x="200" y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9C2D0">OPD</text>
-        <!-- hub -->
-        <circle cx="200" cy="200" r="34" fill="#0B1526" stroke="#2DD4BF" stroke-width="1.6"/>
-        <text x="200" y="196" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="13" fill="#fff">SIM</text>
-        <text x="200" y="211" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="13" fill="#7FE9DA">TIK</text>
-      </svg>
-      </div>
-    </div>
-    <div class="stat-grid">
-      <div class="stat"><div class="num mono">17</div><div class="lbl">Kecamatan di Kabupaten Situbondo</div></div>
-      <div class="stat"><div class="num mono">1 Pintu</div><div class="lbl">Basis data tenaga teknis, server &amp; aplikasi terpusat</div></div>
-      <div class="stat"><div class="num mono">Real-time</div><div class="lbl">Status verifikasi dapat dipantau langsung</div></div>
-    </div>
-  </div>
-</section>
-
-<section class="cta-akhir">
-  <div class="wrap">
-    <div class="cta-box">
-      <div>
-        <h2>Siap pakai SDTIK untuk OPD Anda?</h2>
-        <p>Daftar akun untuk mulai menitipkan data server atau melengkapi profil tenaga teknis Anda.</p>
-      </div>
-      <a href="/login" class="btn btn-primary">Mulai</a>
-    </div>
-  </div>
-</section>
-
-<footer id="kontak">
-  <div class="wrap">
-    <div class="footer-grid">
-      <div>
-        <div class="brand" style="margin-bottom:14px;"><span class="mark">ST</span><span style="color:#fff">SIMTIK</span></div>
-        <p style="font-size:.88rem;max-width:280px;">Sistem Informasi Manajemen SDTIK — Dinas Komunikasi dan Informatika Kabupaten Situbondo.</p>
-      </div>
-      <div>
-        <h4>Tautan</h4>
-        <ul>
-          <li><a href="#konteks">Kenapa SIMTIK</a></li>
-          <li><a href="#layanan">Layanan</a></li>
-          <li><a href="#alur">Alur Kerja</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Bantuan</h4>
-        <ul>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">About us</a></li>
-          <li><a href="#">FAQ's</a></li>
-          <li><a href="#">Support</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Kontak</h4>
-        <ul>
-          <li>Diskominfo Kabupaten Situbondo</li>
-          <li class="placeholder">[alamat kantor — isi sesuai data resmi]</li>
-          <li class="placeholder">[nomor telepon]</li>
-          <li class="placeholder">[email resmi]</li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© 2026 Diskominfo Kabupaten Situbondo — Sistem Informasi Manajemen SDTIK.</span>
-      <span><a href="#">Facebook</a> · <a href="#">Twitter</a> · <a href="#">Google</a></span>
-    </div>
-  </div>
-</footer>
+  </section>
+</main>
 
 <script>
-  document.querySelector('.menu-toggle')?.addEventListener('click', () => {
-    const ul = document.querySelector('nav ul');
-    ul.style.display = ul.style.display === 'flex' ? 'none' : 'flex';
-    ul.style.cssText += 'position:absolute;top:64px;left:0;right:0;background:#0B1526;flex-direction:column;padding:20px 28px;gap:18px;';
+  const menuToggle = document.querySelector('.menu-toggle');
+  const navMenu = document.querySelector('nav ul');
+  menuToggle?.addEventListener('click', () => {
+    const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
+    menuToggle.setAttribute('aria-expanded', String(!isExpanded));
+    menuToggle.setAttribute('aria-label', isExpanded ? 'Buka menu' : 'Tutup menu');
+    navMenu?.classList.toggle('is-open', !isExpanded);
+  });
+  navMenu?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      navMenu.classList.remove('is-open');
+      menuToggle?.setAttribute('aria-expanded', 'false');
+      menuToggle?.setAttribute('aria-label', 'Buka menu');
+    });
   });
 </script>
 
@@ -624,7 +582,6 @@
   }
 
   window.addEventListener('DOMContentLoaded', function () {
-    // versi penuh untuk background hero (home)
     initMagicRings(document.querySelector('#hero-rings-bg'), {
       color: '#2E6FF2',
       colorTwo: '#8FD3FF',
@@ -647,7 +604,6 @@
       parallax: 0.05,
       alphaMode: 'luminance',
     });
-
   });
 })();
 </script>
