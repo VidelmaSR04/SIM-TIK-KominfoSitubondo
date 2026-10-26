@@ -223,7 +223,16 @@
 
     <!-- Tabel -->
     <div class="table-container overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[800px]">
+        <table class="w-full table-fixed text-center border-collapse min-w-[1240px] [&_th]:align-middle [&_td]:align-middle">
+            <colgroup>
+                <col style="width: 80px">
+                <col style="width: 160px">
+                <col style="width: 100px">
+                <col style="width: 420px">
+                <col style="width: 140px">
+                <col style="width: 180px">
+                <col style="width: 160px">
+            </colgroup>
             <thead>
                 <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-y border-outline-variant">
                     <th class="p-4">Nomor</th>
@@ -248,7 +257,7 @@
                     <td class="p-4 text-center">
                         <img src="{{ route('qr.show', $server->id) }}" alt="QR Code" class="w-12 h-12">
                     </td>
-                    <td class="p-4">{{ $server->nama_opd }}</td>
+                    <td class="p-4 whitespace-nowrap">{{ $server->nama_opd }}</td>
                     <td class="p-4 text-gray-500 font-mono text-xs">{{ $server->tanggal_from_kode ? $server->tanggal_from_kode->format('d M Y') : '-' }}</td>
                     <td class="p-4 text-center">
                         <div class="flex items-center justify-center gap-2 text-gray-500">
