@@ -1,5 +1,21 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+    .server-dokumen-pagination nav a,
+    .server-dokumen-pagination nav [aria-disabled="true"] span,
+    .server-dokumen-pagination nav [aria-current="page"] span {
+        color: #6b7280 !important;
+        background-color: #f3f4f6 !important;
+        border-color: #d1d5db !important;
+    }
+    .server-dokumen-pagination nav [aria-current="page"] span {
+        color: #374151 !important;
+        background-color: #e5e7eb !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div x-data="{
     showPhotoModal: false,
@@ -169,7 +185,7 @@
         <form action="{{ route('server.dokumen.index') }}" method="GET" class="flex items-center gap-4 flex-wrap">
             <div class="flex items-center gap-2 text-sm text-secondary whitespace-nowrap">
                 <span>Show</span>
-                <select name="perPage" onchange="this.form.submit()" class="border border-outline-variant rounded-lg bg-white py-1.5 pl-3 pr-8 text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <select name="perPage" class="border border-outline-variant rounded-lg bg-white py-1.5 pl-3 pr-8 text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                     <option value="10" {{ request('perPage') == 10 ? 'selected' : '' }}>10</option>
                     <option value="25" {{ request('perPage') == 25 ? 'selected' : '' }}>25</option>
                     <option value="50" {{ request('perPage') == 50 ? 'selected' : '' }}>50</option>
@@ -178,18 +194,18 @@
             </div>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
-                <input name="search" value="{{ request('search') }}" class="pl-9 pr-3 py-2 w-64 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Cari nama perangkat atau pemilik..." type="text" onkeypress="if(event.keyCode==13) this.form.submit()" />
+                <input name="search" value="{{ request('search') }}" class="pl-9 pr-3 py-2 w-64 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Cari nama perangkat atau pemilik..." type="text" />
             </div>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">arrow_downward</span>
-                <select name="urutan" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <select name="urutan" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                     <option value="terbaru" {{ request('urutan') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
                     <option value="terlama" {{ request('urutan') == 'terlama' ? 'selected' : '' }}>Terlama</option>
                 </select>
             </div>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">calendar_today</span>
-                <select name="tanggal" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-32 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <select name="tanggal" class="pl-9 pr-3 py-2 w-32 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                     <option value="">Semua</option>
                     @for ($i = 1; $i <= 31; $i++)
                         <option value="{{ $i }}" {{ request('tanggal') == $i ? 'selected' : '' }}> {{ str_pad($i,2,'0',STR_PAD_LEFT) }} </option>
@@ -198,7 +214,7 @@
             </div>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">date_range</span>
-                <select name="bulan" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <select name="bulan" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                     <option value="">Semua</option>
                     @php
                     $bulanArr = [1=>'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -210,17 +226,18 @@
             </div>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">update</span>
-                <select name="tahun" onchange="this.form.submit()" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <select name="tahun" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                     <option value="">Semua</option>
                     @foreach ($tahunList as $tahun)
                         <option value="{{ $tahun }}" {{ request('tahun') == $tahun ? 'selected' : '' }}> {{ $tahun }} </option>
                     @endforeach
                 </select>
             </div>
-            <a href="{{ route('server.dokumen.index') }}" class="ml-2 px-3 py-1.5 text-sm font-medium border border-outline-variant rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">Reset</a>
+            <a href="{{ route('server.dokumen.index') }}" data-ajax-reset class="ml-2 px-3 py-1.5 text-sm font-medium border border-outline-variant rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">Reset</a>
         </form>
     </div>
 
+    <div id="serverDokumenResults">
     <!-- Tabel -->
     <div class="table-container overflow-x-auto">
         <table class="w-full table-fixed text-center border-collapse min-w-[1240px] [&_th]:align-middle [&_td]:align-middle">
@@ -310,9 +327,46 @@
         <span class="text-gray-500">
             Menampilkan {{ $servers->firstItem() ?? 0 }} hingga {{ $servers->lastItem() ?? 0 }} dari {{ $servers->total() }} entri
         </span>
-        <div class="flex gap-1">
-            {{ $servers->appends(request()->query())->links('pagination::tailwind') }}
+        <div id="serverDokumenPagination" class="server-dokumen-pagination flex gap-1">
+            @if ($servers->hasPages())
+                @php
+                    $startPage = max(1, min($servers->currentPage() - 1, $servers->lastPage() - 2));
+                    $endPage = min($servers->lastPage(), $startPage + 2);
+                @endphp
+                <nav role="navigation" aria-label="Pagination">
+                    <div class="inline-flex items-center">
+                        @if ($servers->onFirstPage())
+                            <span aria-disabled="true"><span class="inline-flex items-center px-2 py-2 text-sm border rounded-l-md">&lsaquo;</span></span>
+                        @else
+                            <a href="{{ $servers->previousPageUrl() }}" rel="prev" aria-label="Halaman sebelumnya" class="inline-flex items-center px-2 py-2 text-sm border rounded-l-md">&lsaquo;</a>
+                        @endif
+
+                        @if ($startPage > 1)
+                            <span aria-hidden="true" class="inline-flex items-center px-2 py-2 text-sm border">&hellip;</span>
+                        @endif
+
+                        @for ($page = $startPage; $page <= $endPage; $page++)
+                            @if ($page === $servers->currentPage())
+                                <span aria-current="page"><span class="inline-flex items-center px-3 py-2 text-sm border">{{ $page }}</span></span>
+                            @else
+                                <a href="{{ $servers->url($page) }}" aria-label="Halaman {{ $page }}" class="inline-flex items-center px-3 py-2 text-sm border">{{ $page }}</a>
+                            @endif
+                        @endfor
+
+                        @if ($endPage < $servers->lastPage())
+                            <span aria-hidden="true" class="inline-flex items-center px-2 py-2 text-sm border">&hellip;</span>
+                        @endif
+
+                        @if ($servers->hasMorePages())
+                            <a href="{{ $servers->nextPageUrl() }}" rel="next" aria-label="Halaman berikutnya" class="inline-flex items-center px-2 py-2 text-sm border rounded-r-md">&rsaquo;</a>
+                        @else
+                            <span aria-disabled="true"><span class="inline-flex items-center px-2 py-2 text-sm border rounded-r-md">&rsaquo;</span></span>
+                        @endif
+                    </div>
+                </nav>
+            @endif
         </div>
+    </div>
     </div>
     <!-- Modal Preview Foto -->
     <div x-show="showPhotoModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/70" @keydown.escape.window="showPhotoModal = false; photo = {}" @click.self="showPhotoModal = false; photo = {}">
@@ -343,3 +397,85 @@
 </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const form = document.querySelector('#serverDokumenResults')?.previousElementSibling?.querySelector('form');
+        let results = document.getElementById('serverDokumenResults');
+        let activeRequest;
+
+        if (!form || !results) return;
+
+        function syncFilters(url) {
+            const params = new URL(url, window.location.href).searchParams;
+            form.querySelectorAll('[name]').forEach(function (field) {
+                field.value = params.get(field.name) ?? (field.name === 'perPage' ? '10' : field.name === 'urutan' ? 'terbaru' : '');
+            });
+        }
+
+        async function loadResults(url, updateHistory) {
+            const target = new URL(url, window.location.href);
+            if (activeRequest) activeRequest.abort();
+            const request = new AbortController();
+            activeRequest = request;
+            results.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(target, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: request.signal
+                });
+                if (!response.ok) throw new Error('Gagal memuat hasil filter.');
+
+                const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+                const replacement = page.getElementById('serverDokumenResults');
+                if (!replacement) throw new Error('Bagian tabel tidak ditemukan.');
+                if (activeRequest !== request) return;
+
+                results.replaceWith(replacement);
+                results = replacement;
+                if (updateHistory) history.pushState({}, '', target);
+                syncFilters(target);
+            } catch (error) {
+                if (error.name !== 'AbortError') window.location.assign(target);
+            } finally {
+                if (activeRequest === request) {
+                    results.removeAttribute('aria-busy');
+                    activeRequest = null;
+                }
+            }
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const target = new URL(form.action, window.location.href);
+            target.search = new URLSearchParams(new FormData(form)).toString();
+            loadResults(target, true);
+        });
+
+        form.addEventListener('change', function (event) {
+            if (event.target.matches('select[name]')) form.requestSubmit();
+        });
+
+        form.addEventListener('click', function (event) {
+            const reset = event.target.closest('[data-ajax-reset]');
+            if (!reset) return;
+            event.preventDefault();
+            loadResults(reset.href, true);
+        });
+
+        document.addEventListener('click', function (event) {
+            const link = event.target.closest('#serverDokumenPagination a[href]');
+            if (!link) return;
+            event.preventDefault();
+            loadResults(link.href, true);
+        });
+
+        window.addEventListener('popstate', function () {
+            syncFilters(window.location.href);
+            loadResults(window.location.href, false);
+        });
+    })();
+</script>
+@endpush
