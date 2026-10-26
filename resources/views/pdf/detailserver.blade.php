@@ -299,10 +299,15 @@
                 <table class="ttd-tabel">
                     {{-- Baris 1: jabatan pejabat --}}
                     <tr>
-                        @foreach ($ttd as $t)
+                        @foreach ($ttd as $sisi => $t)
                             <td class="ttd-sel">
                                 @if (filled($t['judul']))
-                                    <div class="ttd-pembuka">Mengetahui,</div>
+                                    @if ($sisi === 'kiri')
+                                        <div class="ttd-pembuka">Mengetahui,</div>
+                                    @else
+                                        {{-- Tanpa "Mengetahui,": baris kosong agar jabatan kanan sejajar dengan kiri --}}
+                                        <div class="ttd-pembuka">&nbsp;</div>
+                                    @endif
                                     @foreach (preg_split('/\r\n|\r|\n/', trim($t['judul'])) as $baris)
                                         @if (filled(trim($baris)) && !preg_match('/^mengetahui,?$/i', trim($baris)))
                                             <div class="ttd-jabatan">{{ trim($baris) }}</div>
