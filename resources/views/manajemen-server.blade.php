@@ -226,7 +226,7 @@
                                         {{ $server->nama_perangkat ?? 'Node-DB-Master-01' }}
                                     </div>
                                 </td>
-                                <td class="p-4 font-mono text-xs text-secondary">{{ $server->ip_server ?? '192.168.10.101' }}</td>
+                                <td class="p-4 font-mono text-xs text-secondary">{{ $server->ip_server ?? '-' }}</td>
                                 <td class="p-4 font-mono text-xs text-secondary">{{ $server->ip_vps ?? '-' }}</td>
                                 <td class="p-4">
                                     @php

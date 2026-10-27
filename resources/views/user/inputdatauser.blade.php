@@ -20,6 +20,7 @@
     .field:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
     .field.is-invalid { border-color: #ba1a1a; }
     .lbl { display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 0.375rem; }
+    .opd-options { max-height: 15rem; overflow-y: auto; }
 </style>
 @endpush
 
@@ -82,36 +83,51 @@
 
                 {{-- Baris 2 kiri - Nama Pengirim --}}
                 <div>
-                    <label class="lbl" for="nama_pengirim">Nama Pengirim @if ($opd !== 'Kominfo') <span class="text-red-600">*</span> @endif</label>
+                    <label class="lbl" for="nama_pengirim">Nama Pengirim <span class="text-red-600">*</span></label>
                     <input type="text" id="nama_pengirim" name="nama_pengirim"
                            class="field @error('nama_pengirim') is-invalid @enderror"
                            value="{{ old('nama_pengirim') }}" placeholder="Masukkan nama pengirim"
-                           @if ($opd === 'Kominfo') disabled @endif
-                           @if ($opd !== 'Kominfo') required @endif>
+                           required>
                     @error('nama_pengirim') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Baris 2 kanan - Nama Penerima --}}
                 <div>
                     <label class="lbl" for="nama_penerima">Nama Penerima (diisi admin)</label>
-                    <input type="text" id="nama_penerima" name="nama_penerima"
-                           class="field @error('nama_penerima') is-invalid @enderror"
-                           value="{{ old('nama_penerima') }}" placeholder="Akan diisi oleh admin">
-                    @error('nama_penerima') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    <input type="text" id="nama_penerima" class="field" value=""
+                           placeholder="Akan diisi oleh admin" disabled>
                 </div>
 
                 {{-- Baris 3 - Nama Dinas/OPD --}}
                 <div class="md:col-span-2">
                     <label class="lbl" for="opd">Nama Dinas/OPD <span class="text-red-600">*</span></label>
-                    <select id="opd" name="opd" class="field @error('opd') is-invalid @enderror" required>
-                        <option value="" disabled selected>Pilih Dinas/OPD</option>
-                        @foreach($opdList as $value => $label)
-                            <option value="{{ $value }}" {{ old('opd') === $value ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="relative" id="opdDropdown">
+                        <input type="hidden" id="opd" name="opd" value="{{ old('opd') }}">
+                        <button type="button" id="opdTrigger"
+                                class="field flex items-center justify-between text-left @error('opd') is-invalid @enderror"
+                                aria-haspopup="listbox" aria-expanded="false" aria-controls="opdMenu">
+                            <span id="opdSelectedLabel" class="{{ old('opd') ? 'text-slate-900' : 'text-slate-400' }}">
+                                {{ old('opd') ? ($opdList[old('opd')] ?? old('opd')) : 'Pilih Dinas/OPD' }}
+                            </span>
+                            <span class="material-symbols-outlined text-[18px] text-secondary">expand_more</span>
+                        </button>
+                        <div id="opdMenu" class="hidden absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-outline-variant bg-white shadow-lg">
+                            <div class="border-b border-outline-variant bg-white p-2">
+                                <input type="search" id="opdSearch" class="field" placeholder="Cari Dinas/OPD..." autocomplete="off">
+                            </div>
+                            <div id="opdOptions" class="opd-options py-1" role="listbox" aria-label="Pilihan Dinas/OPD">
+                                @foreach($opdList as $value => $label)
+                                    <button type="button" class="opd-option w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                                            data-value="{{ $value }}" data-label="{{ $label }}" role="option">
+                                        {{ $label }}
+                                    </button>
+                                @endforeach
+                                <p id="opdNoResults" class="hidden px-3 py-2 text-sm text-secondary">OPD tidak ditemukan.</p>
+                            </div>
+                        </div>
+                    </div>
                     @error('opd') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    <p id="opdRequiredMessage" class="hidden mt-1 text-xs text-red-600">Nama Dinas/OPD wajib dipilih.</p>
                 </div>
 
                 {{-- Baris 4 - Nama Perangkat --}}
@@ -243,8 +259,75 @@
 
         // ---- Preview kode perangkat ----
         const opdSelect = document.getElementById('opd');
+        const opdDropdown = document.getElementById('opdDropdown');
+        const opdTrigger = document.getElementById('opdTrigger');
+        const opdSelectedLabel = document.getElementById('opdSelectedLabel');
+        const opdMenu = document.getElementById('opdMenu');
+        const opdSearch = document.getElementById('opdSearch');
+        const opdOptions = Array.from(document.querySelectorAll('.opd-option'));
+        const opdNoResults = document.getElementById('opdNoResults');
+        const opdRequiredMessage = document.getElementById('opdRequiredMessage');
         const tanggalInput = document.getElementById('tanggal_input');
         const kodePerangkat = document.getElementById('kode_perangkat');
+
+        function closeOpdMenu() {
+            if (!opdMenu || !opdTrigger) return;
+            opdMenu.classList.add('hidden');
+            opdTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function openOpdMenu() {
+            if (!opdMenu || !opdTrigger || !opdSearch) return;
+            opdMenu.classList.remove('hidden');
+            opdTrigger.setAttribute('aria-expanded', 'true');
+            opdSearch.value = '';
+            filterOpdOptions();
+            opdSearch.focus();
+        }
+
+        function filterOpdOptions() {
+            const searchTerm = opdSearch.value.trim().toLocaleLowerCase('id');
+            let visibleCount = 0;
+            opdOptions.forEach(function (option) {
+                const matches = option.dataset.label.toLocaleLowerCase('id').includes(searchTerm);
+                option.classList.toggle('hidden', !matches);
+                if (matches) visibleCount++;
+            });
+            opdNoResults.classList.toggle('hidden', visibleCount > 0);
+        }
+
+        if (opdTrigger) {
+            opdTrigger.addEventListener('click', function () {
+                if (opdMenu.classList.contains('hidden')) {
+                    openOpdMenu();
+                } else {
+                    closeOpdMenu();
+                }
+            });
+        }
+        if (opdSearch) opdSearch.addEventListener('input', filterOpdOptions);
+        opdOptions.forEach(function (option) {
+            option.addEventListener('click', function () {
+                opdSelect.value = option.dataset.value;
+                opdSelectedLabel.textContent = option.dataset.label;
+                opdSelectedLabel.classList.remove('text-slate-400');
+                opdSelectedLabel.classList.add('text-slate-900');
+                opdTrigger.classList.remove('is-invalid');
+                opdRequiredMessage.classList.add('hidden');
+                closeOpdMenu();
+                opdSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                opdSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
+        document.addEventListener('click', function (event) {
+            if (opdDropdown && !opdDropdown.contains(event.target)) closeOpdMenu();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && opdMenu && !opdMenu.classList.contains('hidden')) {
+                closeOpdMenu();
+                opdTrigger.focus();
+            }
+        });
 
         function fallbackKode(prefix, dateValue) {
             let datePart;
@@ -262,11 +345,12 @@
         let kodeRequestId = 0;
         async function updateKodePerangkatPreview() {
             if (!opdSelect || !tanggalInput || !kodePerangkat) return;
-            const prefix = opdSelect.value === 'Kominfo' ? 'KO' : 'CO';
+            const statusKepemilikan = opdSelect.value === 'Kominfo' ? 'Kominfo' : 'Colocation';
+            const prefix = statusKepemilikan === 'Kominfo' ? 'KO' : 'CO';
             const dateParam = tanggalInput.value || '';
             const myId = ++kodeRequestId;
             try {
-                const response = await fetch('/server/next-code?status_kepemilikan=' + encodeURIComponent(opdSelect.value)
+                const response = await fetch('/server/next-code?status_kepemilikan=' + encodeURIComponent(statusKepemilikan)
                     + (dateParam ? '&date=' + encodeURIComponent(dateParam) : ''));
                 const data = await response.json();
                 if (myId !== kodeRequestId) return;
@@ -279,13 +363,21 @@
         }
         updateKodePerangkatPreview();
         if (opdSelect) opdSelect.addEventListener('change', updateKodePerangkatPreview);
+        if (opdSelect) opdSelect.addEventListener('input', updateKodePerangkatPreview);
         if (tanggalInput) tanggalInput.addEventListener('change', updateKodePerangkatPreview);
 
         // ---- Cegah submit ganda + indikator loading ----
         const form = document.getElementById('deviceForm');
         const btn = document.getElementById('submitBtn');
         if (form && btn) {
-            form.addEventListener('submit', function () {
+            form.addEventListener('submit', function (event) {
+                if (!opdSelect.value) {
+                    event.preventDefault();
+                    opdTrigger.classList.add('is-invalid');
+                    opdRequiredMessage.classList.remove('hidden');
+                    opdTrigger.focus();
+                    return;
+                }
                 if (btn.dataset.busy === '1') return;
                 btn.dataset.busy = '1';
                 setTimeout(function () {

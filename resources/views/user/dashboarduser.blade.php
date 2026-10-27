@@ -75,6 +75,7 @@
                         @php
                             $statusMap = [
                                 'Aktif' => 'bg-green-100 text-green-800',
+                                'Pending' => 'bg-yellow-100 text-yellow-800',
                                 'Non-Aktif' => 'bg-red-100 text-red-800',
                                 'Maintenance' => 'bg-yellow-100 text-yellow-800',
                             ];
