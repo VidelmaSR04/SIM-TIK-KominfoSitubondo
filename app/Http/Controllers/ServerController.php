@@ -21,9 +21,11 @@ class ServerController extends Controller
         $perPage = $request->input('perPage', 10);
 
         $query = Server::when($search, function ($query, $search) {
-            return $query->where('nama_perangkat', 'like', "%{$search}%")
-                ->orWhere('id', 'like', "%{$search}%")
-                ->orWhere('ip_server', 'like', "%{$search}%");
+            return $query->where(function ($query) use ($search) {
+                $query->where('nama_perangkat', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%")
+                    ->orWhere('ip_server', 'like', "%{$search}%");
+            });
         });
 
         // If user is not admin, only show their own servers
@@ -31,7 +33,10 @@ class ServerController extends Controller
             $query->where('user_id', Auth::id());
         }
 
-        $servers = $query->paginate($perPage);
+        $servers = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate($perPage);
 
         return view('server', compact('servers'));
     }

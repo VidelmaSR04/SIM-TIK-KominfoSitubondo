@@ -27,7 +27,7 @@ class ServerStatusTest extends TestCase
             'merk_perangkat' => 'TestMerk',
             'opd' => 'Dinas Kesehatan',
             'nama_pengirim' => 'Test Pengirim',
-            'nama_penerima' => 'Test Penerima',
+            'nama_penerima' => 'Tidak boleh diisi user',
             'tanggal_input' => '2026-10-05',
         ]);
 
@@ -40,8 +40,44 @@ class ServerStatusTest extends TestCase
         $this->assertEquals('Colocation', $server->status_kepemilikan);
         $this->assertEquals('Dinas Kesehatan', $server->pemilik_perangkat);
         $this->assertEquals('Dinas Kesehatan', $server->nama_opd);
+        $this->assertNull($server->nama_penerima);
+        $this->assertEquals('Pending', $server->status);
+    }
+
+    /** @test */
+    public function user_must_provide_a_sender_name_and_the_opd_must_be_a_known_option()
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $this->actingAs($user);
+
+        $response = $this->post(route('inputdatauser.store'), [
+            'nama_perangkat' => 'Test Perangkat',
+            'jenis_perangkat' => 'server',
+            'merk_perangkat' => 'TestMerk',
+            'opd' => 'OPD Tidak Terdaftar',
+            'tanggal_input' => '2026-10-05',
+        ]);
+
+        $response->assertSessionHasErrors(['nama_pengirim', 'opd']);
+        $this->assertDatabaseCount('servers', 0);
 
         // Cleanup (handled by RefreshDatabase)
+    }
+
+    /** @test */
+    public function user_form_supports_opd_search_and_keeps_recipient_admin_only()
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $this->actingAs($user);
+
+        $response = $this->get(route('inputdatauser.create'));
+
+        $response->assertOk()
+            ->assertSee('id="opdTrigger"', false)
+            ->assertSee('id="opdSearch" class="field" placeholder="Cari Dinas/OPD..."', false)
+            ->assertSee('class="opd-options py-1"', false)
+            ->assertSee('id="nama_penerima" class="field" value=""', false)
+            ->assertSee('placeholder="Akan diisi oleh admin" disabled', false);
     }
 
     /** @test */
@@ -55,8 +91,9 @@ class ServerStatusTest extends TestCase
 
         // Create a server with status Pending, status_locked = false, missing required fields
         // Explicitly set status_kelengkapan to 'pending' since it's not being set correctly from default
+        $owner = User::factory()->create(['role' => 'user']);
         $server = Server::create([
-            'user_id' => $admin->id,
+            'user_id' => $owner->id,
             'nama_perangkat' => 'Test Server',
             'jenis_perangkat' => 'server',
             'merk_perangkat' => 'Test Merk',
@@ -127,6 +164,11 @@ class ServerStatusTest extends TestCase
         $this->assertEquals('Aktif', $server->status);
         // Convert to boolean for proper comparison (0 is false in PHP but not identical to false)
         $this->assertFalse((bool)$server->status_locked);
+
+        $this->actingAs($owner)
+            ->get(route('user.dashboarduser'))
+            ->assertOk()
+            ->assertSee(route('server.dokumen.download', $server->id));
 
         // Cleanup
     }

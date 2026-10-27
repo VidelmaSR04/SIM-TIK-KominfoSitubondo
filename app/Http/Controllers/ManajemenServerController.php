@@ -64,7 +64,13 @@ class ManajemenServerController extends Controller
         $colocation= $isAdmin ? Server::where('status_kepemilikan', 'Colocation')->count() : Server::where('user_id', Auth::id())->where('status_kepemilikan', 'Colocation')->count();
 
         // ==== Data tabel ====
-        $servers = $isAdmin ? Server::latest()->paginate(10) : Server::where('user_id', Auth::id())->latest()->paginate(10);
+        $serverQuery = Server::query()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+        if (!$isAdmin) {
+            $serverQuery->where('user_id', Auth::id());
+        }
+        $servers = $serverQuery->paginate(10);
         $cpanels = Cpanel::latest()->paginate(10);
         $aplikasis = Aplikasi::latest()->paginate(10);
 

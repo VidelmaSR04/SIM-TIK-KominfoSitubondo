@@ -8,11 +8,77 @@ use App\Models\MasterData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class InputDataUserController extends Controller
 {
+
+    private function opdOptions(): array
+    {
+        $opdList = MasterData::forSelect('pemilik_perangkat');
+        if (!empty($opdList)) {
+            return $opdList;
+        }
+
+        $opdOptions = [
+            'Dinas Pendidikan dan Kebudayaan',
+            'Dinas Kesehatan',
+            'Dinas Pekerjaan Umum dan Penataan Ruang',
+            'Dinas Perumahan dan Kawasan Permukiman',
+            'Satuan Polisi Pamong Praja',
+            'Badan Kesatuan Bangsa dan Politik',
+            'Badan Penanggulangan Bencana Daerah',
+            'Dinas Sosial',
+            'Dinas Tenaga Kerja',
+            'Dinas Pemberdayaan Perempuan dan Perlindungan Anak',
+            'Dinas Ketahanan Pangan',
+            'Dinas Lingkungan Hidup',
+            'Dinas Kependudukan dan Pencatatan Sipil',
+            'Dinas Pemberdayaan Masyarakat dan Desa',
+            'Dinas Pengendalian Penduduk dan Keluarga Berencana',
+            'Dinas Perhubungan',
+            'Dinas Komunikasi, Informatika dan Persandian',
+            'Dinas Koperosi dan Usaha Mikro',
+            'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu',
+            'Dinas Perpustakaan dan Kearsipan',
+            'Dinas Perikanan',
+            'Dinas Pariwisata',
+            'Dinas Tanaman Pangan, Hortikultura dan Perkebunan',
+            'Dinas Peternakan dan Kesehatan Hewan',
+            'Dinas Perdagangan dan Perindustrian',
+            'Badan Perencanaan Pembangunan Daerah',
+            'Badan Kepegawaian dan Pengembangan Sumber Daya Manusia',
+            'Badan Pendapatan, Pengelolaan Keuangan dan Aset Daerah',
+            'Inspektorat Daerah',
+            'Sekretariat Daerah',
+            'Sekretariat DPRD',
+            'Kecamatan Banyuglugur',
+            'Kecamatan Jatibanteng',
+            'Kecamatan Sumbermalang',
+            'Kecamatan Besuki',
+            'Kecamatan Suboh',
+            'Kecamatan Mlandingan',
+            'Kecamatan Bungatan',
+            'Kecamatan Kendit',
+            'Kecamatan Panarukan',
+            'Kecamatan Situbondo',
+            'Kecamatan Panji',
+            'Kecamatan Mangaran',
+            'Kecamatan Kapongan',
+            'Kecamatan Arjasa',
+            'Kecamatan Asembagus',
+            'Kecamatan Jangkar',
+            'Kecamatan Banyuputih',
+            'RSAR',
+            'PDAM Tirta Baluran',
+            'RSUD Besuki',
+            'RSUD Asembagus',
+        ];
+
+        return array_combine($opdOptions, $opdOptions);
+    }
+
     private function resolveMasterDataValue(string $kategori, string $input): string
     {
         $input = trim($input);
@@ -49,65 +115,7 @@ class InputDataUserController extends Controller
      */
     public function create(): View
     {
-        // Fetch master data for dropdowns (same as admin)
-        $opdList = MasterData::forSelect('pemilik_perangkat');
-        if (empty($opdList)) {
-            $opdOptionsArray = [
-                'Dinas Pendidikan dan Kebudayaan',
-                'Dinas Kesehatan',
-                'Dinas Pekerjaan Umum dan Penataan Ruang',
-                'Dinas Perumahan dan Kawasan Permukiman',
-                'Satuan Polisi Pamong Praja',
-                'Badan Kesatuan Bangsa dan Politik',
-                'Badan Penanggulangan Bencana Daerah',
-                'Dinas Sosial',
-                'Dinas Tenaga Kerja',
-                'Dinas Pemberdayaan Perempuan dan Perlindungan Anak',
-                'Dinas Ketahanan Pangan',
-                'Dinas Lingkungan Hidup',
-                'Dinas Kependudukan dan Pencatatan Sipil',
-                'Dinas Pemberdayaan Masyarakat dan Desa',
-                'Dinas Pengendalian Penduduk dan Keluarga Berencana',
-                'Dinas Perhubungan',
-                'Dinas Komunikasi, Informatika dan Persandian',
-                'Dinas Koperosi dan Usaha Mikro',
-                'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu',
-                'Dinas Perpustakaan dan Kearsipan',
-                'Dinas Perikanan',
-                'Dinas Pariwisata',
-                'Dinas Tanaman Pangan, Hortikultura dan Perkebunan',
-                'Dinas Peternakan dan Kesehatan Hewan',
-                'Dinas Perdagangan dan Perindustrian',
-                'Badan Perencanaan Pembangunan Daerah',
-                'Badan Kepegawaian dan Pengembangan Sumber Daya Manusia',
-                'Badan Pendapatan, Pengelolaan Keuangan dan Aset Daerah',
-                'Inspektorat Daerah',
-                'Sekretariat Daerah',
-                'Sekretariat DPRD',
-                'Kecamatan Banyuglugur',
-                'Kecamatan Jatibanteng',
-                'Kecamatan Sumbermalang',
-                'Kecamatan Besuki',
-                'Kecamatan Suboh',
-                'Kecamatan Mlandingan',
-                'Kecamatan Bungatan',
-                'Kecamatan Kendit',
-                'Kecamatan Panarukan',
-                'Kecamatan Situbondo',
-                'Kecamatan Panji',
-                'Kecamatan Mangaran',
-                'Kecamatan Kapongan',
-                'Kecamatan Arjasa',
-                'Kecamatan Asembagus',
-                'Kecamatan Jangkar',
-                'Kecamatan Banyuputih',
-                'RSAR',
-                'PDAM Tirta Baluran',
-                'RSUD Besuki',
-                'RSUD Asembagus',
-            ];
-            $opdList = array_combine($opdOptionsArray, $opdOptionsArray);
-        }
+        $opdList = $this->opdOptions();
 
         $jenisList = MasterData::forSelect('jenis_perangkat');
         if (empty($jenisList)) {
@@ -151,9 +159,8 @@ class InputDataUserController extends Controller
         $jenisValue = $request->input('jenis_perangkat');
 
         $validationRules = [
-            'nama_pengirim' => $request->input('opd') !== 'Kominfo' ? ['required', 'string', 'max:255'] : ['nullable', 'string', 'max:255'],
-            'opd' => ['required', 'string', 'max:255'],
-            'nama_penerima' => ['nullable', 'string', 'max:255'],
+            'nama_pengirim' => ['required', 'string', 'max:255'],
+            'opd' => ['required', 'string', Rule::in(array_keys($this->opdOptions()))],
             'nama_perangkat' => ['required', 'string', 'max:255'],
             'jenis_perangkat' => ['required', 'string', 'max:255'],
             'merk_perangkat' => ['required', 'string', 'max:255'],
@@ -188,7 +195,7 @@ class InputDataUserController extends Controller
             'pemilik_perangkat' => $validated['opd'],
             'status_kepemilikan'=> $statusKepemilikan,
             'nama_pengirim'     => $validated['nama_pengirim'],
-            'nama_penerima'     => $validated['nama_penerima'] ?: null,
+            'nama_penerima'     => null,
             'tanggal_input'     => $validated['tanggal_input'],
             'user_id'           => Auth::id(),
         ];
