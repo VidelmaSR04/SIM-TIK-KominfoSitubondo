@@ -18,12 +18,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('server_documents', function (Blueprint $table) {
-            $table->string('surat_tanggal', 100)->nullable();
-            $table->string('surat_nomor', 150)->nullable();
-            $table->string('surat_sifat', 100)->nullable();
-            $table->string('surat_lampiran', 100)->nullable();
-            $table->string('surat_hal', 255)->nullable();
-            $table->string('surat_yth', 500)->nullable();
+            if (!Schema::hasColumn('server_documents', 'surat_tanggal')) {
+                $table->string('surat_tanggal', 100)->nullable();
+            }
+            if (!Schema::hasColumn('server_documents', 'surat_nomor')) {
+                $table->string('surat_nomor', 150)->nullable();
+            }
+            if (!Schema::hasColumn('server_documents', 'surat_sifat')) {
+                $table->string('surat_sifat', 100)->nullable();
+            }
+            if (!Schema::hasColumn('server_documents', 'surat_lampiran')) {
+                $table->string('surat_lampiran', 100)->nullable();
+            }
+            if (!Schema::hasColumn('server_documents', 'surat_hal')) {
+                $table->string('surat_hal', 255)->nullable();
+            }
+            if (!Schema::hasColumn('server_documents', 'surat_yth')) {
+                $table->string('surat_yth', 500)->nullable();
+            }
         });
 
         foreach (DB::table('server_documents')->select(['id', 'isi_surat'])->cursor() as $document) {

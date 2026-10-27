@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             MasterDataSeeder::class,
+            CreateDummyUsersSeeder::class,
+            CreateDummyServersSeeder::class,
         ]);
     }
 }

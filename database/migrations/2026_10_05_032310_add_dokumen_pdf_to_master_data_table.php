@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('master_data', function (Blueprint $table) {
-            $table->string('dokumen_pdf')->nullable()->after('pangkat');
+            if (!Schema::hasColumn('master_data', 'dokumen_pdf')) {
+                $table->string('dokumen_pdf')->nullable()->after('pangkat');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('master_data', function (Blueprint $table) {
-            $table->dropColumn('dokumen_pdf');
+            if (Schema::hasColumn('master_data', 'dokumen_pdf')) {
+                $table->dropColumn('dokumen_pdf');
+            }
         });
     }
 };
