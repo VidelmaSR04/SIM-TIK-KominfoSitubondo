@@ -6,16 +6,37 @@
         </div>
         <div>
             <p class="text-white font-semibold text-sm leading-tight">SIM TIK</p>
-            <p class="text-xs text-gray-400 leading-tight">{{ Auth::user()->role === 'admin' ? 'Admin Data Center' : 'Kepala Bidang TIK' }}</p>
+            <p class="text-xs text-gray-400 leading-tight">
+                @if(Auth::user()->role === 'admin')
+                    Admin Data Center
+                @elseif(Auth::user()->role === 'kepala_bidang_tik')
+                    Kepala Bidang TIK
+                @else
+                    Pengguna OPD
+                @endif
+            </p>
         </div>
     </div>
 
     <nav class="flex-1 px-3 py-4 space-y-1">
 
-        @php
-            // Halaman yang termasuk grup "Manajemen Server"
-            $dalamGrupServer = request()->routeIs(['manajemen-server','server.*','detailserver','master-data.*']);
-        @endphp
+        @if(Auth::user()->role === 'user')
+            {{-- MENU KHUSUS ROLE USER: Hanya Dashboard --}}
+            <a href="{{ route('dashboard') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                      {{ request()->routeIs(['dashboard', 'user.dashboarduser', 'inputdatauser.*']) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Dashboard
+            </a>
+        @else
+            {{-- MENU ADMIN & KEPALA BIDANG TIK --}}
+            @php
+                // Halaman yang termasuk grup "Manajemen Server"
+                $dalamGrupServer = request()->routeIs(['manajemen-server','server.*','detailserver','master-data.*']);
+            @endphp
 
         {{-- Status buka/tutup grup diingat di browser, jadi tidak menutup sendiri saat pindah ke menu lain (mis. User Management) --}}
         <div x-data="{
@@ -96,6 +117,7 @@
             </svg>
             User Management
         </a>
+        @endif
         @endif
 
     </nav>
