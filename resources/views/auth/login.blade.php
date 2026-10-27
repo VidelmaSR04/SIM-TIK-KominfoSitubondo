@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+    @if (config('services.recaptcha.enabled'))
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -187,6 +190,16 @@
                     <a class="font-label-md text-label-md text-primary hover:underline" href="{{ route('password.request') }}">Lupa Password?</a>
                 @endif
             </div>
+
+            {{-- Google reCAPTCHA v2 --}}
+            @if (config('services.recaptcha.enabled'))
+                <div class="mt-4 flex flex-col items-center justify-center">
+                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                    @error('g-recaptcha-response')
+                        <p class="text-sm text-red-600 mt-1 w-full text-center">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
 
             {{-- Submit --}}
             <button class="w-full bg-primary text-on-primary font-label-md text-label-md py-3 px-4 rounded-lg hover:bg-on-primary-fixed-variant focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-sm flex items-center justify-center gap-2" type="submit">
