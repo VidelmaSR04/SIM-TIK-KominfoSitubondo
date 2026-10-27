@@ -4,14 +4,26 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Nonaktifkan reCAPTCHA agar test autentikasi dasar
+        // tidak terpengaruh oleh konfigurasi CAPTCHA di .env
+        Config::set('services.recaptcha.enabled', false);
+    }
+
     public function test_login_screen_can_be_rendered(): void
     {
+        $this->withoutVite();
+
         $response = $this->get('/login');
 
         $response->assertStatus(200);

@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Google reCAPTCHA v2
+    |--------------------------------------------------------------------------
+    |
+    | Konfigurasi untuk Google reCAPTCHA v2 Checkbox.
+    | Set RECAPTCHA_ENABLED=true dan isi site key / secret key untuk
+    | mengaktifkan proteksi CAPTCHA pada halaman login.
+    |
+    | Untuk pengujian lokal, gunakan kunci pengujian resmi Google:
+    | Site key : 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+    | Secret key: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+    |
+    | PENTING: Kunci pengujian selalu lolos verifikasi dan TIDAK boleh
+    | digunakan di produksi. Ganti dengan kunci asli sebelum deployment.
+    |
+    */
+    'recaptcha' => [
+        'enabled' => env('RECAPTCHA_ENABLED', false),
+        'site_key' => env('RECAPTCHA_SITE_KEY', ''),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY', ''),
+    ],
+
 ];

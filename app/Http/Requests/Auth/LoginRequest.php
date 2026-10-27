@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\Recaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,9 +28,28 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+        ];
+
+        // Tambahkan validasi reCAPTCHA hanya jika diaktifkan via konfigurasi
+        if (config('services.recaptcha.enabled')) {
+            $rules['g-recaptcha-response'] = ['required', new Recaptcha];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Pesan validasi kustom.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'g-recaptcha-response.required' => 'Silakan selesaikan verifikasi CAPTCHA.',
         ];
     }
 
