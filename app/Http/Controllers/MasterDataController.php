@@ -3,12 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterData;
+use App\Models\Server;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
 
 class MasterDataController extends Controller
 {
+    /**
+     * Kategori master data => kolom di tabel `servers` yang memakai nilainya.
+     * Dipakai untuk mengecek apakah sebuah master data masih dipakai perangkat.
+     */
+    private const KOLOM_SERVER = [
+        'jenis_perangkat'    => 'jenis_perangkat',
+        'merk_perangkat'     => 'merk_perangkat',
+        'tipe_perangkat'     => 'tipe_perangkat',
+        'status_kepemilikan' => 'status_kepemilikan',
+        'pemilik_perangkat'  => 'pemilik_perangkat',
+        'nomor_rack'         => 'nomor_rack',
+        'kondisi_tipe'       => 'kondisi_tipe',
+        'kondisi_status'     => 'kondisi_status',
+        'status_perangkat'   => 'status',
+    ];
+
     /**
      * Display a listing of the resource, optionally filtered by category.
      */
@@ -56,12 +75,14 @@ class MasterDataController extends Controller
         }
 
         MasterData::create($this->olahData($validated));
+        $this->bersihkanCache($validated['kategori']);
 
         return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->with('success', 'Data berhasil ditambahkan.');
     }
 
     /**
      * Update the specified resource in storage.
+     * Status aktif/non-aktif ikut diubah dari form edit (popup pemakaian ada di sisi view).
      */
     public function update(Request $request, MasterData $masterDatum)
     {
@@ -84,9 +105,42 @@ class MasterDataController extends Controller
             return Redirect::back()->withErrors(['value' => 'Nilai sudah ada untuk kategori ini.'])->withInput();
         }
 
+        $kategoriLama = $masterDatum->kategori;
+
         $masterDatum->update($this->olahData($validated));
 
+        $this->bersihkanCache($kategoriLama);
+        $this->bersihkanCache($validated['kategori']);
+
         return redirect()->route('master-data.index', ['kategori' => $validated['kategori']])->with('success', 'Data berhasil diperbarui.');
+    }
+
+    /**
+     * Cek pemakaian sebuah master data (dipanggil via AJAX sebelum menonaktifkan).
+     * Mengembalikan jumlah perangkat Kominfo dan Colocation yang masih memakainya.
+     */
+    public function pemakaian(MasterData $masterDatum)
+    {
+        $query = $this->queryPemakaian($masterDatum);
+
+        $servers = $query
+            ? $query->orderBy('nama_perangkat')
+                ->get(['id', 'kode_perangkat', 'nama_perangkat', 'status_kepemilikan'])
+            : collect();
+
+        $perKepemilikan = $servers->countBy('status_kepemilikan');
+
+        return response()->json([
+            'dipakai'    => $servers->isNotEmpty(),
+            'total'      => $servers->count(),
+            'kominfo'    => (int) $perKepemilikan->get('Kominfo', 0),
+            'colocation' => (int) $perKepemilikan->get('Colocation', 0),
+            'daftar'     => $servers->take(10)->map(fn ($s) => [
+                'kode'        => $s->kode_perangkat ?? '-',
+                'nama'        => $s->nama_perangkat,
+                'kepemilikan' => $s->status_kepemilikan,
+            ])->values(),
+        ]);
     }
 
     /**
@@ -98,23 +152,41 @@ class MasterDataController extends Controller
             'is_aktif' => !$masterDatum->is_aktif,
         ]);
 
-        return Redirect::back()->with('success', 'Status berhasil diubah.');
-    }
+        $this->bersihkanCache($masterDatum->kategori);
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     */
-    public function destroy(MasterData $masterDatum)
-    {
-        $masterDatum->delete();
-
-        return redirect()->route('master-data.index', ['kategori' => $masterDatum->kategori])->with('success', 'Data berhasil dihapus.');
+        return Redirect::back()->with(
+            'success',
+            $masterDatum->is_aktif ? 'Data master berhasil diaktifkan.' : 'Data master berhasil dinonaktifkan.'
+        );
     }
 
     // ------------------------------------------------------------------
     // Helper
     // ------------------------------------------------------------------
+
+    /** Query perangkat yang memakai master data ini (null jika kategori tidak dipakai di server). */
+    private function queryPemakaian(MasterData $item)
+    {
+        // Pejabat dipakai sebagai tanda tangan di dokumen server (berdasarkan id)
+        if ($item->kategori === MasterData::KATEGORI_PEJABAT) {
+            $serverIds = DB::table('server_documents')
+                ->where('ttd_kiri_master_id', $item->id)
+                ->orWhere('ttd_kanan_master_id', $item->id)
+                ->pluck('server_id');
+
+            return Server::whereIn('id', $serverIds);
+        }
+
+        $kolom = self::KOLOM_SERVER[$item->kategori] ?? null;
+
+        return $kolom ? Server::where($kolom, $item->value) : null;
+    }
+
+    /** Hapus cache pilihan dropdown (key: master_data.select.{kategori}) agar perubahan langsung terlihat. */
+    private function bersihkanCache(string $kategori): void
+    {
+        Cache::forget("master_data.select.{$kategori}");
+    }
 
     private function aturan(): array
     {
@@ -123,7 +195,7 @@ class MasterDataController extends Controller
             'value' => ['required', 'string', 'max:255'],
             'label' => ['nullable', 'string', 'max:255'],
             'urutan' => ['nullable', 'integer'],
-            'is_aktif' => ['boolean'],
+            'is_aktif' => ['required', 'boolean'],
 
             // Khusus kategori pejabat
             'nip' => ['nullable', 'string', 'max:30'],
@@ -150,13 +222,10 @@ class MasterDataController extends Controller
             $validated['nip'] = null;
             $validated['pangkat'] = null;
             $validated['jabatan_ttd'] = null;
-            $validated['urutan'] = (int)($validated['urutan'] ?? 0);
-
-            return $validated;
         }
 
-        // Untuk kategori pejabat, pastikan urutan adalah integer
-        $validated['urutan'] = (int)($validated['urutan'] ?? 0);
+        $validated['urutan'] = (int) ($validated['urutan'] ?? 0);
+        $validated['is_aktif'] = (bool) $validated['is_aktif'];
 
         return $validated;
     }

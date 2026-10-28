@@ -17,17 +17,56 @@
         <form action="{{ route('server.index') }}" method="GET" class="flex items-center gap-4 flex-wrap">
             <div class="flex items-center gap-2 text-sm text-secondary whitespace-nowrap">
                 <span>Show</span>
-                <select name="perPage" onchange="this.form.submit()" class="border border-outline-variant rounded-lg bg-white py-1.5 pl-3 pr-8 text-sm focus:ring-1 focus:ring-primary focus:border-primary">
-                    <option value="10" {{ request('perPage') == 10 ? 'selected' : '' }}>10</option>
-                    <option value="25" {{ request('perPage') == 25 ? 'selected' : '' }}>25</option>
-                    <option value="50" {{ request('perPage') == 50 ? 'selected' : '' }}>50</option>
+                <select name="perPage" class="border border-outline-variant rounded-lg bg-white py-1.5 pl-3 pr-8 text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                    <option value="10" {{ $servers->perPage() === 10 ? 'selected' : '' }}>10</option>
+                    <option value="25" {{ $servers->perPage() === 25 ? 'selected' : '' }}>25</option>
+                    <option value="50" {{ $servers->perPage() === 50 ? 'selected' : '' }}>50</option>
                 </select>
                 <span>entries</span>
             </div>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
-                <input name="search" value="{{ request('search') }}" class="pl-9 pr-3 py-2 w-64 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Cari data..." type="text" onkeypress="if(event.keyCode==13) this.form.submit()" />
+                <input name="search" value="{{ request('search') }}" class="pl-9 pr-3 py-2 w-64 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Cari nama perangkat atau pemilik..." type="text" />
             </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">arrow_downward</span>
+                <select name="urutan" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <option value="terbaru" {{ request('urutan', 'terbaru') === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                <option value="terlama" {{ request('urutan') === 'terlama' ? 'selected' : '' }}>Terlama</option>
+                </select>
+            </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">calendar_today</span>
+                <select name="tanggal" class="pl-9 pr-3 py-2 w-32 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <option value="">Semua</option>
+                @for ($i = 1; $i <= 31; $i++)
+                    <option value="{{ $i }}" {{ request('tanggal') == $i ? 'selected' : '' }}>{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}</option>
+                @endfor
+                </select>
+            </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">date_range</span>
+                <select name="bulan" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <option value="">Semua</option>
+                @php
+                    $bulanArr = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                @endphp
+                @foreach ($bulanArr as $key => $nama)
+                    <option value="{{ $key }}" {{ request('bulan') == $key ? 'selected' : '' }}>{{ $nama }}</option>
+                @endforeach
+                </select>
+            </div>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">update</span>
+                <select name="tahun" class="pl-9 pr-3 py-2 w-40 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary">
+                <option value="">Semua</option>
+                @foreach ($tahunList as $tahun)
+                    <option value="{{ $tahun }}" {{ request('tahun') == $tahun ? 'selected' : '' }}>{{ $tahun }}</option>
+                @endforeach
+                </select>
+            </div>
+            <button type="submit" class="bg-primary hover:bg-primary-container text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Cari</button>
+            <a href="{{ route('server.index') }}" class="ml-2 px-3 py-1.5 text-sm font-medium border border-outline-variant rounded-lg bg-white hover:bg-gray-50">Reset</a>
         </form>
     </div>
 
@@ -50,8 +89,11 @@
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="p-4 text-gray-500 font-mono text-xs">{{ (($servers->currentPage() - 1) * $servers->perPage()) + $loop->iteration }}</td>
                     <td class="p-4 text-gray-500 font-mono text-xs">{{ $s->kode_perangkat ?? $s->id }}</td>
-                    <td class="p-4 font-medium flex items-center gap-2.5">
-                        <span class="material-symbols-outlined text-gray-400 text-[18px]">dns</span> {{ $s->nama_perangkat }}
+                    <td class="p-4 font-medium">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-gray-400 text-[18px]">dns</span>
+                            {{ $s->nama_perangkat }}
+                        </div>
                     </td>
                     <td class="p-4 font-mono text-xs text-gray-500">{{ $s->ip_server ?? '-' }}</td>
                     <td class="p-4 font-mono text-xs text-gray-500">{{ $s->ip_vps ?? '-' }}</td>
@@ -81,13 +123,18 @@
                                 <a href="{{ route('server.edit', $s->id) }}" class="hover:text-blue-600 transition-colors" title="Edit Data">
                                     <span class="material-symbols-outlined text-[19px]">edit</span>
                                 </a>
-                                <form action="{{ route('server.destroy', $s->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus server ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="hover:text-red-600 transition-colors" title="Hapus Data">
-                                        <span class="material-symbols-outlined text-[19px]">delete</span>
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        class="js-hapus-server hover:text-red-600 transition-colors" title="Hapus Data"
+                                        data-nama="{{ $s->nama_perangkat }}"
+                                        data-kode="{{ $s->kode_perangkat ?? $s->id }}"
+                                        data-status="{{ $s->status ?? 'Pending' }}"
+                                        data-status-label="{{ $statusInfo['label'] }}"
+                                        data-kepemilikan="{{ $s->status_kepemilikan }}"
+                                        data-pemilik="{{ $s->pemilik_perangkat }}"
+                                        data-edit-url="{{ route('server.edit', $s->id) }}"
+                                        data-delete-url="{{ route('server.destroy', $s->id) }}">
+                                    <span class="material-symbols-outlined text-[19px]">delete</span>
+                                </button>
                             @else
                                 <span class="text-gray-400">Tidak ada akses</span>
                             @endif
@@ -96,7 +143,11 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="p-4 text-center text-gray-500">Tidak ada data server.</td>
+                    <td colspan="7" class="p-4 text-center text-gray-500">
+                        {{ request()->filled('search') || request()->filled('tanggal') || request()->filled('bulan') || request()->filled('tahun')
+                            ? 'Tidak ada data yang cocok dengan filter yang dipilih.'
+                            : 'Tidak ada data server.' }}
+                    </td>
                 </tr>
                 @endforelse
             </tbody>
@@ -109,8 +160,12 @@
             Menampilkan {{ $servers->firstItem() ?? 0 }} hingga {{ $servers->lastItem() ?? 0 }} dari {{ $servers->total() }} entri
         </span>
         <div class="flex gap-1">
-            {{ $servers->appends(request()->query())->links('pagination::tailwind') }}
+            {{ $servers->links('pagination::tailwind') }}
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    @include('partials.hapus-server-modal')
+@endpush

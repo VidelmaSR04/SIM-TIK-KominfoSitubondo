@@ -45,6 +45,32 @@ class Server extends Model
         'tanggal_input' => 'date',
     ];
 
+    public function scopeVisibleTo($query, $user)
+{
+        // Non-admin users only see their own servers.
+        if (!$user || $user->role !== 'admin') {
+        $query->where('user_id', $user?->id);
+    }
+    return $query;
+}
+
+public function scopeFilter($query, ?string $search)
+{
+    $search = trim((string) $search);
+    if ($search === '') {
+        return $query;
+    }
+
+    // Dibungkus closure agar orWhere tidak menembus filter user_id
+    return $query->where(function ($q) use ($search) {
+        $q->where('kode_perangkat', 'like', "%{$search}%")
+          ->orWhere('nama_perangkat', 'like', "%{$search}%")
+          ->orWhere('ip_server', 'like', "%{$search}%")
+          ->orWhere('ip_vps', 'like', "%{$search}%")
+          ->orWhere('status', 'like', "%{$search}%");
+    });
+}
+
     protected static function boot()
     {
         parent::boot();

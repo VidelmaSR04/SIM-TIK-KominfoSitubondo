@@ -38,8 +38,12 @@ Route::get('/server/{server}/pdf', function (Server $server) {
 Route::get('/detailserver/{id}', [ServerController::class, 'show'])->name('detailserver');
 
 // ============= LENGKAPI DATA (Admin melengkapi data dari user) =============
-Route::get('/server/{id}/lengkapi', [ServerController::class, 'lengkapi'])->name('server.lengkapi');
-Route::put('/server/{id}/lengkapi', [ServerController::class, 'updateLengkapi'])->name('server.lengkapi.update');
+Route::get('/server/{id}/lengkapi', [ServerController::class, 'lengkapi'])
+    ->middleware(['auth', 'role:admin'])
+    ->name('server.lengkapi');
+Route::put('/server/{id}/lengkapi', [ServerController::class, 'updateLengkapi'])
+    ->middleware(['auth', 'role:admin'])
+    ->name('server.lengkapi.update');
 
 // Redirect /inputdata ke server.create (form ADMIN, biarkan seperti semula)
 Route::get('/inputdata', function () {
@@ -61,14 +65,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/server-dokumen/{server}/preview-draft', [ServerDocumentController::class, 'previewDraft'])->name('server.dokumen.preview-draft');
     });
 
-    // Master Data routes
-    Route::prefix('master-data')->name('master-data.')->middleware(['auth', 'role:admin'])->group(function () {
-        Route::get('/', [MasterDataController::class, 'index'])->name('index');
-        Route::post('/', [MasterDataController::class, 'store'])->name('store');
-        Route::put('/{masterDatum}', [MasterDataController::class, 'update'])->name('update');
-        Route::patch('/{masterDatum}/toggle-aktif', [MasterDataController::class, 'toggleAktif'])->name('toggleAktif');
-        Route::delete('/{masterDatum}', [MasterDataController::class, 'destroy'])->name('destroy');
-    });
+   // Master Data routes
+Route::prefix('master-data')->name('master-data.')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/', [MasterDataController::class, 'index'])->name('index');
+    Route::post('/', [MasterDataController::class, 'store'])->name('store');
+    Route::put('/{masterDatum}', [MasterDataController::class, 'update'])->name('update');
+    Route::get('/{masterDatum}/pemakaian', [MasterDataController::class, 'pemakaian'])->name('pemakaian');
+    Route::patch('/{masterDatum}/toggle-aktif', [MasterDataController::class, 'toggleAktif'])->name('toggleAktif');
+});
 
     // Unlock and sync route for admin one-click fix
     Route::post('/server/{id}/unlock-sync', [ServerController::class, 'unlockAndSync'])->name('server.unlockSync');

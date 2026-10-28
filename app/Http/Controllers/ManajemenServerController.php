@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Server;
 use App\Models\Cpanel;
 use App\Models\Aplikasi;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class ManajemenServerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Determine if user is admin or kepala_bidang_tik
         $isAdmin = Auth::check() && in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik']);
@@ -64,15 +65,17 @@ class ManajemenServerController extends Controller
         $colocation= $isAdmin ? Server::where('status_kepemilikan', 'Colocation')->count() : Server::where('user_id', Auth::id())->where('status_kepemilikan', 'Colocation')->count();
 
         // ==== Data tabel ====
-        $serverQuery = Server::query()
-            ->orderByDesc('created_at')
+        $perPage = in_array((int) $request->input('perPage'), [10, 25, 50], true)
+            ? (int) $request->input('perPage')
+            : 10;
+
+        $servers = Server::visibleTo(Auth::user())
+            ->filter($request->input('search'))
+            ->orderByRaw("COALESCE(SUBSTRING(kode_perangkat, 3), '') desc")
             ->orderByDesc('id');
-        if (!$isAdmin) {
-            $serverQuery->where('user_id', Auth::id());
-        }
-        $servers = $serverQuery->paginate(10);
-        $cpanels = Cpanel::latest()->paginate(10);
-        $aplikasis = Aplikasi::latest()->paginate(10);
+        $servers = $servers->paginate($perPage, ['*'], 'server_page')->withQueryString();
+        $cpanels = Cpanel::latest()->paginate(10, ['*'], 'cpanel_page')->withQueryString();
+        $aplikasis = Aplikasi::latest()->paginate(10, ['*'], 'aplikasi_page')->withQueryString();
 
         return view('manajemen-server', compact(
             'totalDevices',
