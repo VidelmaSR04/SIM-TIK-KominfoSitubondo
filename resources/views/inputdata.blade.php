@@ -437,6 +437,62 @@
             <h2 class="text-white font-headline-md text-headline-md m-0">Form Data Server</h2>
         </div>
         <div class="p-6">
+            @php
+                $warningList = [];
+                if (!empty($inactiveMasterValues)) {
+                    foreach ($inactiveMasterValues as $f => $info) {
+                        $val = is_array($info) ? ($info['value'] ?? '') : $info;
+                        $lbl = is_array($info) ? ($info['label'] ?? $f) : $f;
+                        $warningList[] = $lbl . ': "' . $val . '"';
+                    }
+                }
+                if (session('master_data_warning')) {
+                    $warningList = array_unique(array_merge($warningList, (array) session('master_data_warning')));
+                }
+            @endphp
+
+            @if(!empty($warningList))
+            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 shadow-sm" role="alert">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-amber-600 text-2xl mt-0.5">warning</span>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-amber-900 text-base">Master Data Non-Aktif</h4>
+                        <p class="text-sm mt-1 text-amber-800">Data berikut sudah terdaftar di Data Master tetapi berstatus Non-Aktif:</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-sm font-medium text-amber-900">
+                            @foreach($warningList as $warn)
+                                <li>{{ $warn }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            @if(request('mode') === 'nonaktifkan')
+            <div class="mb-6 p-5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-10 h-10 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                        <span class="material-symbols-outlined text-2xl">power_settings_new</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-amber-950 text-base leading-tight">Penonaktifan Server Sebelum Dihapus</h4>
+                        <p class="text-sm text-amber-900 mt-1">
+                            Status server telah otomatis disetel ke <strong>Non-Aktif</strong>. Anda dapat langsung mengklik tombol di sebelah kanan untuk menyimpan perubahan status ini.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto shrink-0">
+                    <a href="{{ route('server.index') }}" class="w-full md:w-auto px-4 py-2.5 text-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                        Batal
+                    </a>
+                    <button type="submit" form="serverForm" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm rounded-xl shadow-md transition-colors">
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                        <span>Simpan Status Non-Aktif</span>
+                    </button>
+                </div>
+            </div>
+            @endif
+
             <form action="{{ $route }}" method="POST" enctype="multipart/form-data" id="serverForm">
                 @csrf
                 @if ($isEdit)
@@ -479,6 +535,12 @@
                             @foreach (\App\Models\MasterData::forSelect('jenis_perangkat') as $value => $label)
                                 <option value="{{ $value }}" {{ old('jenis_perangkat', $isEdit ? $server->jenis_perangkat : '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
+                            @if(isset($inactiveMasterValues['jenis_perangkat']))
+                                @php $inVal = is_array($inactiveMasterValues['jenis_perangkat']) ? $inactiveMasterValues['jenis_perangkat']['value'] : $inactiveMasterValues['jenis_perangkat']; @endphp
+                                @if(!array_key_exists($inVal, \App\Models\MasterData::forSelect('jenis_perangkat')))
+                                    <option value="{{ $inVal }}" {{ old('jenis_perangkat', $isEdit ? $server->jenis_perangkat : '') == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                @endif
+                            @endif
                             <option value="lainnya" {{ (old('jenis_perangkat') == 'lainnya' || (!old('jenis_perangkat') && $isEdit && !empty($server->jenisLainnya))) ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         @error('jenis_perangkat')
@@ -505,6 +567,12 @@
                             @foreach (\App\Models\MasterData::forSelect('merk_perangkat') as $value => $label)
                                 <option value="{{ $value }}" {{ old('merk_perangkat', $isEdit ? $server->merk_perangkat : '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
+                            @if(isset($inactiveMasterValues['merk_perangkat']))
+                                @php $inVal = is_array($inactiveMasterValues['merk_perangkat']) ? $inactiveMasterValues['merk_perangkat']['value'] : $inactiveMasterValues['merk_perangkat']; @endphp
+                                @if(!array_key_exists($inVal, \App\Models\MasterData::forSelect('merk_perangkat')))
+                                    <option value="{{ $inVal }}" {{ old('merk_perangkat', $isEdit ? $server->merk_perangkat : '') == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                @endif
+                            @endif
                             <option value="lainnya" {{ (old('merk_perangkat') == 'lainnya' || (!old('merk_perangkat') && $isEdit && !empty($server->merkLainnya))) ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         @error('merk_perangkat')
@@ -556,6 +624,12 @@
                                     @foreach (\App\Models\MasterData::forSelect('kondisi_tipe') as $value => $label)
                                         <option value="{{ $value }}" {{ old('kondisi_tipe', $server->kondisi_tipe ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
+                                    @if(isset($inactiveMasterValues['kondisi_tipe']))
+                                        @php $inVal = is_array($inactiveMasterValues['kondisi_tipe']) ? $inactiveMasterValues['kondisi_tipe']['value'] : $inactiveMasterValues['kondisi_tipe']; @endphp
+                                        @if(!array_key_exists($inVal, \App\Models\MasterData::forSelect('kondisi_tipe')))
+                                            <option value="{{ $inVal }}" {{ old('kondisi_tipe', $server->kondisi_tipe ?? '') == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                        @endif
+                                    @endif
                                 </select>
                             </div>
                             <div>
@@ -564,6 +638,12 @@
                                     @foreach (\App\Models\MasterData::forSelect('kondisi_status') as $value => $label)
                                         <option value="{{ $value }}" {{ old('kondisi_status', $server->kondisi_status ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
+                                    @if(isset($inactiveMasterValues['kondisi_status']))
+                                        @php $inVal = is_array($inactiveMasterValues['kondisi_status']) ? $inactiveMasterValues['kondisi_status']['value'] : $inactiveMasterValues['kondisi_status']; @endphp
+                                        @if(!array_key_exists($inVal, \App\Models\MasterData::forSelect('kondisi_status')))
+                                            <option value="{{ $inVal }}" {{ old('kondisi_status', $server->kondisi_status ?? '') == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                        @endif
+                                    @endif
                                 </select>
                             </div>
                         </div>
@@ -592,6 +672,12 @@
                             @foreach (\App\Models\MasterData::forSelect('tipe_perangkat') as $value => $label)
                                 <option value="{{ $value }}" {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
+                            @if(isset($inactiveMasterValues['tipe_perangkat']))
+                                @php $inVal = is_array($inactiveMasterValues['tipe_perangkat']) ? $inactiveMasterValues['tipe_perangkat']['value'] : $inactiveMasterValues['tipe_perangkat']; @endphp
+                                @if(!array_key_exists($inVal, \App\Models\MasterData::forSelect('tipe_perangkat')))
+                                    <option value="{{ $inVal }}" {{ old('tipe_perangkat', $server->tipe_perangkat ?? '') == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                @endif
+                            @endif
                         </select>
                         @error('tipe_perangkat')
                             <p class="form-error">{{ $message }}</p>
@@ -606,6 +692,12 @@
                             @foreach (\App\Models\MasterData::forSelect('status_kepemilikan') as $value => $label)
                                 <option value="{{ $value }}" {{ old('status_kepemilikan', $server->status_kepemilikan ?? 'Kominfo') == $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
+                            @if(isset($inactiveMasterValues['status_kepemilikan']))
+                                @php $inVal = is_array($inactiveMasterValues['status_kepemilikan']) ? $inactiveMasterValues['status_kepemilikan']['value'] : $inactiveMasterValues['status_kepemilikan']; @endphp
+                                @if(!array_key_exists($inVal, \App\Models\MasterData::forSelect('status_kepemilikan')))
+                                    <option value="{{ $inVal }}" {{ old('status_kepemilikan', $server->status_kepemilikan ?? 'Kominfo') == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                @endif
+                            @endif
                         </select>
                         @error('status_kepemilikan')
                             <p class="form-error">{{ $message }}</p>
@@ -624,6 +716,12 @@
                                     @foreach ($pemilikOptions as $value => $label)
                                         <div class="searchable-select-option {{ $pemilikSelected == $value ? 'is-selected' : '' }}" data-value="{{ $value }}">{{ $label }}</div>
                                     @endforeach
+                                    @if(isset($inactiveMasterValues['pemilik_perangkat']))
+                                        @php $inVal = is_array($inactiveMasterValues['pemilik_perangkat']) ? $inactiveMasterValues['pemilik_perangkat']['value'] : $inactiveMasterValues['pemilik_perangkat']; @endphp
+                                        @if(!array_key_exists($inVal, $pemilikOptions))
+                                            <div class="searchable-select-option text-amber-600 {{ $pemilikSelected == $inVal ? 'is-selected' : '' }}" data-value="{{ $inVal }}">{{ $inVal }} (Non-Aktif)</div>
+                                        @endif
+                                    @endif
                                 </div>
                                 <div class="searchable-select-empty hidden" id="pemilik_perangkat_empty">Tidak ditemukan</div>
                             </div>
@@ -631,6 +729,12 @@
                                 @foreach ($pemilikOptions as $value => $label)
                                     <option value="{{ $value }}" {{ $pemilikSelected == $value ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
+                                @if(isset($inactiveMasterValues['pemilik_perangkat']))
+                                    @php $inVal = is_array($inactiveMasterValues['pemilik_perangkat']) ? $inactiveMasterValues['pemilik_perangkat']['value'] : $inactiveMasterValues['pemilik_perangkat']; @endphp
+                                    @if(!array_key_exists($inVal, $pemilikOptions))
+                                        <option value="{{ $inVal }}" {{ $pemilikSelected == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                    @endif
+                                @endif
                             </select>
                         </div>
                         <p class="helper-text" id="pemilik_perangkat_hint">Hanya aktif jika Status Kepemilikan = Colocation.</p>
@@ -666,8 +770,16 @@
                     </div>
 
                     <!-- Status Perangkat (full width) -->
-                    <div class="col-span-1 md:col-span-2">
-                        <label class="form-label" for="status">Status Perangkat <span class="required-star">*</span></label>
+                    <div class="col-span-1 md:col-span-2" id="status-section">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="form-label mb-0" for="status">Status Perangkat <span class="required-star">*</span></label>
+                            @if(request('mode') === 'nonaktifkan')
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                    Disetel ke Non-Aktif
+                                </span>
+                            @endif
+                        </div>
 
                         <!-- Read-only status info -->
                         @if(isset($server))
@@ -709,10 +821,11 @@
                             </div>
                         @endif
 
-                        <select class="standard-select @error('status') border-red-500 @enderror" id="status" name="status">
+                        <select class="standard-select {{ request('mode') === 'nonaktifkan' ? 'border-amber-500 ring-2 ring-amber-500 bg-amber-50/40' : '' }} @error('status') border-red-500 @enderror" id="status" name="status">
                             @php
                                 $isLocked = $server->status_locked ?? false;
                                 $currentStatus = $server->status ?? 'Pending';
+                                $isModeNonaktifkan = request('mode') === 'nonaktifkan';
                                 // Determine label for automatic option
                                 if ($currentStatus === 'Aktif') {
                                     $autoLabel = 'Aktif (Otomatis)';
@@ -729,18 +842,18 @@
                             @if ($isLocked)
                                 <!-- When locked, show manual options with current status selected -->
                                 @foreach ($manualOptions as $value => $label)
-                                    <option value="{{ $value }}" {{ old('status', $server->status ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    <option value="{{ $value }}" {{ old('status', $isModeNonaktifkan ? 'Non-Aktif' : ($server->status ?? '')) == $value ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                                 <!-- Option to unlock -->
-                                <option value="automatic" {{ old('status', $server->status ?? '') == 'automatic' ? 'selected' : '' }}>
+                                <option value="automatic" {{ old('status') == 'automatic' ? 'selected' : '' }}>
                                     Kembalikan ke Otomatis
                                 </option>
                             @else
                                 <!-- When unlocked, show automatic option reflecting current status -->
-                                <option value="automatic" selected>{{ $autoLabel }}</option>
+                                <option value="automatic" {{ old('status', $isModeNonaktifkan ? 'Non-Aktif' : 'automatic') == 'automatic' ? 'selected' : '' }}>{{ $autoLabel }}</option>
                                 <!-- Manual lock options -->
                                 @foreach ($manualOptions as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
+                                    <option value="{{ $value }}" {{ old('status', $isModeNonaktifkan ? 'Non-Aktif' : '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             @endif
                         </select>
@@ -798,6 +911,12 @@
                                 @foreach (\App\Models\MasterData::forSelect('nomor_rack') as $value => $label)
                                     <option value="{{ $value }}" {{ old('nomor_rack', $server->nomor_rack ?? '') == $value ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
+                                @if(isset($inactiveMasterValues['nomor_rack']))
+                                    @php $inVal = is_array($inactiveMasterValues['nomor_rack']) ? $inactiveMasterValues['nomor_rack']['value'] : $inactiveMasterValues['nomor_rack']; @endphp
+                                    @if(!array_key_exists($inVal, \App\Models\MasterData::forSelect('nomor_rack')))
+                                        <option value="{{ $inVal }}" {{ old('nomor_rack', $server->nomor_rack ?? '') == $inVal ? 'selected' : '' }} class="text-amber-600">{{ $inVal }} (Non-Aktif)</option>
+                                    @endif
+                                @endif
                             </select>
                         </div>
                         @error('nomor_rack')
@@ -916,7 +1035,7 @@
                         @enderror
                     </div>
 
-                    
+
                     <!-- Tanggal Pengisian (full width) -->
                     <div class="col-span-1 md:col-span-2">
                         <label class="form-label" for="jam_pengisian">Tanggal Pengisian <span class="required-star">*</span></label>
@@ -1400,6 +1519,175 @@
         const jamPengisian = document.getElementById('jam_pengisian');
         if (jamPengisian) {
             jamPengisian.addEventListener('change', updateKodePerangkatPreview);
+        }
+    });
+</script>
+@endpush
+
+@push('scripts')
+    <!-- Popup: nilai master Non-Aktif -->
+    <div id="master-warning-modal" class="fixed inset-0 z-[110] flex items-center justify-center hidden bg-black/40" aria-hidden="true">
+        <div class="relative w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 bg-white p-6 shadow-lg rounded-lg">
+            <div class="flex items-start gap-3 mb-4">
+                <span class="material-symbols-outlined text-3xl text-amber-500">warning</span>
+                <h2 class="text-lg font-bold text-on-surface pt-1">Data master Non-Aktif</h2>
+            </div>
+            <div id="master-warning-body" class="space-y-3 text-sm text-on-surface-variant"></div>
+            <div class="flex justify-end gap-3 pt-5 mt-5 border-t border-outline-variant">
+                <a id="master-warning-link" href="#" target="_blank" rel="noopener"
+                   class="hidden px-5 py-2 rounded-lg text-sm font-medium text-primary border border-primary hover:bg-primary/5 transition-colors">
+                    Buka Data Master
+                </a>
+                <button type="button" id="master-warning-close"
+                        class="px-5 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-colors">
+                    Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+@php
+    // Nilai master yang berstatus Non-Aktif, dikelompokkan per kategori (huruf kecil untuk pencocokan)
+    $masterNonAktif = \App\Models\MasterData::where('is_aktif', false)
+        ->whereIn('kategori', [
+            'jenis_perangkat', 'merk_perangkat', 'tipe_perangkat', 'status_kepemilikan',
+            'pemilik_perangkat', 'nomor_rack', 'kondisi_tipe', 'kondisi_status',
+        ])
+        ->get(['kategori', 'value'])
+        ->groupBy('kategori')
+        ->map(fn ($g) => $g->pluck('value')->map(fn ($v) => mb_strtolower(trim($v)))->values())
+        ->all();
+    $adalahAdmin = auth()->check() && auth()->user()->isAdmin();
+@endphp
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('serverForm');
+        if (!form) return;
+
+        const NON_AKTIF  = @json($masterNonAktif);
+        const IS_ADMIN   = @json($adalahAdmin);
+        const MASTER_URL = @json(route('master-data.index'));
+
+        // name field di form, kategori di Data Master, label, dan input "lainnya" (jika ada)
+        const FIELDS = [
+            { name: 'jenis_perangkat',    kategori: 'jenis_perangkat',    label: 'Jenis perangkat',    lainnya: 'jenis_lainnya' },
+            { name: 'merk_perangkat',     kategori: 'merk_perangkat',     label: 'Merk perangkat',     lainnya: 'merk_lainnya' },
+            { name: 'tipe_perangkat',     kategori: 'tipe_perangkat',     label: 'Tipe perangkat' },
+            { name: 'status_kepemilikan', kategori: 'status_kepemilikan', label: 'Status kepemilikan' },
+            { name: 'pemilik_perangkat',  kategori: 'pemilik_perangkat',  label: 'Pemilik perangkat' },
+            { name: 'nomor_rack',         kategori: 'nomor_rack',         label: 'Nomor rack' },
+            { name: 'kondisi_tipe',       kategori: 'kondisi_tipe',       label: 'Kondisi tipe' },
+            { name: 'kondisi_status',     kategori: 'kondisi_status',     label: 'Kondisi status' },
+        ];
+
+        const modal = document.getElementById('master-warning-modal');
+        const body  = document.getElementById('master-warning-body');
+        const link  = document.getElementById('master-warning-link');
+        const btnClose = document.getElementById('master-warning-close');
+
+        function el(tag, cls, text) {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (text !== undefined) e.textContent = text;
+            return e;
+        }
+
+        // Nilai yang akan tersimpan: dropdown, atau teks yang diketik jika memilih "Lainnya"
+        function nilaiField(f) {
+            const input = form.elements[f.name];
+            if (!input || input.disabled) return '';
+            let v = (input.value || '').trim();
+            if (v.toLowerCase() === 'lainnya' && f.lainnya) {
+                const alt = form.elements[f.lainnya];
+                v = alt ? (alt.value || '').trim() : '';
+            }
+            return v;
+        }
+
+        function temukanMasalah(daftarField) {
+            const hasil = [];
+            daftarField.forEach(function (f) {
+                const v = nilaiField(f);
+                if (!v) return;
+                if ((NON_AKTIF[f.kategori] || []).indexOf(v.toLowerCase()) !== -1) {
+                    hasil.push({ label: f.label, nilai: v, kategori: f.kategori });
+                }
+            });
+            return hasil;
+        }
+
+        function tampilkan(masalah) {
+            body.replaceChildren();
+            body.append(el('p', '', 'Data berikut sudah terdaftar di Data Master tetapi berstatus Non-Aktif, sehingga belum bisa disimpan:'));
+
+            const list = el('ul', 'rounded-lg border border-amber-200 bg-amber-50 divide-y divide-amber-200');
+            masalah.forEach(function (m) {
+                const li = el('li', 'px-3 py-2 text-amber-900');
+                li.append(el('span', 'font-medium', m.label + ': '));
+                li.append(document.createTextNode('"' + m.nilai + '"'));
+                list.append(li);
+            });
+            body.append(list);
+
+            body.append(el('p', '',
+                IS_ADMIN
+                    ? 'Aktifkan terlebih dahulu di menu Data Master, atau pilih nilai lain.'
+                    : 'Hubungi admin untuk mengaktifkannya di Data Master, atau pilih nilai lain.'));
+
+            if (IS_ADMIN) {
+                link.href = MASTER_URL + '?kategori=' + encodeURIComponent(masalah[0].kategori);
+                link.classList.remove('hidden');
+            } else {
+                link.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function tutup() {
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        btnClose.addEventListener('click', tutup);
+        modal.addEventListener('click', function (e) { if (e.target === modal) tutup(); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) tutup();
+        });
+
+        // 1) Saat user mengganti pilihan / mengetik nilai "Lainnya"
+        FIELDS.forEach(function (f) {
+            [f.name, f.lainnya].filter(Boolean).forEach(function (n) {
+                const input = form.elements[n];
+                if (!input) return;
+                input.addEventListener('change', function () {
+                    const masalah = temukanMasalah([f]);
+                    if (masalah.length) tampilkan(masalah);
+                });
+            });
+        });
+
+        // 2) Sebelum disimpan: blok jika masih ada nilai Non-Aktif
+        form.addEventListener('submit', function (e) {
+            const masalah = temukanMasalah(FIELDS);
+            if (masalah.length) {
+                e.preventDefault();
+                tampilkan(masalah);
+            }
+        });
+
+        // 3) Saat halaman dibuka (mis. edit server yang masih memakai nilai Non-Aktif)
+        const awal = temukanMasalah(FIELDS);
+        if (awal.length) tampilkan(awal);
+
+        // 4) Jika mode nonaktifkan, beri scroll halus ke bagian status
+        if (new URLSearchParams(window.location.search).get('mode') === 'nonaktifkan') {
+            const statusSection = document.getElementById('status-section');
+            if (statusSection) {
+                setTimeout(function () {
+                    statusSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 350);
+            }
         }
     });
 </script>

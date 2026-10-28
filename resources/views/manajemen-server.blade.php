@@ -176,28 +176,46 @@
         </div>
 
         <!-- Data table -->
+        @php
+            $activeTab = in_array(request('tab'), ['server', 'cpanel', 'aplikasi'], true) ? request('tab') : 'server';
+            $perPageServer = $servers->perPage();
+        @endphp
         <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
-            <div class="p-5 border-b border-outline-variant flex flex-col sm:flex-row justify-between gap-4 items-center">
+            <div id="tabel-data" class="p-5 border-b border-outline-variant flex flex-col sm:flex-row justify-between gap-4 items-center">
                 <div class="flex gap-1 bg-surface-container-low p-1 rounded-lg">
                     <button onclick="switchTab('server')" id="tab-btn-server" class="tab-btn px-4 py-2 text-sm font-medium rounded-md bg-white text-primary shadow-sm">Server</button>
                     <button onclick="switchTab('cpanel')" id="tab-btn-cpanel" class="tab-btn px-4 py-2 text-sm font-medium rounded-md text-secondary hover:text-on-surface transition-colors">cPanel</button>
                     <button onclick="switchTab('aplikasi')" id="tab-btn-aplikasi" class="tab-btn px-4 py-2 text-sm font-medium rounded-md text-secondary hover:text-on-surface transition-colors">Aplikasi</button>
                 </div>
-                <div class="flex items-center gap-4 w-full sm:w-auto">
+
+                {{-- Filter hanya untuk tab Server --}}
+                <form id="server-filter" method="GET" action="{{ url()->current() }}#tabel-data"
+                      class="flex flex-wrap items-center gap-4 w-full sm:w-auto {{ $activeTab === 'server' ? '' : 'hidden' }}">
+                    <input type="hidden" name="tab" value="server">
+
                     <div class="flex items-center gap-2 text-sm text-secondary whitespace-nowrap">
                         <span>Show</span>
-                        <select class="custom-select border border-outline-variant rounded-lg bg-white py-1.5 pl-3 pr-8 text-sm focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer">
-                            <option>10</option>
-                            <option>25</option>
-                            <option>50</option>
+                        <select name="perPage" onchange="this.form.submit()"
+                                class="custom-select border border-outline-variant rounded-lg bg-white py-1.5 pl-3 pr-8 text-sm focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer">
+                            @foreach ([10, 25, 50] as $n)
+                                <option value="{{ $n }}" {{ $perPageServer === $n ? 'selected' : '' }}>{{ $n }}</option>
+                            @endforeach
                         </select>
                         <span>entries</span>
                     </div>
+
                     <div class="relative flex-1 sm:w-64">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
-                        <input class="pl-9 pr-3 py-2 w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Cari data..." type="text"/>
+                        <input name="search" value="{{ request('search') }}" type="text" placeholder="Cari data..."
+                               class="pl-9 pr-3 py-2 w-full border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary focus:border-primary"/>
                     </div>
-                </div>
+
+                    <button type="submit" class="bg-primary hover:bg-primary-container text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Cari</button>
+
+                    @if (request()->filled('search'))
+                        <a href="{{ url()->current() }}?tab=server&perPage={{ $perPageServer }}#tabel-data" class="text-sm text-secondary hover:text-primary">Reset</a>
+                    @endif
+                </form>
             </div>
 
             <!-- PANEL: SERVER -->
@@ -268,26 +286,34 @@
                                     @endif
                                 </td>
                                 <td class="p-4 text-center relative">
-    <div class="flex items-center justify-center gap-1">
-        <a href="{{ route('detailserver', ['id' => $server->id]) }}" title="Lihat Detail" class="text-secondary hover:text-primary hover:bg-blue-50 transition-colors p-1.5 rounded-lg">
-            <span class="material-symbols-outlined text-[19px]">visibility</span>
-        </a>
-        <a href="{{ route('server.edit', $server->id) }}" title="Edit" class="text-secondary hover:text-amber-600 hover:bg-amber-50 transition-colors p-1.5 rounded-lg">
-            <span class="material-symbols-outlined text-[19px]">edit</span>
-        </a>
-        <form action="{{ route('server.destroy', $server->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus server ini?')">
-            @csrf
-            @method('DELETE')
-            <button type="submit" title="Hapus" class="text-secondary hover:text-red-600 hover:bg-red-50 transition-colors p-1.5 rounded-lg">
-                <span class="material-symbols-outlined text-[19px]">delete</span>
-            </button>
-        </form>
-    </div>
-</td>
+                                    <div class="flex items-center justify-center gap-1">
+                                        <a href="{{ route('detailserver', ['id' => $server->id]) }}" title="Lihat Detail" class="text-secondary hover:text-primary hover:bg-blue-50 transition-colors p-1.5 rounded-lg">
+                                            <span class="material-symbols-outlined text-[19px]">visibility</span>
+                                        </a>
+                                        <a href="{{ route('server.edit', $server->id) }}" title="Edit" class="text-secondary hover:text-amber-600 hover:bg-amber-50 transition-colors p-1.5 rounded-lg">
+                                            <span class="material-symbols-outlined text-[19px]">edit</span>
+                                        </a>
+                                        {{-- Hapus: server harus Non-Aktif dulu (popup di partials/hapus-server-modal) --}}
+                                        <button type="button" title="Hapus"
+                                                class="js-hapus-server text-secondary hover:text-red-600 hover:bg-red-50 transition-colors p-1.5 rounded-lg"
+                                                data-nama="{{ $server->nama_perangkat }}"
+                                                data-kode="{{ $server->kode_perangkat ?? $server->id }}"
+                                                data-status="{{ $server->status ?? 'Pending' }}"
+                                                data-status-label="{{ $statusInfo['label'] }}"
+                                                data-kepemilikan="{{ $server->status_kepemilikan }}"
+                                                data-pemilik="{{ $server->pemilik_perangkat }}"
+                                                data-edit-url="{{ route('server.edit', $server->id) }}"
+                                                data-delete-url="{{ route('server.destroy', $server->id) }}">
+                                            <span class="material-symbols-outlined text-[19px]">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="p-4 text-center text-secondary">Tidak ada data server</td>
+                                <td colspan="7" class="p-4 text-center text-secondary">
+                                    {{ request()->filled('search') ? 'Tidak ada data yang cocok dengan "' . e(request('search')) . '".' : 'Tidak ada data server' }}
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -297,10 +323,10 @@
                 <div class="p-4 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
                     @if($servers instanceof \Illuminate\Pagination\LengthAwarePaginator)
                         <span class="text-secondary">
-                            Menampilkan {{ $servers->firstItem() }} hingga {{ $servers->lastItem() }} dari {{ $servers->total() }} entri
+                            Menampilkan {{ $servers->firstItem() ?? 0 }} hingga {{ $servers->lastItem() ?? 0 }} dari {{ $servers->total() }} entri
                         </span>
                         <div class="flex gap-1">
-                            {{ $servers->links('pagination::tailwind') }}
+                            {{ $servers->appends(['tab' => 'server'])->fragment('tabel-data')->links('pagination::tailwind') }}
                         </div>
                     @else
                         <span class="text-secondary">Menampilkan {{ $servers->count() }} entri</span>
@@ -366,7 +392,7 @@
                             Menampilkan {{ $cpanels->firstItem() }} hingga {{ $cpanels->lastItem() }} dari {{ $cpanels->total() }} entri
                         </span>
                         <div class="flex gap-1">
-                            {{ $cpanels->links('pagination::tailwind') }}
+                            {{ $cpanels->appends(['tab' => 'cpanel'])->fragment('tabel-data')->links('pagination::tailwind') }}
                         </div>
                     @else
                         <span class="text-secondary">Menampilkan {{ $cpanels->count() }} entri</span>
@@ -433,7 +459,7 @@
                             Menampilkan {{ $aplikasis->firstItem() }} hingga {{ $aplikasis->lastItem() }} dari {{ $aplikasis->total() }} entri
                         </span>
                         <div class="flex gap-1">
-                            {{ $aplikasis->links('pagination::tailwind') }}
+                            {{ $aplikasis->appends(['tab' => 'aplikasi'])->fragment('tabel-data')->links('pagination::tailwind') }}
                         </div>
                     @else
                         <span class="text-secondary">Menampilkan {{ $aplikasis->count() }} entri</span>
@@ -454,6 +480,9 @@
 @push('scripts')
 <script>
     function switchTab(name) {
+        // Nama tab tidak dikenal (mis. dari URL) -> kembali ke Server
+        if (!document.getElementById('panel-' + name)) name = 'server';
+
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
         document.getElementById('panel-' + name).classList.remove('hidden');
 
@@ -466,6 +495,16 @@
             activeBtn.classList.remove('text-secondary');
             activeBtn.classList.add('bg-white', 'text-primary', 'shadow-sm');
         }
+
+        // Filter (Show + Cari) hanya untuk tab Server
+        const filter = document.getElementById('server-filter');
+        if (filter) filter.classList.toggle('hidden', name !== 'server');
     }
+
+    // Pulihkan tab aktif setelah reload (cari / pindah halaman)
+    switchTab(@json($activeTab));
 </script>
+
+{{-- Popup hapus server (server harus Non-Aktif dulu) --}}
+@include('partials.hapus-server-modal')
 @endpush

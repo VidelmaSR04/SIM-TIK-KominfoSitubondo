@@ -3,47 +3,138 @@
 namespace App\Http\Controllers;
 
 use App\Models\Server;
-use App\Models\User;
 use App\Models\MasterData;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Validator as ValidationValidator;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ServerController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
-        $perPage = $request->input('perPage', 10);
+public function index(Request $request)
+{
+    // Whitelist: only supported page sizes are accepted.
+    $perPage = in_array((int) $request->input('perPage'), [10, 25, 50], true)
+        ? (int) $request->input('perPage')
+        : 10;
 
-        $query = Server::when($search, function ($query, $search) {
-            return $query->where(function ($query) use ($search) {
-                $query->where('nama_perangkat', 'like', "%{$search}%")
-                    ->orWhere('id', 'like', "%{$search}%")
-                    ->orWhere('ip_server', 'like', "%{$search}%");
-            });
-        });
+    $search = $request->input('search');
+    $search = is_string($search) ? trim($search) : '';
+    $urutan = $request->input('urutan', 'terbaru');
+    $urutan = in_array($urutan, ['terbaru', 'terlama'], true) ? $urutan : 'terbaru';
+    $tanggal = $request->input('tanggal');
+    $bulan = $request->input('bulan');
+    $tahun = $request->input('tahun');
 
-        // If user is not admin, only show their own servers
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
-            $query->where('user_id', Auth::id());
-        }
+    $query = Server::visibleTo(Auth::user())
+        ->filter($search);
 
-        $servers = $query
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->paginate($perPage);
-
-        return view('server', compact('servers'));
+    if ($tanggal && in_array((int) $tanggal, range(1, 31), true)) {
+        $query->whereRaw('SUBSTRING(kode_perangkat, 7, 2) = ?', [
+            str_pad((int) $tanggal, 2, '0', STR_PAD_LEFT),
+        ]);
     }
+
+    if ($bulan && in_array((int) $bulan, range(1, 12), true)) {
+        $query->whereRaw('SUBSTRING(kode_perangkat, 5, 2) = ?', [
+            str_pad((int) $bulan, 2, '0', STR_PAD_LEFT),
+        ]);
+    }
+
+    if ($tahun && is_numeric($tahun)) {
+        $query->whereRaw('SUBSTRING(kode_perangkat, 3, 2) = ?', [substr((string) $tahun, -2)]);
+    }
+
+    $dir = $urutan === 'terbaru' ? 'desc' : 'asc';
+    $query->orderByRaw("COALESCE(SUBSTRING(kode_perangkat, 3), '') {$dir}")
+        ->orderBy('id', $dir);
+
+    $servers = $query
+        ->paginate($perPage)
+        ->withQueryString();
+
+    $tahunList = Server::visibleTo(Auth::user())
+        ->whereNotNull('kode_perangkat')
+        ->selectRaw('DISTINCT SUBSTRING(kode_perangkat, 3, 2) AS yy')
+        ->pluck('yy')
+        ->filter()
+        ->sortDesc()
+        ->map(fn ($yy) => '20' . $yy)
+        ->values();
+
+    return view('server', compact('servers', 'perPage', 'tahunList'));
+}
 
     public function create()
     {
-        return view('inputdata');
+        return view('inputdata', ['inactiveMasterValues' => []]);
+    }
+
+    /**
+     * Kolom server yang nilainya berasal dari Data Master.
+     * field => [kategori master, label untuk pesan, field input "lainnya" (jika ada)]
+     */
+    private const FIELD_MASTER = [
+        'jenis_perangkat'    => ['jenis_perangkat',    'Jenis perangkat',    'jenis_lainnya'],
+        'merk_perangkat'     => ['merk_perangkat',     'Merk perangkat',     'merk_lainnya'],
+        'tipe_perangkat'     => ['tipe_perangkat',     'Tipe perangkat',     null],
+        'status_kepemilikan' => ['status_kepemilikan', 'Status kepemilikan', null],
+        'pemilik_perangkat'  => ['pemilik_perangkat',  'Pemilik perangkat',  null],
+        'nomor_rack'         => ['nomor_rack',         'Nomor rack',         null],
+        'kondisi_tipe'       => ['kondisi_tipe',       'Kondisi tipe',       null],
+        'kondisi_status'     => ['kondisi_status',     'Kondisi status',     null],
+    ];
+
+    /**
+     * Tambahkan error ke validator jika ada nilai yang dipilih/diketik
+     * sudah terdaftar di Data Master tetapi berstatus NON-AKTIF.
+     *
+     * - store(): semua nilai diperiksa.
+     * - update(): nilai nonaktif tetap ditolak, meskipun nilainya sama
+     *   dengan data yang sudah tersimpan.
+     */
+    private function cekMasterNonAktif(
+        ValidationValidator $validator,
+        Request $request,
+        array &$masterNonAktif = []
+    ): void
+    {
+        $validator->after(function (ValidationValidator $validator) use ($request, &$masterNonAktif) {
+            $isAdmin = Auth::check() && Auth::user()->role === 'admin';
+
+            foreach (self::FIELD_MASTER as $field => [$kategori, $label, $fieldLainnya]) {
+                $nilai = trim((string) $request->input($field));
+                $keyError = $field;
+
+                // Pilihan "lainnya": yang dicek adalah teks yang diketik user
+                if ($nilai === 'lainnya' && $fieldLainnya) {
+                    $nilai = trim((string) $request->input($fieldLainnya));
+                    $keyError = $fieldLainnya;
+                }
+
+                if ($nilai === '') {
+                    continue;
+                }
+
+                $master = MasterData::where('kategori', $kategori)
+                    ->whereRaw('LOWER(TRIM(value)) = ?', [mb_strtolower($nilai)])
+                    ->first();
+
+                if ($master && !$master->is_aktif) {
+                    $masterNonAktif[] = $label . ': "' . $master->value . '"';
+                    $pesan = 'Aktifkan terlebih dahulu ' . mb_strtolower($label) . ' "' . $master->value
+                        . '" di Data Master karena sudah terdaftar di sana (saat ini berstatus Non-Aktif)';
+                    $pesan .= $isAdmin
+                        ? ', atau pilih nilai lain.'
+                        : '. Hubungi admin untuk mengaktifkannya, atau pilih nilai lain.';
+
+                    $validator->errors()->add($keyError, $pesan);
+                }
+            }
+        });
     }
 
     private function resolveMasterDataValue(string $kategori, string $input): string
@@ -76,6 +167,32 @@ class ServerController extends Controller
         ]);
 
         return $input;
+    }
+
+    private function masterNonAktifPada(Server $server): array
+    {
+        $inactiveMasterValues = [];
+        foreach (self::FIELD_MASTER as $field => [$kategori, $label]) {
+            $value = trim((string) $server->{$field});
+            if ($value === '') {
+                continue;
+            }
+
+            $master = MasterData::where('kategori', $kategori)
+                ->whereRaw('LOWER(TRIM(value)) = ?', [mb_strtolower($value)])
+                ->where('is_aktif', false)
+                ->first();
+
+            if ($master) {
+                $inactiveMasterValues[$field] = [
+                    'value' => $master->value,
+                    'label' => $label,
+                    'kategori' => $kategori,
+                ];
+            }
+        }
+
+        return $inactiveMasterValues;
     }
 
     public function store(Request $request)
@@ -119,9 +236,15 @@ class ServerController extends Controller
         }
 
         $validator = Validator::make($request->all(), $validationRules);
+        $masterNonAktif = [];
+        $this->cekMasterNonAktif($validator, $request, $masterNonAktif);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            $redirect = redirect()->back()->withErrors($validator)->withInput();
+            if ($masterNonAktif !== []) {
+                $redirect->with('master_data_warning', array_values(array_unique($masterNonAktif)));
+            }
+            return $redirect;
         }
 
         $validated = $request->validate($validationRules);
@@ -153,7 +276,6 @@ class ServerController extends Controller
             'ukuran_hdd'        => $validated['ukuran_hdd'],
             'ukuran_ram'        => $validated['ukuran_ram'],
             'nomor_rack'        => $validated['nomor_rack'],
-            'gambar_rack'       => $validated['gambar_rack'] ?? null,
             'jumlah_core'       => $validated['jumlah_core'],
             'peruntukan'        => $validated['peruntukan'],
             'nama_pengirim'     => empty($validated['nama_pengirim'] ?? '') ? null : $validated['nama_pengirim'],
@@ -163,7 +285,9 @@ class ServerController extends Controller
         ];
 
         // Calculate status_kelengkapan FIRST
-        $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
+        $data['status_kelengkapan'] = Server::hitungStatusKelengkapan(
+            $data + ['gambar_rack' => $request->hasFile('gambar_rack') ? 'upload' : null]
+        );
 
         // Determine status_locked based on admin's manual status choice from form
         // We need to check the original status value BEFORE removing it from $data
@@ -242,7 +366,7 @@ class ServerController extends Controller
         return redirect()->route('detailserver', ['id' => $server->id])->with('success', 'Server berhasil ditambahkan.');
     }
 
-    public function show($id)
+    public function show(int|string $id)
     {
         $server = Server::findOrFail($id);
 
@@ -254,7 +378,7 @@ class ServerController extends Controller
         return view('detailserver', compact('server'));
     }
 
-    public function edit($id)
+    public function edit(int|string $id)
     {
         $server = Server::findOrFail($id);
 
@@ -263,12 +387,17 @@ class ServerController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        return view('inputdata', compact('server'));
+        $inactiveMasterValues = $this->masterNonAktifPada($server);
+
+        return view('inputdata', compact('server', 'inactiveMasterValues'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int|string $id)
     {
         $server = Server::findOrFail($id);
+        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+            abort(403, 'Unauthorized action.');
+        }
 
         // Determine if merk is 'lainnya' to validate alternative field
         $merkValue = $request->input('merk_perangkat');
@@ -309,9 +438,15 @@ class ServerController extends Controller
         }
 
         $validator = Validator::make($request->all(), $validationRules);
+        $masterNonAktif = [];
+        $this->cekMasterNonAktif($validator, $request, $masterNonAktif);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            $redirect = redirect()->back()->withErrors($validator)->withInput();
+            if ($masterNonAktif !== []) {
+                $redirect->with('master_data_warning', array_values(array_unique($masterNonAktif)));
+            }
+            return $redirect;
         }
 
         $validated = $request->validate($validationRules);
@@ -343,7 +478,6 @@ class ServerController extends Controller
             'ukuran_hdd'        => $validated['ukuran_hdd'],
             'ukuran_ram'        => $validated['ukuran_ram'],
             'nomor_rack'        => $validated['nomor_rack'],
-            'gambar_rack'       => $validated['gambar_rack'] ?? null,
             'jumlah_core'       => $validated['jumlah_core'],
             'peruntukan'        => $validated['peruntukan'],
             'nama_pengirim'     => empty($validated['nama_pengirim'] ?? '') ? null : $validated['nama_pengirim'],
@@ -352,7 +486,11 @@ class ServerController extends Controller
         ];
 
         // Calculate status_kelengkapan FIRST
-        $data['status_kelengkapan'] = Server::hitungStatusKelengkapan($data);
+        $hapusFotoDiminta = $request->input('remove_image') == '1';
+        $adaFoto = $request->hasFile('gambar_rack') || (!empty($server->gambar_rack) && !$hapusFotoDiminta);
+        $data['status_kelengkapan'] = Server::hitungStatusKelengkapan(
+            $data + ['gambar_rack' => $adaFoto ? ($server->gambar_rack ?: 'upload') : null]
+        );
 
         // Determine status_locked based on admin's manual status choice from form
         // We need to check the original status value BEFORE removing it from $data
@@ -440,9 +578,21 @@ class ServerController extends Controller
         return redirect()->route('server.index')->with('success', 'Server berhasil diperbarui.');
     }
 
-    public function destroy($id)
+    public function destroy(int|string $id)
     {
         $server = Server::findOrFail($id);
+        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Server harus dinonaktifkan dulu sebelum dihapus
+        if (($server->status ?? 'Pending') !== 'Non-Aktif') {
+            $msg = 'Server berstatus "' . ($server->status ?? 'Pending') . '". Ubah status menjadi Non-Aktif terlebih dahulu untuk menghapus.';
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->with('hapus_error', $msg);
+        }
 
         // ============= HAPUS GAMBAR =============
         if ($server->gambar_rack && Storage::disk('public')->exists($server->gambar_rack)) {
@@ -457,10 +607,13 @@ class ServerController extends Controller
     }
 
     // ============= METHOD UNTUK HAPUS GAMBAR =============
-    public function removeImage($id)
+    public function removeImage(int|string $id)
     {
         try {
             $server = Server::findOrFail($id);
+            if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+                return response()->json(['success' => false, 'message' => 'Tidak diizinkan'], 403);
+            }
 
             if ($server->gambar_rack && Storage::disk('public')->exists($server->gambar_rack)) {
                 Storage::disk('public')->delete($server->gambar_rack);
@@ -495,11 +648,16 @@ class ServerController extends Controller
      * didaftarkan user (masih menggunakan form "inputdata" yang sama
      * dengan create/edit, supaya tidak ada view ganda yang bentrok).
      */
-    public function lengkapi($id)
+    public function lengkapi(int|string $id)
     {
         $server = Server::findOrFail($id);
+        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+            abort(403, 'Unauthorized action.');
+        }
 
-        return view('inputdata', compact('server'));
+        $inactiveMasterValues = $this->masterNonAktifPada($server);
+
+        return view('inputdata', compact('server', 'inactiveMasterValues'));
     }
 
     /**
@@ -508,12 +666,12 @@ class ServerController extends Controller
      * status_kelengkapan), jadi cukup delegasikan ke situ supaya tidak ada
      * duplikasi/​potensi bentrok logic.
      */
-    public function updateLengkapi(Request $request, $id)
+    public function updateLengkapi(Request $request, int|string $id)
     {
         return $this->update($request, $id);
     }
 
-    public function exportPdf($id)
+    public function exportPdf(int|string $id)
     {
         $server = Server::findOrFail($id);
         $pdf = Pdf::loadView('pdf.detailserver', compact('server'));
@@ -523,7 +681,7 @@ class ServerController extends Controller
     /**
      * Unlock status and sync with data completeness - for admin one-click fix
      */
-    public function unlockAndSync(Request $request, $id)
+    public function unlockAndSync(Request $request, int|string $id)
     {
         $server = Server::findOrFail($id);
 
@@ -554,7 +712,7 @@ class ServerController extends Controller
         }
 
         $dateObj = $date ? \Illuminate\Support\Carbon::parse($date) : \Illuminate\Support\Carbon::now();
-        $kode = \App\Models\Server::generateKodePerangkat($status, $dateObj->toDateString());
+        $kode = Server::generateKodePerangkat($status, $dateObj->toDateString());
 
         return response()->json(['kode_perangkat' => $kode]);
     }
