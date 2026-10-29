@@ -326,7 +326,7 @@
                             Menampilkan {{ $servers->firstItem() ?? 0 }} hingga {{ $servers->lastItem() ?? 0 }} dari {{ $servers->total() }} entri
                         </span>
                         <div class="flex gap-1">
-                            {{ $servers->appends(['tab' => 'server'])->fragment('tabel-data')->links('pagination::tailwind') }}
+                            {{ $servers->appends(['tab' => 'server'])->fragment('tabel-data')->links('vendor.pagination.sim-tik') }}
                         </div>
                     @else
                         <span class="text-secondary">Menampilkan {{ $servers->count() }} entri</span>
@@ -392,7 +392,7 @@
                             Menampilkan {{ $cpanels->firstItem() }} hingga {{ $cpanels->lastItem() }} dari {{ $cpanels->total() }} entri
                         </span>
                         <div class="flex gap-1">
-                            {{ $cpanels->appends(['tab' => 'cpanel'])->fragment('tabel-data')->links('pagination::tailwind') }}
+                            {{ $cpanels->appends(['tab' => 'cpanel'])->fragment('tabel-data')->links('vendor.pagination.sim-tik') }}
                         </div>
                     @else
                         <span class="text-secondary">Menampilkan {{ $cpanels->count() }} entri</span>
@@ -459,7 +459,7 @@
                             Menampilkan {{ $aplikasis->firstItem() }} hingga {{ $aplikasis->lastItem() }} dari {{ $aplikasis->total() }} entri
                         </span>
                         <div class="flex gap-1">
-                            {{ $aplikasis->appends(['tab' => 'aplikasi'])->fragment('tabel-data')->links('pagination::tailwind') }}
+                            {{ $aplikasis->appends(['tab' => 'aplikasi'])->fragment('tabel-data')->links('vendor.pagination.sim-tik') }}
                         </div>
                     @else
                         <span class="text-secondary">Menampilkan {{ $aplikasis->count() }} entri</span>

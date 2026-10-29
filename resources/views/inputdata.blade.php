@@ -56,12 +56,22 @@
             padding: 8px 12px;
             font-size: 14px;
             outline: none;
+            background-color: #ffffff;
             transition: all 0.2s;
         }
 
         .standard-input:focus {
             border-color: #2563eb;
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .standard-input:disabled,
+        .standard-input[disabled] {
+            background-color: #F1F5F9 !important;
+            color: #94A3B8 !important;
+            cursor: not-allowed !important;
+            border-color: #E2E8F0 !important;
+            opacity: 0.75;
         }
 
         .standard-select {
@@ -1012,24 +1022,38 @@
                     </div>
 
                     <!-- Pengirim & Penerima -->
+                    @php
+                        $currStatusKepemilikan = old('status_kepemilikan', $isEdit ? ($server->status_kepemilikan ?? 'Kominfo') : 'Kominfo');
+                        $isColocation = $currStatusKepemilikan === 'Colocation';
+                    @endphp
                     <div>
-                        <label class="form-label" for="nama_pengirim">Nama Pengirim @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') <span class="required-star">*</span> @endif</label>
-                        <input class="standard-input @error('nama_pengirim') border-red-500 @enderror" id="nama_pengirim"
-                            name="nama_pengirim" placeholder="Nama pengirim" type="text"
+                        <label class="form-label" for="nama_pengirim">
+                            Nama Pengirim <span class="required-star" id="nama_pengirim_star" style="{{ $isColocation ? '' : 'display:none;' }}">*</span>
+                        </label>
+                        <input class="standard-input {{ $isColocation ? '' : 'bg-slate-100 cursor-not-allowed text-slate-400 border-slate-200' }} @error('nama_pengirim') border-red-500 @enderror"
+                            id="nama_pengirim"
+                            name="nama_pengirim"
+                            placeholder="Nama pengirim"
+                            type="text"
                             value="{{ old('nama_pengirim', $isEdit ? $server->nama_pengirim : '') }}"
-                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) === 'Kominfo') disabled @endif
-                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') required @endif>
+                            {{ $isColocation ? 'required' : 'disabled' }}>
+                        <p class="helper-text" id="nama_pengirim_hint" style="{{ $isColocation ? 'display:none;' : '' }}">Hanya aktif jika Status Kepemilikan = Colocation.</p>
                         @error('nama_pengirim')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label class="form-label" for="nama_penerima">Nama Penerima @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') <span class="required-star">*</span> @endif</label>
-                        <input class="standard-input @error('nama_penerima') border-red-500 @enderror" id="nama_penerima"
-                            name="nama_penerima" placeholder="Nama penerima" type="text"
+                        <label class="form-label" for="nama_penerima">
+                            Nama Penerima <span class="required-star" id="nama_penerima_star" style="{{ $isColocation ? '' : 'display:none;' }}">*</span>
+                        </label>
+                        <input class="standard-input {{ $isColocation ? '' : 'bg-slate-100 cursor-not-allowed text-slate-400 border-slate-200' }} @error('nama_penerima') border-red-500 @enderror"
+                            id="nama_penerima"
+                            name="nama_penerima"
+                            placeholder="Nama penerima"
+                            type="text"
                             value="{{ old('nama_penerima', $isEdit ? $server->nama_penerima : '') }}"
-                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) === 'Kominfo') disabled @endif
-                            @if ((old('status_kepemilikan', $isEdit ? $server->status_kepemilikan : 'Kominfo')) !== 'Kominfo') required @endif>
+                            {{ $isColocation ? 'required' : 'disabled' }}>
+                        <p class="helper-text" id="nama_penerima_hint" style="{{ $isColocation ? 'display:none;' : '' }}">Hanya aktif jika Status Kepemilikan = Colocation.</p>
                         @error('nama_penerima')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
@@ -1043,10 +1067,26 @@
                             class="w-full border border-[#CBD5E1] rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary @error('jam_pengisian') border-red-500 @enderror"
                             id="jam_pengisian" name="jam_pengisian" type="date"
                             value="{{ old('jam_pengisian', isset($server) && $server->jam_pengisian ? $server->jam_pengisian->format('Y-m-d') : '') }}">
-                        <p class="text-xs text-secondary mt-1">Format: YYYY-MM-DD (contoh: 2026-09-10). Gunakan kalender atau ketik manual.</p>
+                        <p class="text-xs text-secondary mt-1">Pilih tanggal pengisian.</p>
                         @error('jam_pengisian')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                    </div>
+                    @php
+                        $jamTersimpan = null;
+                        if (isset($server)) {
+                            $jamTersimpan = $server->jam_pengisian && $server->jam_pengisian->format('H:i:s') !== '00:00:00'
+                                ? $server->jam_pengisian->format('H:i:s')
+                                : $server->created_at?->copy()->timezone('Asia/Jakarta')->format('H:i:s');
+                        }
+                    @endphp
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="form-label" for="jam_pengisian_tampil">Jam Pengisian</label>
+                        <input id="jam_pengisian_tampil" type="text" readonly tabindex="-1" value="{{ $jamTersimpan ?? '' }}"
+                            class="w-full border border-[#CBD5E1] rounded-md py-2 pl-3 pr-3 text-sm bg-gray-50 text-gray-600 cursor-not-allowed">
+                        <p class="text-xs text-secondary mt-1">
+                            {{ $jamTersimpan ? 'Jam terkunci sesuai waktu pembuatan data (WIB).' : 'Jam terisi otomatis oleh sistem saat data disimpan (WIB).' }}
+                        </p>
                     </div>
                 </div>
 
@@ -1397,24 +1437,61 @@
         });
     }
 
-    // ============= Status Kepemilikan -> aktif/nonaktifkan Pemilik Perangkat =============
+    // ============= Status Kepemilikan -> aktif/nonaktifkan Pemilik Perangkat, Nama Pengirim & Penerima =============
     function toggleOwnerField() {
         const statusSelect = document.getElementById('status_kepemilikan');
+        if (!statusSelect) return;
+
+        const isColocation = statusSelect.value === 'Colocation';
+
+        // 1. Pemilik Perangkat
         const ownerSelect = document.getElementById('pemilik_perangkat');
         const wrapper = document.getElementById('pemilik_perangkat_wrapper');
         const trigger = document.getElementById('pemilik_perangkat_trigger');
-        if (!statusSelect || !ownerSelect || !wrapper) return;
+        const ownerHint = document.getElementById('pemilik_perangkat_hint');
 
-        const isColocation = statusSelect.value === 'Colocation';
-        ownerSelect.disabled = !isColocation; // kalau disabled, field ini tidak ikut terkirim saat submit
-        if (trigger) trigger.disabled = !isColocation;
-        wrapper.classList.toggle('stepper-disabled', !isColocation);
+        if (ownerSelect && wrapper) {
+            ownerSelect.disabled = !isColocation; // kalau disabled, field ini tidak ikut terkirim saat submit
+            if (trigger) trigger.disabled = !isColocation;
+            wrapper.classList.toggle('stepper-disabled', !isColocation);
 
-        if (!isColocation) {
-            const panel = document.getElementById('pemilik_perangkat_panel');
-            if (panel) panel.classList.add('hidden');
-            wrapper.classList.remove('is-open');
+            if (!isColocation) {
+                const panel = document.getElementById('pemilik_perangkat_panel');
+                if (panel) panel.classList.add('hidden');
+                wrapper.classList.remove('is-open');
+            }
         }
+        if (ownerHint) {
+            ownerHint.style.display = isColocation ? 'none' : 'block';
+        }
+
+        // 2. Nama Pengirim & Nama Penerima (sama logikanya dengan Pemilik Perangkat)
+        const namaPengirim = document.getElementById('nama_pengirim');
+        const namaPenerima = document.getElementById('nama_penerima');
+        const starPengirim = document.getElementById('nama_pengirim_star');
+        const starPenerima = document.getElementById('nama_penerima_star');
+        const hintPengirim = document.getElementById('nama_pengirim_hint');
+        const hintPenerima = document.getElementById('nama_penerima_hint');
+
+        [namaPengirim, namaPenerima].forEach(function (input) {
+            if (!input) return;
+            input.disabled = !isColocation;
+            input.required = isColocation;
+
+            if (!isColocation) {
+                // Saat Kominfo: kolom abu-abu & nonaktif
+                input.value = '';
+                input.classList.add('bg-slate-100', 'cursor-not-allowed', 'text-slate-400', 'border-slate-200');
+            } else {
+                // Saat Colocation: kolom aktif kembali
+                input.classList.remove('bg-slate-100', 'cursor-not-allowed', 'text-slate-400', 'border-slate-200');
+            }
+        });
+
+        if (starPengirim) starPengirim.style.display = isColocation ? 'inline' : 'none';
+        if (starPenerima) starPenerima.style.display = isColocation ? 'inline' : 'none';
+        if (hintPengirim) hintPengirim.style.display = isColocation ? 'none' : 'block';
+        if (hintPenerima) hintPenerima.style.display = isColocation ? 'none' : 'block';
     }
 
     // Toggle Lainnya functionality for Jenis Perangkat and Merk Perangkat
@@ -1521,6 +1598,87 @@
             jamPengisian.addEventListener('change', updateKodePerangkatPreview);
         }
     });
+</script>
+@endpush
+
+@push('scripts')
+<div id="tanggal-lewat-modal" class="fixed inset-0 z-[110] flex items-center justify-center hidden bg-black/40" aria-hidden="true">
+    <div class="relative w-full max-w-md mx-4 bg-white p-6 shadow-lg rounded-lg">
+        <div class="flex items-start gap-3 mb-4">
+            <span class="material-symbols-outlined text-3xl text-amber-500">event_busy</span>
+            <h2 class="text-lg font-bold text-on-surface pt-1">Tanggal sudah terlewat</h2>
+        </div>
+        <p id="tanggal-lewat-pesan" class="text-sm text-gray-600"></p>
+        <div class="flex justify-end gap-3 pt-5 mt-5 border-t border-outline-variant">
+            <button type="button" id="tanggal-lewat-hariini" class="px-5 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">Ganti ke Hari Ini</button>
+            <button type="button" id="tanggal-lewat-lanjut" class="px-5 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-colors">Tetap Pakai Tanggal Ini</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tanggal = document.getElementById('jam_pengisian');
+    if (!tanggal || !tanggal.form) return;
+    const form = tanggal.form;
+
+    const jamTampil = document.getElementById('jam_pengisian_tampil');
+    if (jamTampil && !jamTampil.value) {
+        const tick = () => {
+            jamTampil.value = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta' });
+        };
+        tick();
+        setInterval(tick, 1000);
+    }
+
+    const modal = document.getElementById('tanggal-lewat-modal');
+    const pesan = document.getElementById('tanggal-lewat-pesan');
+    const awal = tanggal.value;
+    let diakui = null;
+
+    const hariIni = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    const terlewat = () => tanggal.value && tanggal.value < hariIni() && tanggal.value !== awal;
+
+    function tampil() {
+        const selisih = Math.round((Date.parse(hariIni()) - Date.parse(tanggal.value)) / 86400000);
+        const teks = new Date(tanggal.value + 'T00:00:00').toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+        pesan.textContent = 'Tanggal ' + teks + ' sudah terlewat (' + selisih + ' hari yang lalu). '
+            + 'Kode perangkat dan data akan memakai tanggal ini. Pastikan tanggalnya memang benar.';
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function tutup() {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    tanggal.addEventListener('change', function () {
+        if (terlewat()) tampil();
+    });
+
+    form.addEventListener('submit', function (event) {
+        if (terlewat() && diakui !== tanggal.value) {
+            event.preventDefault();
+            tampil();
+        }
+    });
+
+    document.getElementById('tanggal-lewat-hariini').addEventListener('click', function () {
+        tanggal.value = hariIni();
+        tanggal.dispatchEvent(new Event('change', { bubbles: true }));
+        tutup();
+    });
+
+    document.getElementById('tanggal-lewat-lanjut').addEventListener('click', function () {
+        diakui = tanggal.value;
+        tutup();
+    });
+});
 </script>
 @endpush
 

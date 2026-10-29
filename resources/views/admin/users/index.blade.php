@@ -161,7 +161,7 @@
             Menampilkan {{ $users->firstItem() ?? 0 }} hingga {{ $users->lastItem() ?? 0 }} dari {{ $users->total() }} entri
         </span>
         <div class="flex gap-1">
-            {{ $users->links('pagination::tailwind') }}
+            {{ $users->links('vendor.pagination.sim-tik') }}
         </div>
     </div>
 </div>
