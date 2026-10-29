@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Server;
 use App\Models\MasterData;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Validator as ValidationValidator;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +15,23 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ServerController extends Controller
 {
+    /**
+     * Gabungkan tanggal dari form dengan jam server yang terkunci.
+     * Nilai tengah malam dianggap data lama yang belum memiliki jam.
+     */
+    private function gabungTanggalJam(
+        string $tanggal,
+        ?Carbon $jamTersimpan = null,
+        ?Carbon $jamFallback = null
+    ): Carbon
+    {
+        $punyaJam = $jamTersimpan && $jamTersimpan->format('H:i:s') !== '00:00:00';
+        $jam = $punyaJam ? $jamTersimpan : ($jamFallback ?? now('Asia/Jakarta'));
+
+        return Carbon::parse($tanggal, 'Asia/Jakarta')
+            ->setTime($jam->hour, $jam->minute, $jam->second);
+    }
+
 public function index(Request $request)
 {
     // Whitelist: only supported page sizes are accepted.
@@ -280,7 +298,7 @@ public function index(Request $request)
             'peruntukan'        => $validated['peruntukan'],
             'nama_pengirim'     => empty($validated['nama_pengirim'] ?? '') ? null : $validated['nama_pengirim'],
             'nama_penerima'     => empty($validated['nama_penerima'] ?? '') ? null : $validated['nama_penerima'],
-            'jam_pengisian'     => $validated['jam_pengisian'],
+            'jam_pengisian'     => $this->gabungTanggalJam($validated['jam_pengisian']),
             'user_id'           => Auth::user()->id,
         ];
 
@@ -482,7 +500,11 @@ public function index(Request $request)
             'peruntukan'        => $validated['peruntukan'],
             'nama_pengirim'     => empty($validated['nama_pengirim'] ?? '') ? null : $validated['nama_pengirim'],
             'nama_penerima'     => empty($validated['nama_penerima'] ?? '') ? null : $validated['nama_penerima'],
-            'jam_pengisian'     => $validated['jam_pengisian'],
+            'jam_pengisian'     => $this->gabungTanggalJam(
+                $validated['jam_pengisian'],
+                $server->jam_pengisian,
+                $server->created_at?->copy()->timezone('Asia/Jakarta')
+            ),
         ];
 
         // Calculate status_kelengkapan FIRST

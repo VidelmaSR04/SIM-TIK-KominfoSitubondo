@@ -297,9 +297,9 @@
                     @endif
 
                     <!-- Informasi lainnya -->
-                    <div><span class="text-secondary">Dibuat:</span> {{ $server->created_at->format('d M Y, H:i') }}</div>
+                    <div><span class="text-secondary">Dibuat:</span> {{ $server->created_at->copy()->timezone('Asia/Jakarta')->format('d M Y, H:i') }}</div>
                     <div><span class="text-secondary">Terakhir Update:</span>
-                        {{ $server->updated_at->format('d M Y, H:i') }}</div>
+                        {{ $server->updated_at->copy()->timezone('Asia/Jakarta')->format('d M Y, H:i') }}</div>
                     <div><span class="text-secondary">Kode Perangkat:</span> <span
                             class="font-mono">{{ $server->kode_perangkat ?? $server->id }}</span></div>
                     <div><span class="text-secondary">RACK:</span> <span

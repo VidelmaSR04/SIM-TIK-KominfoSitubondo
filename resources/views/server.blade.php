@@ -160,7 +160,7 @@
             Menampilkan {{ $servers->firstItem() ?? 0 }} hingga {{ $servers->lastItem() ?? 0 }} dari {{ $servers->total() }} entri
         </span>
         <div class="flex gap-1">
-            {{ $servers->links('pagination::tailwind') }}
+            {{ $servers->links('vendor.pagination.sim-tik') }}
         </div>
     </div>
 </div>

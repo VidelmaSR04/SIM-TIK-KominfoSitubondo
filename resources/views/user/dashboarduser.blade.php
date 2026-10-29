@@ -118,7 +118,7 @@
 
     @if($devices->hasPages())
     <div class="p-4 border-t border-outline-variant bg-white">
-        {{ $devices->links() }}
+        {{ $devices->links('vendor.pagination.sim-tik') }}
     </div>
     @endif
 </div>
