@@ -108,15 +108,40 @@
         </div>
 
         @if(Auth::user()->role === 'admin')
-        <a href="{{ route('admin.users.index') }}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                  {{ request()->routeIs('admin.users.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
-            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-6.13a4 4 0 11-8 0 4 4 0 018 0zm6 3a4 4 0 10-8 0" />
-            </svg>
-            User Management
-        </a>
+        @php
+            $dalamGrupUser = request()->routeIs(['admin.users.*', 'admin.approvals.*', 'admin.registration-codes.*']);
+            $pendingCount = \App\Models\User::where('status', 'pending')->count();
+        @endphp
+        <div x-data="{ open: {{ $dalamGrupUser ? 'true' : 'false' }} }">
+            <div class="flex items-center justify-between rounded-lg
+                        {{ $dalamGrupUser ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
+                <a href="{{ route('admin.users.index') }}" class="flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-6.13a4 4 0 11-8 0 4 4 0 018 0zm6 3a4 4 0 10-8 0" />
+                    </svg>
+                    User Management
+                </a>
+                <button type="button" @click="open = !open" class="px-3 py-2.5" aria-label="Buka submenu User Management">
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+            <div x-show="open" class="mt-1 ml-4 space-y-1">
+                <a href="{{ route('admin.approvals.index') }}"
+                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('admin.approvals.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
+                    Persetujuan User
+                    @if($pendingCount > 0)
+                        <span class="ml-auto bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5">{{ $pendingCount }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('admin.registration-codes.index') }}"
+                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('admin.registration-codes.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
+                    Kode Registrasi
+                </a>
+            </div>
+        </div>
         @endif
         @endif
 

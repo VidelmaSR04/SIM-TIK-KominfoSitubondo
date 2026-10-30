@@ -121,9 +121,6 @@ Route::middleware('auth')->group(function () {
 Route::middleware('guest')->group(function () {
     Route::get('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])
         ->name('register');
-
-    Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])
-        ->name('register.store');
 });
 
 // ============= AUTH (Breeze - Login, Password Reset, etc.) =============
@@ -139,4 +136,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->names('admin.users')
         ->parameters(['users' => 'user'])
         ->except(['show']);
+
+    Route::prefix('admin/kode-registrasi')->name('admin.registration-codes.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\RegistrationCodeController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Admin\RegistrationCodeController::class, 'store'])->name('store');
+        Route::patch('/{registrationCode}/toggle', [\App\Http\Controllers\Admin\RegistrationCodeController::class, 'toggle'])->name('toggle');
+        Route::delete('/{registrationCode}', [\App\Http\Controllers\Admin\RegistrationCodeController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('admin/persetujuan-user')->name('admin.approvals.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\UserApprovalController::class, 'index'])->name('index');
+        Route::patch('/{user}/approve', [\App\Http\Controllers\Admin\UserApprovalController::class, 'approve'])->name('approve');
+        Route::patch('/{user}/reject', [\App\Http\Controllers\Admin\UserApprovalController::class, 'reject'])->name('reject');
+    });
 });

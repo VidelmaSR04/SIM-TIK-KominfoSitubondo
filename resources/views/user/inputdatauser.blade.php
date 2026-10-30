@@ -26,7 +26,7 @@
 
 @section('content')
 @php
-    $opd = old('opd') ?? '';
+    $opd = $registeredOpd ?: (old('opd') ?? '');
     $statusKepemilikan = ($opd === 'Kominfo') ? 'Kominfo' : 'Colocation';
     $dateString = old('tanggal_input') ?? now()->toDateString();
     $defaultKode = \App\Models\Server::generateKodePerangkat($statusKepemilikan, $dateString);
@@ -86,9 +86,8 @@
                     <label class="lbl" for="nama_pengirim">Nama Pengirim <span class="text-red-600">*</span></label>
                     <input type="text" id="nama_pengirim" name="nama_pengirim"
                            class="field @error('nama_pengirim') is-invalid @enderror"
-                           value="{{ old('nama_pengirim') }}" placeholder="Masukkan nama pengirim"
-                           required>
-                    @error('nama_pengirim') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                           value="{{ auth()->user()->name }}" readonly aria-readonly="true">
+                    <p class="mt-1 text-xs text-secondary">Terisi otomatis sesuai nama akun Anda.</p>
                 </div>
 
                 {{-- Baris 2 kanan - Nama Penerima --}}
@@ -100,34 +99,40 @@
 
                 {{-- Baris 3 - Nama Dinas/OPD --}}
                 <div class="md:col-span-2">
-                    <label class="lbl" for="opd">Nama Dinas/OPD <span class="text-red-600">*</span></label>
-                    <div class="relative" id="opdDropdown">
-                        <input type="hidden" id="opd" name="opd" value="{{ old('opd') }}">
-                        <button type="button" id="opdTrigger"
-                                class="field flex items-center justify-between text-left @error('opd') is-invalid @enderror"
-                                aria-haspopup="listbox" aria-expanded="false" aria-controls="opdMenu">
-                            <span id="opdSelectedLabel" class="{{ old('opd') ? 'text-slate-900' : 'text-slate-400' }}">
-                                {{ old('opd') ? ($opdList[old('opd')] ?? old('opd')) : 'Pilih Dinas/OPD' }}
-                            </span>
-                            <span class="material-symbols-outlined text-[18px] text-secondary">expand_more</span>
-                        </button>
-                        <div id="opdMenu" class="hidden absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-outline-variant bg-white shadow-lg">
-                            <div class="border-b border-outline-variant bg-white p-2">
-                                <input type="search" id="opdSearch" class="field" placeholder="Cari Dinas/OPD..." autocomplete="off">
-                            </div>
-                            <div id="opdOptions" class="opd-options py-1" role="listbox" aria-label="Pilihan Dinas/OPD">
-                                @foreach($opdList as $value => $label)
-                                    <button type="button" class="opd-option w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
-                                            data-value="{{ $value }}" data-label="{{ $label }}" role="option">
-                                        {{ $label }}
-                                    </button>
-                                @endforeach
-                                <p id="opdNoResults" class="hidden px-3 py-2 text-sm text-secondary">OPD tidak ditemukan.</p>
+                    <label class="lbl" for="opd">OPD <span class="text-red-600">*</span></label>
+                    @if($registeredOpd)
+                        <input type="hidden" id="opd" value="{{ $registeredOpd }}">
+                        <input type="text" class="field" value="{{ $registeredOpd }}" readonly aria-readonly="true">
+                        <p class="mt-1.5 text-xs text-secondary">OPD terisi otomatis dari kode registrasi akun Anda.</p>
+                    @else
+                        <div class="relative" id="opdDropdown">
+                            <input type="hidden" id="opd" name="opd" value="{{ old('opd') }}">
+                            <button type="button" id="opdTrigger"
+                                    class="field flex items-center justify-between text-left @error('opd') is-invalid @enderror"
+                                    aria-haspopup="listbox" aria-expanded="false" aria-controls="opdMenu">
+                                <span id="opdSelectedLabel" class="{{ old('opd') ? 'text-slate-900' : 'text-slate-400' }}">
+                                    {{ old('opd') ? ($opdList[old('opd')] ?? old('opd')) : 'Pilih Dinas/OPD' }}
+                                </span>
+                                <span class="material-symbols-outlined text-[18px] text-secondary">expand_more</span>
+                            </button>
+                            <div id="opdMenu" class="hidden absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-outline-variant bg-white shadow-lg">
+                                <div class="border-b border-outline-variant bg-white p-2">
+                                    <input type="search" id="opdSearch" class="field" placeholder="Cari Dinas/OPD..." autocomplete="off">
+                                </div>
+                                <div id="opdOptions" class="opd-options py-1" role="listbox" aria-label="Pilihan Dinas/OPD">
+                                    @foreach($opdList as $value => $label)
+                                        <button type="button" class="opd-option w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                                                data-value="{{ $value }}" data-label="{{ $label }}" role="option">
+                                            {{ $label }}
+                                        </button>
+                                    @endforeach
+                                    <p id="opdNoResults" class="hidden px-3 py-2 text-sm text-secondary">OPD tidak ditemukan.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    @error('opd') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                    <p id="opdRequiredMessage" class="hidden mt-1 text-xs text-red-600">Nama Dinas/OPD wajib dipilih.</p>
+                        @error('opd') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        <p id="opdRequiredMessage" class="hidden mt-1 text-xs text-red-600">Nama Dinas/OPD wajib dipilih.</p>
+                    @endif
                 </div>
 
                 {{-- Baris 4 - Nama Perangkat --}}
@@ -373,9 +378,11 @@
             form.addEventListener('submit', function (event) {
                 if (!opdSelect.value) {
                     event.preventDefault();
-                    opdTrigger.classList.add('is-invalid');
-                    opdRequiredMessage.classList.remove('hidden');
-                    opdTrigger.focus();
+                    if (opdTrigger) {
+                        opdTrigger.classList.add('is-invalid');
+                        opdTrigger.focus();
+                    }
+                    if (opdRequiredMessage) opdRequiredMessage.classList.remove('hidden');
                     return;
                 }
                 if (btn.dataset.busy === '1') return;

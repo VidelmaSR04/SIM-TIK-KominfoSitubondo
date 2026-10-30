@@ -60,9 +60,33 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
-        $this->ensureIsNotRateLimited();
+                // Status dicek SETELAH password benar, jadi status akun tidak bocor
+        // ke pihak yang salah password, dan akun pending tidak pernah benar-benar login.
+        $blocked = null;
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $loggedIn = Auth::attemptWhen(
+            $this->only('email', 'password'),
+            function ($user) use (&$blocked) {
+                if ($user->role === 'user' && ! $user->isActive()) {
+                    $blocked = $user;
+
+                    return false;
+                }
+
+                return true;
+            },
+            $this->boolean('remember')
+        );
+
+        if ($blocked) {
+            throw ValidationException::withMessages([
+                'email' => $blocked->isRejected()
+                    ? 'Pendaftaran akun Anda tidak disetujui oleh admin.'
+                    : 'Akun Anda sedang menunggu persetujuan admin. Silakan coba lagi setelah disetujui.',
+            ]);
+        }
+
+        if (! $loggedIn) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
