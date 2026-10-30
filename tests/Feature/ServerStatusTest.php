@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Server;
+use App\Models\RegistrationCode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ServerStatusTest extends TestCase
@@ -18,6 +19,12 @@ class ServerStatusTest extends TestCase
         $user = User::factory()->create([
             'role' => 'user',
         ]);
+        $code = RegistrationCode::create([
+            'code' => 'OPD-TEST-1',
+            'label' => 'Dinas Kesehatan',
+            'is_active' => true,
+        ]);
+        $user->forceFill(['registration_code_id' => $code->id])->save();
         $this->actingAs($user);
 
         // Simulate submitting the user form (InputDataUserController)
@@ -25,8 +32,8 @@ class ServerStatusTest extends TestCase
             'nama_perangkat' => 'Test Perangkat',
             'jenis_perangkat' => 'server',
             'merk_perangkat' => 'TestMerk',
-            'opd' => 'Dinas Kesehatan',
-            'nama_pengirim' => 'Test Pengirim',
+            'opd' => 'OPD Palsu',
+            'nama_pengirim' => 'Nama Palsu',
             'nama_penerima' => 'Tidak boleh diisi user',
             'tanggal_input' => '2026-10-05',
         ]);
@@ -40,12 +47,13 @@ class ServerStatusTest extends TestCase
         $this->assertEquals('Colocation', $server->status_kepemilikan);
         $this->assertEquals('Dinas Kesehatan', $server->pemilik_perangkat);
         $this->assertEquals('Dinas Kesehatan', $server->nama_opd);
+        $this->assertEquals($user->name, $server->nama_pengirim);
         $this->assertNull($server->nama_penerima);
         $this->assertEquals('Pending', $server->status);
     }
 
     /** @test */
-    public function user_must_provide_a_sender_name_and_the_opd_must_be_a_known_option()
+    public function legacy_user_must_choose_a_known_opd()
     {
         $user = User::factory()->create(['role' => 'user']);
         $this->actingAs($user);
@@ -58,7 +66,7 @@ class ServerStatusTest extends TestCase
             'tanggal_input' => '2026-10-05',
         ]);
 
-        $response->assertSessionHasErrors(['nama_pengirim', 'opd']);
+        $response->assertSessionHasErrors(['opd']);
         $this->assertDatabaseCount('servers', 0);
 
         // Cleanup (handled by RefreshDatabase)
@@ -78,6 +86,24 @@ class ServerStatusTest extends TestCase
             ->assertSee('class="opd-options py-1"', false)
             ->assertSee('id="nama_penerima" class="field" value=""', false)
             ->assertSee('placeholder="Akan diisi oleh admin" disabled', false);
+    }
+
+    public function test_registration_opd_and_account_name_are_shown_as_locked_fields(): void
+    {
+        $code = RegistrationCode::create([
+            'code' => 'OPD-TEST-2',
+            'label' => 'Dinas Kesehatan',
+            'is_active' => true,
+        ]);
+        $user = User::factory()->create(['role' => 'user']);
+        $user->forceFill(['registration_code_id' => $code->id])->save();
+
+        $this->actingAs($user)
+            ->get(route('inputdatauser.create'))
+            ->assertOk()
+            ->assertSee('value="'.$user->name.'" readonly', false)
+            ->assertSee('value="Dinas Kesehatan" readonly', false)
+            ->assertDontSee('id="opdTrigger"', false);
     }
 
     /** @test */

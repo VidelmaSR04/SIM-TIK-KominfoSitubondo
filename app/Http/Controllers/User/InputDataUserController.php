@@ -116,6 +116,7 @@ class InputDataUserController extends Controller
     public function create(): View
     {
         $opdList = $this->opdOptions();
+        $registeredOpd = Auth::user()->registrationCode?->label;
 
         $jenisList = MasterData::forSelect('jenis_perangkat');
         if (empty($jenisList)) {
@@ -142,7 +143,8 @@ class InputDataUserController extends Controller
         return view('user.inputdatauser', compact(
             'opdList',
             'jenisList',
-            'merkList'
+            'merkList',
+            'registeredOpd'
         ));
     }
 
@@ -153,19 +155,24 @@ class InputDataUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        $registeredOpd = $user->registrationCode?->label;
+        $hasRegisteredOpd = is_string($registeredOpd) && trim($registeredOpd) !== '';
+
         // Determine if merk is 'lainnya' to validate alternative field
         $merkValue = $request->input('merk_perangkat');
         // Determine if jenis is 'lainnya' to validate alternative field
         $jenisValue = $request->input('jenis_perangkat');
 
         $validationRules = [
-            'nama_pengirim' => ['required', 'string', 'max:255'],
-            'opd' => ['required', 'string', Rule::in(array_keys($this->opdOptions()))],
             'nama_perangkat' => ['required', 'string', 'max:255'],
             'jenis_perangkat' => ['required', 'string', 'max:255'],
             'merk_perangkat' => ['required', 'string', 'max:255'],
             'tanggal_input' => ['required', 'date'],
         ];
+        if (! $hasRegisteredOpd) {
+            $validationRules['opd'] = ['required', 'string', Rule::in(array_keys($this->opdOptions()))];
+        }
 
         if ($merkValue === 'lainnya') {
             $validationRules['merk_lainnya'] = ['required', 'string', 'max:255'];
@@ -176,8 +183,10 @@ class InputDataUserController extends Controller
 
         $validated = $request->validate($validationRules);
 
+        $opd = $hasRegisteredOpd ? $registeredOpd : $validated['opd'];
+
         // Determine status kepemilikan based on selected OPD
-        $statusKepemilikan = ($validated['opd'] === 'Kominfo') ? 'Kominfo' : 'Colocation';
+        $statusKepemilikan = ($opd === 'Kominfo') ? 'Kominfo' : 'Colocation';
 
         // Determine final merk & jenis value
         $finalMerk = $merkValue === 'lainnya' && !empty($validated['merk_lainnya'] ?? '')
@@ -192,9 +201,9 @@ class InputDataUserController extends Controller
             'nama_perangkat' => $validated['nama_perangkat'],
             'jenis_perangkat'   => $finalJenis,
             'merk_perangkat'    => $finalMerk,
-            'pemilik_perangkat' => $validated['opd'],
+            'pemilik_perangkat' => $opd,
             'status_kepemilikan'=> $statusKepemilikan,
-            'nama_pengirim'     => $validated['nama_pengirim'],
+            'nama_pengirim'     => $user->name,
             'nama_penerima'     => null,
             'tanggal_input'     => $validated['tanggal_input'],
             'user_id'           => Auth::id(),

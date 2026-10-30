@@ -173,6 +173,20 @@
                 @enderror
             </div>
 
+             <!-- Kode Registrasi -->
+            <div class="space-y-2">
+                <label class="block font-label-md text-label-md text-on-surface" for="registration_code">Kode Registrasi</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">vpn_key</span>
+                    <input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface uppercase focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow @error('registration_code') border-red-500 @enderror"
+                           id="registration_code" type="text" name="registration_code" value="{{ old('registration_code') }}" required autocomplete="off" maxlength="32" placeholder="Contoh: K7QX-M4TD" />
+                </div>
+                <p class="text-xs text-on-surface-variant">Kode diberikan oleh admin Diskominfo. Akun baru aktif setelah disetujui admin.</p>
+                @error('registration_code')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Password -->
             <div class="space-y-2">
                 <label class="block font-label-md text-label-md text-on-surface" for="password">Password</label>
