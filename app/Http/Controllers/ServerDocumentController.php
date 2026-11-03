@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 
 class ServerDocumentController extends Controller
@@ -78,7 +80,7 @@ class ServerDocumentController extends Controller
 
         // Daftar tahun untuk dropdown (distinct tahun dari kode_perangkat, dua digit, lalu tambahkan '20' depan)
         $tahunList = Server::where('status_kelengkapan', 'lengkap')
-            ->pluck(\DB::raw('SUBSTRING(kode_perangkat,3,2)'))
+            ->pluck(DB::raw('SUBSTRING(kode_perangkat,3,2)'))
             ->unique()
             ->sortDesc()
             ->map(fn($y) => '20'.$y)
@@ -86,18 +88,37 @@ class ServerDocumentController extends Controller
 
         $servers = $query->paginate($perPage)->withQueryString();
 
+        // Status tanda tangan tiap baris (server_id => waktu upload), satu query untuk satu halaman
+        $ttdMap = ServerDocument::whereIn('server_id', $servers->pluck('id'))
+            ->whereNotNull('signed_file')
+            ->pluck('signed_at', 'server_id');
+
         return view('server-dokumen.index', compact(
             'servers',
             'tahunList',
             'tanggal',
             'bulan',
-            'tahun'
+            'tahun',
+            'ttdMap'
         ));
     }
     public function edit(Server $server)
     {
-        $dokumen = ServerDocument::where('server_id', $server->id)->first()
+        $dokumen = $this->dokumenTersimpan($server)
             ?? ServerDocument::buatDefault($server);
+
+        // Dokumen final: halaman yang sama, tetapi tampil sebagai tampilan dokumen bertanda tangan.
+        // Formulir edit tidak dirender sama sekali.
+        if ($dokumen->isSigned()) {
+            $dokumen->loadMissing('signer');
+
+            return view('server-dokumen.edit', [
+                'server'    => $server,
+                'dokumen'   => $dokumen,
+                'sudahTtd'  => true,
+                'berkasAda' => $dokumen->signedFileExists(),
+            ]);
+        }
 
         $pejabatList = MasterData::kategori(MasterData::KATEGORI_PEJABAT)
             ->aktif()
@@ -110,7 +131,9 @@ class ServerDocumentController extends Controller
             ? Carbon::createFromLocaleFormat('j F Y', 'id', $dokumen->surat_tanggal)?->toDateString()
             : null;
 
-        return view('server-dokumen.edit', compact('server', 'dokumen', 'pejabatList', 'logoUrl', 'logoKustom', 'tanggalSurat'));
+        $sudahTtd = false;
+
+        return view('server-dokumen.edit', compact('server', 'dokumen', 'pejabatList', 'logoUrl', 'logoKustom', 'tanggalSurat', 'sudahTtd'));
     }
 
     /**
@@ -118,11 +141,22 @@ class ServerDocumentController extends Controller
      */
     public function update(Request $request, Server $server)
     {
+        // Penguncian di backend: dokumen final tidak boleh diubah lewat form, URL, maupun request langsung
+        $this->tolakJikaFinal($this->dokumenTersimpan($server));
+
         $data    = $request->validate($this->aturan());
         $atribut = $this->susunAtribut($data);
         $atribut['updated_by'] = Auth::id();
 
-        ServerDocument::updateOrCreate(['server_id' => $server->id], $atribut);
+        // Dicek ulang di dalam transaksi (baris dikunci) supaya tidak bisa menyelip
+        // di antara upload dokumen bertanda tangan dan penyimpanan ini.
+        DB::transaction(function () use ($server, $atribut) {
+            $this->tolakJikaFinal(
+                ServerDocument::where('server_id', $server->id)->lockForUpdate()->first()
+            );
+
+            ServerDocument::updateOrCreate(['server_id' => $server->id], $atribut);
+        });
 
         $this->perbaruiLogo($request);
 
@@ -136,6 +170,8 @@ class ServerDocumentController extends Controller
      */
     public function previewDraft(Request $request, Server $server)
     {
+        $this->tolakJikaFinal($this->dokumenTersimpan($server));
+
         $data    = $request->validate($this->aturan());
         $dokumen = new ServerDocument($this->susunAtribut($data));
         $dokumen->server_id = $server->id;
@@ -161,7 +197,13 @@ class ServerDocumentController extends Controller
     {
         $this->pastikanBolehLihat($server);
 
-        return $this->buatPdf($server, $this->dokumenUntuk($server))
+        // Dokumen final: semua role mendapat file bertanda tangan yang sama (satu sumber: ID dokumen)
+        $tersimpan = $this->dokumenTersimpan($server);
+        if ($tersimpan?->isSigned()) {
+            return $this->kirimBerkasTtd($server, $tersimpan, 'inline');
+        }
+
+        return $this->buatPdf($server, $this->dokumenUntuk($server, $tersimpan))
             ->stream('detail-server-' . $server->id . '.pdf');
     }
 
@@ -172,8 +214,165 @@ class ServerDocumentController extends Controller
     {
         $this->pastikanBolehLihat($server);
 
-        return $this->buatPdf($server, $this->dokumenUntuk($server))
+        $tersimpan = $this->dokumenTersimpan($server);
+        if ($tersimpan?->isSigned()) {
+            return $this->kirimBerkasTtd($server, $tersimpan, 'attachment');
+        }
+
+        return $this->buatPdf($server, $this->dokumenUntuk($server, $tersimpan))
             ->download('detail-server-' . $server->id . '.pdf');
+    }
+
+    // ------------------------------------------------------------------
+    // Dokumen bertanda tangan (final)
+    // ------------------------------------------------------------------
+
+    /**
+     * Tampilkan file bertanda tangan (inline). Semua role yang boleh melihat dokumen ini.
+     */
+    public function signedPreview(Server $server)
+    {
+        $this->pastikanBolehLihat($server);
+
+        return $this->kirimBerkasTtd($server, $this->dokumenFinalAtau404($server), 'inline');
+    }
+
+    /**
+     * Unduh file bertanda tangan.
+     */
+    public function signedDownload(Server $server)
+    {
+        $this->pastikanBolehLihat($server);
+
+        return $this->kirimBerkasTtd($server, $this->dokumenFinalAtau404($server), 'attachment');
+    }
+
+    /**
+     * Unggah (atau ganti) dokumen bertanda tangan. Khusus admin (dijaga middleware di route).
+     * Setelah berhasil, dokumen menjadi final dan terkunci dari editor.
+     */
+    public function uploadSigned(Request $request, Server $server)
+    {
+        $request->validate([
+            'signed_file' => [
+                'required', 'file', 'mimes:pdf', 'mimetypes:application/pdf',
+                'max:' . ServerDocument::SIGNED_MAX_KB,
+            ],
+        ], [
+            'signed_file.required'  => 'Pilih file dokumen bertanda tangan terlebih dahulu.',
+            'signed_file.file'      => 'File dokumen bertanda tangan tidak valid atau gagal diunggah.',
+            'signed_file.mimes'     => 'Dokumen bertanda tangan harus berformat PDF.',
+            'signed_file.mimetypes' => 'Dokumen bertanda tangan harus berformat PDF.',
+            'signed_file.max'       => 'Ukuran dokumen bertanda tangan maksimal ' . (ServerDocument::SIGNED_MAX_KB / 1024) . ' MB.',
+            'signed_file.uploaded'  => 'File gagal diunggah. Periksa batas ukuran unggahan di server (upload_max_filesize).',
+        ]);
+
+        $berkas = $request->file('signed_file');
+
+        // Ekstensi dan MIME bisa dipalsukan: periksa juga penanda awal isi file PDF
+        $pegangan = @fopen($berkas->getRealPath(), 'rb');
+        $kepala   = $pegangan ? fread($pegangan, 5) : '';
+        if ($pegangan) {
+            fclose($pegangan);
+        }
+        if ($kepala !== '%PDF-') {
+            throw ValidationException::withMessages([
+                'signed_file' => 'Isi file bukan PDF yang valid.',
+            ]);
+        }
+
+        $ukuran = (int) $berkas->getSize();
+        $asli   = Str::limit(basename($berkas->getClientOriginalName()), 200, '');
+
+        // Nama acak (UUID) + folder per server: tidak pernah bentrok dan tidak menimpa file lama
+        $disk     = Storage::disk(ServerDocument::SIGNED_DISK);
+        $pathBaru = $berkas->storeAs(
+            ServerDocument::SIGNED_DIR . '/' . $server->id,
+            (string) Str::uuid() . '.pdf',
+            ServerDocument::SIGNED_DISK
+        );
+
+        if (!$pathBaru) {
+            throw ValidationException::withMessages([
+                'signed_file' => 'File gagal disimpan di server. Silakan coba lagi.',
+            ]);
+        }
+
+        $pathLama = null;
+
+        try {
+            DB::transaction(function () use ($server, $pathBaru, $ukuran, $asli, &$pathLama) {
+                $dokumen = ServerDocument::where('server_id', $server->id)->lockForUpdate()->first();
+
+                // Dokumen belum pernah disimpan: jadikan draf yang diunduh admin sebagai dokumen aslinya
+                if (!$dokumen) {
+                    $dokumen = ServerDocument::buatDefault($server);
+                    $dokumen->updated_by = Auth::id();
+                    $dokumen->save();
+                }
+
+                $pathLama = $dokumen->signed_file;
+
+                // Hanya kolom signed_*: isi dokumen asli (kop, isi surat, tanda tangan) tidak disentuh
+                $dokumen->forceFill([
+                    'signed_file'          => $pathBaru,
+                    'signed_original_name' => $asli,
+                    'signed_mime'          => 'application/pdf',
+                    'signed_size'          => $ukuran,
+                    'signed_at'            => now(),
+                    'signed_by'            => Auth::id(),
+                ])->save();
+            });
+        } catch (\Throwable $e) {
+            // Database gagal: jangan tinggalkan file yatim di penyimpanan
+            $disk->delete($pathBaru);
+            throw $e;
+        }
+
+        // Database sudah berhasil; file lama baru dihapus sesudahnya
+        if (filled($pathLama) && $pathLama !== $pathBaru) {
+            $disk->delete($pathLama);
+        }
+
+        return redirect()
+            ->route('server.dokumen.edit', $server)
+            ->with('success', filled($pathLama)
+                ? 'Dokumen bertanda tangan berhasil diganti. Dokumen tetap final dan terkunci dari pengeditan.'
+                : 'Dokumen bertanda tangan berhasil diunggah. Dokumen kini final dan tidak dapat diedit.');
+    }
+
+    /**
+     * Hapus HANYA file bertanda tangan. Baris dokumen asli (kop, isi surat, tanda tangan) tetap utuh
+     * dan dokumen kembali ke kondisi "belum ditandatangani" sehingga bisa diedit lagi.
+     */
+    public function destroySigned(Server $server)
+    {
+        $pathLama = null;
+
+        DB::transaction(function () use ($server, &$pathLama) {
+            $dokumen = ServerDocument::where('server_id', $server->id)->lockForUpdate()->first();
+
+            abort_unless($dokumen && $dokumen->isSigned(), 404, 'Tidak ada dokumen bertanda tangan untuk dihapus.');
+
+            $pathLama = $dokumen->signed_file;
+
+            $dokumen->forceFill([
+                'signed_file'          => null,
+                'signed_original_name' => null,
+                'signed_mime'          => null,
+                'signed_size'          => null,
+                'signed_at'            => null,
+                'signed_by'            => null,
+            ])->save();
+        });
+
+        // Catatan database dibersihkan lebih dulu; bila penghapusan file gagal, yang tersisa
+        // hanya file yatim yang tidak terhubung ke apa pun (bukan status final yang salah).
+        Storage::disk(ServerDocument::SIGNED_DISK)->delete($pathLama);
+
+        return redirect()
+            ->route('server.dokumen.edit', $server)
+            ->with('success', 'Dokumen bertanda tangan dihapus. Dokumen kembali dapat diedit.');
     }
 
     // ------------------------------------------------------------------
@@ -192,9 +391,54 @@ class ServerDocumentController extends Controller
         }
     }
 
-    private function dokumenUntuk(Server $server): ServerDocument
+    private function dokumenTersimpan(Server $server): ?ServerDocument
     {
-        $dokumen = ServerDocument::where('server_id', $server->id)->first();
+        return ServerDocument::where('server_id', $server->id)->first();
+    }
+
+    /** Hentikan request bila dokumen sudah final (berisi file bertanda tangan). */
+    private function tolakJikaFinal(?ServerDocument $dokumen): void
+    {
+        abort_if(
+            $dokumen?->isSigned(),
+            423,
+            'Dokumen sudah ditandatangani (final) dan tidak dapat diubah. Hapus dokumen bertanda tangan terlebih dahulu bila perlu mengedit.'
+        );
+    }
+
+    private function dokumenFinalAtau404(Server $server): ServerDocument
+    {
+        $dokumen = $this->dokumenTersimpan($server);
+
+        abort_unless($dokumen?->isSigned(), 404, 'Dokumen belum ditandatangani.');
+
+        return $dokumen;
+    }
+
+    private function kirimBerkasTtd(Server $server, ServerDocument $dokumen, string $disposisi)
+    {
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk(ServerDocument::SIGNED_DISK);
+
+        // Tidak pernah jatuh kembali ke PDF buatan sistem: itu akan menampilkan dokumen yang salah
+        abort_unless(
+            $dokumen->isSigned() && $disk->exists($dokumen->signed_file),
+            404,
+            'File dokumen bertanda tangan tidak ditemukan di penyimpanan. Hubungi admin.'
+        );
+
+        $nama = 'dokumen-ttd-' . (Str::slug((string) $server->kode_perangkat) ?: $server->id) . '.pdf';
+
+        return $disk->response($dokumen->signed_file, $nama, [
+            'Content-Type'           => 'application/pdf',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control'          => 'private, no-store, max-age=0',
+        ], $disposisi);
+    }
+
+    private function dokumenUntuk(Server $server, ?ServerDocument $dokumen = null): ServerDocument
+    {
+        $dokumen ??= $this->dokumenTersimpan($server);
 
         return $dokumen
             ? $this->segarkanPenandatangan($dokumen)
