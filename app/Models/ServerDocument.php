@@ -5,9 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class ServerDocument extends Model
 {
+    /** Disk privat (storage/app/private): file tidak bisa dibuka lewat URL, hanya lewat controller. */
+    public const SIGNED_DISK = 'local';
+
+    /** Folder file bertanda tangan: server-documents/signed/{server_id}/{uuid}.pdf */
+    public const SIGNED_DIR = 'server-documents/signed';
+
+    /** Ukuran maksimum file bertanda tangan (KB). */
+    public const SIGNED_MAX_KB = 10240;
+
+    /*
+     * Kolom signed_* sengaja TIDAK masuk $fillable: hanya diisi lewat forceFill()
+     * oleh proses upload/hapus, jadi tidak bisa terisi dari input form biasa.
+     */
     protected $fillable = [
         'server_id',
         'kop_html',
@@ -31,9 +45,47 @@ class ServerDocument extends Model
         'updated_by',
     ];
 
+    protected $casts = [
+        'signed_at'   => 'datetime',
+        'signed_size' => 'integer',
+    ];
+
     public function server(): BelongsTo
     {
         return $this->belongsTo(Server::class);
+    }
+
+    public function signer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'signed_by');
+    }
+
+    /**
+     * Dokumen final bila ada file bertanda tangan yang tercatat.
+     * Status ini yang dipakai untuk mengunci pengeditan (bukan ada/tidaknya file di disk),
+     * jadi file yang hilang dari penyimpanan tidak diam-diam membuka kunci edit.
+     */
+    public function isSigned(): bool
+    {
+        return filled($this->signed_file);
+    }
+
+    /** True bila file bertanda tangan benar-benar ada di penyimpanan. */
+    public function signedFileExists(): bool
+    {
+        return $this->isSigned() && Storage::disk(self::SIGNED_DISK)->exists($this->signed_file);
+    }
+
+    /** Ukuran file bertanda tangan dalam bentuk yang mudah dibaca. */
+    public function signedSizeLabel(): string
+    {
+        $byte = (int) $this->signed_size;
+
+        if ($byte >= 1048576) {
+            return number_format($byte / 1048576, 2, ',', '.') . ' MB';
+        }
+
+        return number_format(max($byte, 0) / 1024, 0, ',', '.') . ' KB';
     }
 
     /**

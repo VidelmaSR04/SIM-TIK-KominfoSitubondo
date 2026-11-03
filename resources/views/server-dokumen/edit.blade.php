@@ -67,7 +67,20 @@
             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
             Kembali ke Manajemen Dokumen
         </a>
-        <h1 class="text-2xl font-bold text-on-surface mt-2">Edit Dokumen Server</h1>
+        <div class="flex items-center gap-3 flex-wrap mt-2">
+            <h1 class="text-2xl font-bold text-on-surface">{{ $sudahTtd ? 'Dokumen Server (Final)' : 'Edit Dokumen Server' }}</h1>
+            @if ($sudahTtd)
+                <span class="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold px-3 py-1">
+                    <span class="material-symbols-outlined text-[16px]">verified</span>
+                    Sudah Ditandatangani / Final
+                </span>
+            @else
+                <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1">
+                    <span class="material-symbols-outlined text-[16px]">edit_note</span>
+                    Belum Ditandatangani
+                </span>
+            @endif
+        </div>
         <p class="text-secondary text-sm mt-1">{{ $server->kode_perangkat }} &middot; {{ $server->nama_perangkat }}</p>
     </div>
 
@@ -87,6 +100,127 @@
         </div>
     @endif
 
+    @if ($sudahTtd)
+    {{-- ================= TAMPILAN DOKUMEN FINAL (sudah ada file bertanda tangan) ================= --}}
+    <div class="edit-dok__split">
+
+        <div class="edit-dok__pane edit-dok__form space-y-6">
+
+            {{-- STATUS + INFORMASI FILE --}}
+            <section class="bg-white rounded-xl border border-green-200 shadow-sm p-5 space-y-4">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold px-3 py-1">
+                        <span class="material-symbols-outlined text-[16px]">lock</span>
+                        Dokumen Final &middot; Terkunci
+                    </span>
+                </div>
+                <p class="text-sm text-secondary">
+                    Dokumen ini sudah ditandatangani dan ditetapkan sebagai dokumen final, sehingga isinya tidak dapat diedit melalui editor.
+                    Untuk mengedit kembali, hapus dokumen bertanda tangan terlebih dahulu.
+                </p>
+
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                    <div class="min-w-0">
+                        <dt class="text-xs text-gray-500">Nama file</dt>
+                        <dd class="font-medium text-on-surface break-words">{{ $dokumen->signed_original_name ?: '-' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-gray-500">Format &amp; ukuran</dt>
+                        <dd class="font-medium text-on-surface">PDF &middot; {{ $dokumen->signedSizeLabel() }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-gray-500">Waktu upload</dt>
+                        <dd class="font-medium text-on-surface">{{ $dokumen->signed_at ? $dokumen->signed_at->locale('id')->translatedFormat('j F Y, H.i') : '-' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-gray-500">Diunggah oleh</dt>
+                        <dd class="font-medium text-on-surface">{{ $dokumen->signer?->name ?? '-' }}</dd>
+                    </div>
+                </dl>
+
+                @unless ($berkasAda)
+                    <div class="rounded-lg border border-red-200 bg-red-50 text-red-800 text-sm px-4 py-3">
+                        File dokumen bertanda tangan tidak ditemukan di penyimpanan server. Unggah ulang lewat tombol Ganti Dokumen,
+                        atau hapus catatan ini agar dokumen dapat diedit kembali.
+                    </div>
+                @endunless
+
+                <div class="flex flex-wrap items-center gap-2">
+                    @if ($berkasAda)
+                        <a href="{{ route('server.dokumen.signed.preview', $server) }}" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-1 border border-outline-variant bg-white text-sm px-3 py-2 rounded-lg hover:bg-gray-50">
+                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                            Lihat
+                        </a>
+                        <a href="{{ route('server.dokumen.signed.download', $server) }}"
+                           class="inline-flex items-center gap-1 border border-outline-variant bg-white text-sm px-3 py-2 rounded-lg hover:bg-gray-50">
+                            <span class="material-symbols-outlined text-[18px]">download</span>
+                            Unduh
+                        </a>
+                    @endif
+                    <button type="button" id="btnGantiTtd"
+                            class="inline-flex items-center gap-1 bg-primary text-white text-sm font-medium px-3 py-2 rounded-lg hover:bg-primary-container transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">sync</span>
+                        Ganti Dokumen
+                    </button>
+                </div>
+            </section>
+
+            {{-- GANTI DOKUMEN (muncul setelah tombol Ganti Dokumen ditekan) --}}
+            <section id="panelGantiTtd" class="hidden bg-white rounded-xl border border-outline-variant shadow-sm p-5 space-y-3">
+                <h2 class="font-semibold text-on-surface">Ganti Dokumen Bertanda Tangan</h2>
+                <form id="formGantiTtd" method="POST" enctype="multipart/form-data"
+                      action="{{ route('server.dokumen.signed.store', $server) }}" class="space-y-3">
+                    @csrf
+                    <input type="file" id="signed_file_ganti" name="signed_file" required accept="application/pdf,.pdf"
+                           class="block w-full text-sm text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-primary-container">
+                    <p class="text-xs text-gray-500">Format PDF, maksimal {{ \App\Models\ServerDocument::SIGNED_MAX_KB / 1024 }} MB. File lama diganti; dokumen tetap final dan formulir edit tetap terkunci.</p>
+                    <div class="flex items-center gap-3">
+                        <button type="submit" class="inline-flex items-center gap-2 bg-primary text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-primary-container transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">upload_file</span>
+                            Unggah Pengganti
+                        </button>
+                        <button type="button" id="btnBatalGantiTtd" class="text-sm text-secondary hover:text-on-surface">Batal</button>
+                    </div>
+                </form>
+            </section>
+
+            {{-- HAPUS DOKUMEN BERTANDA TANGAN --}}
+            <section class="bg-white rounded-xl border border-red-200 shadow-sm p-5 space-y-3">
+                <h2 class="font-semibold text-on-surface">Hapus Dokumen Bertanda Tangan</h2>
+                <p class="text-sm text-secondary">
+                    Hanya file bertanda tangan yang dihapus. Data dokumen asli tetap tersimpan, status kembali menjadi
+                    Belum Ditandatangani, dan formulir edit aktif lagi.
+                </p>
+                <form id="formHapusTtd" method="POST" action="{{ route('server.dokumen.signed.destroy', $server) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-flex items-center gap-2 border border-red-300 text-red-700 bg-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        Hapus Dokumen Bertanda Tangan
+                    </button>
+                </form>
+            </section>
+        </div>
+
+        {{-- PREVIEW DOKUMEN BERTANDA TANGAN --}}
+        <div class="edit-dok__pane edit-dok__preview">
+            <div class="flex items-center justify-between">
+                <h2 class="font-semibold text-on-surface">Preview Dokumen Bertanda Tangan</h2>
+            </div>
+            @if ($berkasAda)
+                <iframe title="Preview dokumen bertanda tangan"
+                        src="{{ route('server.dokumen.signed.preview', $server) }}?v={{ $dokumen->signed_at?->timestamp }}#view=FitH"
+                        class="rounded-lg border border-outline-variant bg-gray-100"></iframe>
+            @else
+                <div class="flex-1 rounded-lg border border-dashed border-outline-variant bg-gray-50 flex items-center justify-center text-sm text-gray-500 text-center p-6">
+                    Preview tidak tersedia karena file tidak ditemukan.
+                </div>
+            @endif
+        </div>
+    </div>
+    @else
+    {{-- ================= TAMPILAN EDIT (belum ditandatangani) ================= --}}
     <div class="edit-dok__split">
 
         {{-- ================= FORM (scroll sendiri) ================= --}}
@@ -175,6 +309,29 @@
                 <p class="text-xs text-gray-500">Jabatan, nama, pangkat/golongan, dan NIP diambil otomatis dari Master Data. Area kosong di atas nama disediakan untuk QR TTD digital.</p>
             </section>
 
+            {{-- UPLOAD DOKUMEN BERTANDA TANGAN --}}
+            <section class="bg-white rounded-xl border border-amber-200 shadow-sm p-5 space-y-3">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <h2 class="font-semibold text-on-surface">Upload Dokumen yang Telah Ditandatangani</h2>
+                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1">Belum Ditandatangani</span>
+                </div>
+                <p class="text-sm text-secondary">
+                    Silakan unggah kembali dokumen yang telah ditandatangani oleh pejabat berwenang. Setelah dokumen berhasil diunggah,
+                    dokumen akan ditetapkan sebagai dokumen final dan tidak dapat diedit kembali.
+                </p>
+                <input type="file" id="signed_file" name="signed_file" form="formUploadTtd" required accept="application/pdf,.pdf"
+                       class="block w-full text-sm text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-primary-container">
+                <p class="text-xs text-gray-500">
+                    Format PDF, maksimal {{ \App\Models\ServerDocument::SIGNED_MAX_KB / 1024 }} MB.
+                    Pastikan perubahan sudah disimpan dan sudah diunduh untuk ditandatangani sebelum mengunggah.
+                </p>
+                <button type="submit" form="formUploadTtd"
+                        class="inline-flex items-center gap-2 border border-primary text-primary bg-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">upload_file</span>
+                    Unggah &amp; Jadikan Final
+                </button>
+            </section>
+
             <div class="edit-dok__actions flex items-center gap-3">
                 <button type="submit" class="inline-flex items-center gap-2 bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-primary-container transition-colors">
                     <span class="material-symbols-outlined text-[18px]">save</span>
@@ -202,9 +359,58 @@
             <p class="text-xs text-gray-500">Preview diperbarui otomatis saat Anda mengetik atau mengubah isian (belum perlu disimpan). Tombol Unduh PDF memakai versi yang sudah disimpan.</p>
         </div>
     </div>
+    @endif
 </div>
+
+@unless ($sudahTtd)
+    {{-- Form unggah dokumen bertanda tangan. Dipisah dari #formDokumen (form tidak boleh bersarang);
+         kolom file dan tombolnya di bagian "Upload Dokumen yang Telah Ditandatangani" terhubung lewat atribut form="formUploadTtd". --}}
+    <form id="formUploadTtd" method="POST" enctype="multipart/form-data" action="{{ route('server.dokumen.signed.store', $server) }}" class="hidden">
+        @csrf
+    </form>
+@endunless
 @endsection
 
+@if ($sudahTtd)
+@push('scripts')
+<script>
+    (function () {
+        const MAKS_BYTE = {{ \App\Models\ServerDocument::SIGNED_MAX_KB }} * 1024;
+        const panel     = document.getElementById('panelGantiTtd');
+        const inputGanti = document.getElementById('signed_file_ganti');
+
+        document.getElementById('btnGantiTtd').addEventListener('click', function () {
+            panel.classList.remove('hidden');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        document.getElementById('btnBatalGantiTtd').addEventListener('click', function () {
+            inputGanti.value = '';
+            panel.classList.add('hidden');
+        });
+
+        inputGanti.addEventListener('change', function () {
+            const berkas = inputGanti.files[0];
+            if (berkas && berkas.size > MAKS_BYTE) {
+                alert('Ukuran file maksimal {{ \App\Models\ServerDocument::SIGNED_MAX_KB / 1024 }} MB.');
+                inputGanti.value = '';
+            }
+        });
+
+        document.getElementById('formGantiTtd').addEventListener('submit', function (e) {
+            if (!confirm('File bertanda tangan yang lama akan diganti dengan file baru. Lanjutkan?')) {
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('formHapusTtd').addEventListener('submit', function (e) {
+            if (!confirm('Hapus dokumen bertanda tangan? File final akan dihapus dan dokumen kembali dapat diedit. Data dokumen asli tidak ikut terhapus.')) {
+                e.preventDefault();
+            }
+        });
+    })();
+</script>
+@endpush
+@else
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/tinymce@6.8.4/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
@@ -213,6 +419,7 @@
     const formDokumen = document.getElementById('formDokumen');
     const statusPreview = document.getElementById('statusPreview');
     let timerPreview = null;
+    let adaPerubahan = false;   // ada isian yang diubah sejak halaman dibuka (dipakai untuk peringatan saat unggah dokumen TTD)
 
     function perbaruiPreview() {
         clearTimeout(timerPreview);
@@ -257,6 +464,8 @@
     // Isian biasa (input teks, textarea, pilihan pejabat). Logo ditangani terpisah di bawah.
     ['input', 'change'].forEach(function (jenis) {
         formDokumen.addEventListener(jenis, function (e) {
+            if (e.target.id === 'signed_file') { return; }   // kolom unggah dokumen TTD bukan bagian preview
+            adaPerubahan = true;
             if (e.target.id === 'logo' || e.target.id === 'hapus_logo') { return; }
             jadwalkanPreview(jenis === 'input' ? 900 : 300);
         });
@@ -264,7 +473,7 @@
 
     // Editor TinyMCE (isinya ada di dalam iframe, jadi tidak lewat event form)
     function pantauEditor(editor) {
-        editor.on('input change Undo Redo', function () { jadwalkanPreview(900); });
+        editor.on('input change Undo Redo', function () { adaPerubahan = true; jadwalkanPreview(900); });
         editor.on('ExecCommand', function (e) {
             if (!/^mce(Focus|Repaint)/i.test(e.command)) { jadwalkanPreview(600); }
         });
@@ -406,5 +615,28 @@
     document.querySelectorAll('.select-pejabat').forEach(function (sel) {
         sel.addEventListener('change', function () { jadwalkanPreview(300); });
     });
+
+    // ---------- Unggah dokumen bertanda tangan ----------
+    (function () {
+        const MAKS_BYTE = {{ \App\Models\ServerDocument::SIGNED_MAX_KB }} * 1024;
+        const inputTtd  = document.getElementById('signed_file');
+
+        inputTtd.addEventListener('change', function () {
+            const berkas = inputTtd.files[0];
+            if (berkas && berkas.size > MAKS_BYTE) {
+                alert('Ukuran file maksimal {{ \App\Models\ServerDocument::SIGNED_MAX_KB / 1024 }} MB.');
+                inputTtd.value = '';
+            }
+        });
+
+        document.getElementById('formUploadTtd').addEventListener('submit', function (e) {
+            let pesan = 'Setelah diunggah, dokumen menjadi FINAL dan tidak dapat diedit lagi (kecuali dokumen bertanda tangan dihapus). Lanjutkan?';
+            if (adaPerubahan) {
+                pesan = 'Ada perubahan di formulir yang BELUM disimpan dan tidak akan ikut tersimpan. ' + pesan;
+            }
+            if (!confirm(pesan)) { e.preventDefault(); }
+        });
+    })();
 </script>
 @endpush
+@endif

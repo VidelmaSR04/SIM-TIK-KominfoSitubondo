@@ -58,11 +58,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/server-dokumen/{server}/foto/download', [ServerPhotoController::class, 'downloadFoto'])->name('server.dokumen.foto.download');
     Route::get('/server-dokumen/{server}/foto/preview', [ServerPhotoController::class, 'previewFoto'])->name('server.dokumen.foto.preview');
 
+    // Dokumen bertanda tangan (final): dilihat/diunduh semua role yang berhak atas dokumennya
+    Route::get('/server-dokumen/{server}/signed/preview', [ServerDocumentController::class, 'signedPreview'])->name('server.dokumen.signed.preview');
+    Route::get('/server-dokumen/{server}/signed/download', [ServerDocumentController::class, 'signedDownload'])->name('server.dokumen.signed.download');
+
     // Edit dokumen (surat pengantar, kop, tanda tangan) — khusus admin
     Route::middleware('role:admin')->group(function () {
         Route::get('/server-dokumen/{server}/edit', [ServerDocumentController::class, 'edit'])->name('server.dokumen.edit');
         Route::put('/server-dokumen/{server}', [ServerDocumentController::class, 'update'])->name('server.dokumen.update');
         Route::post('/server-dokumen/{server}/preview-draft', [ServerDocumentController::class, 'previewDraft'])->name('server.dokumen.preview-draft');
+
+        // Unggah / ganti / hapus dokumen bertanda tangan — khusus admin
+        Route::post('/server-dokumen/{server}/signed', [ServerDocumentController::class, 'uploadSigned'])->name('server.dokumen.signed.store');
+        Route::delete('/server-dokumen/{server}/signed', [ServerDocumentController::class, 'destroySigned'])->name('server.dokumen.signed.destroy');
     });
 
    // Master Data routes

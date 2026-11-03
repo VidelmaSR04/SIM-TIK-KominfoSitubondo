@@ -285,13 +285,21 @@
                             </a>
                             @endif
                             <!-- Preview button -->
-                            <a href="{{ route('server.dokumen.preview', $server->id) }}" class="hover:text-blue-600 transition-colors" title="Preview PDF" target="_blank">
+                            <a href="{{ route('server.dokumen.preview', $server->id) }}" class="hover:text-blue-600 transition-colors" title="{{ $ttdMap->has($server->id) ? 'Preview PDF (bertanda tangan)' : 'Preview PDF' }}" target="_blank">
                                 <span class="material-symbols-outlined text-[19px]">visibility</span>
                             </a>
                             <!-- Download button -->
-                            <a href="{{ route('server.dokumen.download', $server->id) }}" class="hover:text-green-600 transition-colors" title="Unduh PDF">
+                            <a href="{{ route('server.dokumen.download', $server->id) }}" class="hover:text-green-600 transition-colors" title="{{ $ttdMap->has($server->id) ? 'Unduh PDF (bertanda tangan)' : 'Unduh PDF' }}">
                                 <span class="material-symbols-outlined text-[19px]">download</span>
                             </a>
+                        </div>
+                        {{-- Status tanda tangan: sumber yang sama dipakai semua role --}}
+                        <div class="mt-1.5">
+                            @if ($ttdMap->has($server->id))
+                                <span class="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-800 text-[11px] font-semibold px-2 py-0.5">Final &middot; TTD</span>
+                            @else
+                                <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold px-2 py-0.5">Belum TTD</span>
+                            @endif
                         </div>
                     </td>
                     <td class="p-4 text-center">
