@@ -52,7 +52,7 @@
             <div class="flex items-center justify-between rounded-lg
                         {{ $dalamGrupServer ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-800' }}">
 
-                <a href="{{ route('admin.manajemen-server') }}"
+                <a href="{{ Auth::user()->role === 'admin' ? route('admin.manajemen-server') : route('manajemen-server') }}"
                    @click="open = true"
                    class="flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
