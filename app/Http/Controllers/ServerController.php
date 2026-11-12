@@ -388,8 +388,8 @@ public function index(Request $request)
     {
         $server = Server::findOrFail($id);
 
-        // If user is not admin, verify ownership
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+        // If user cannot manage servers, verify ownership
+        if (!Auth::check() || (!Auth::user()->canManageServers() && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -400,8 +400,8 @@ public function index(Request $request)
     {
         $server = Server::findOrFail($id);
 
-        // If user is not admin, verify ownership
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+        // If user cannot manage servers, verify ownership
+        if (!Auth::check() || (!Auth::user()->canManageServers() && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -413,7 +413,7 @@ public function index(Request $request)
     public function update(Request $request, int|string $id)
     {
         $server = Server::findOrFail($id);
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+        if (!Auth::check() || (!Auth::user()->canManageServers() && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -603,7 +603,7 @@ public function index(Request $request)
     public function destroy(int|string $id)
     {
         $server = Server::findOrFail($id);
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+        if (!Auth::check() || (!Auth::user()->canManageServers() && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -633,7 +633,7 @@ public function index(Request $request)
     {
         try {
             $server = Server::findOrFail($id);
-            if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+            if (!Auth::check() || (!Auth::user()->canManageServers() && $server->user_id !== Auth::id())) {
                 return response()->json(['success' => false, 'message' => 'Tidak diizinkan'], 403);
             }
 
@@ -673,7 +673,7 @@ public function index(Request $request)
     public function lengkapi(int|string $id)
     {
         $server = Server::findOrFail($id);
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && $server->user_id !== Auth::id())) {
+        if (!Auth::check() || (!Auth::user()->canManageServers() && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -706,6 +706,9 @@ public function index(Request $request)
     public function unlockAndSync(Request $request, int|string $id)
     {
         $server = Server::findOrFail($id);
+        if (!Auth::check() || (!Auth::user()->canManageServers() && $server->user_id !== Auth::id())) {
+            abort(403, 'Unauthorized action.');
+        }
 
         // Unlock the status
         $server->status_locked = false;

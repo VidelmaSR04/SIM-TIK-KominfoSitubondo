@@ -112,6 +112,7 @@
                         <label class="form-label" for="role">Role <span class="required-star">*</span></label>
                         <select class="standard-select @error('role') border-red-500 @enderror" id="role" name="role">
                             <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="teknisi" {{ old('role', $user->role) == 'teknisi' ? 'selected' : '' }}>Teknisi</option>
                             <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>User OPD</option>
                             <option value="kepala_bidang_tik" {{ old('role', $user->role) == 'kepala_bidang_tik' ? 'selected' : '' }}>Kepala Bidang TIK</option>
                         </select>

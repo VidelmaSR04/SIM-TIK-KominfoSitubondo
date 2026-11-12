@@ -60,8 +60,8 @@ class ServerPhotoController extends Controller
      */
     public function downloadFoto(Server $server, PhotoCardService $photoCardService)
     {
-        // If user is not admin or kepala_bidang_tik, verify ownership
-        if (!Auth::check() || (!in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik']) && $server->user_id !== Auth::id())) {
+        // If user is not admin, kepala_bidang_tik, or teknisi, verify ownership
+        if (!Auth::check() || (!in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik', 'teknisi'], true) && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -77,8 +77,8 @@ class ServerPhotoController extends Controller
      */
     public function previewFoto(Server $server, PhotoCardService $photoCardService)
     {
-        // If user is not admin or kepala_bidang_tik, verify ownership
-        if (!Auth::check() || (!in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik']) && $server->user_id !== Auth::id())) {
+        // If user is not admin, kepala_bidang_tik, or teknisi, verify ownership
+        if (!Auth::check() || (!in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik', 'teknisi'], true) && $server->user_id !== Auth::id())) {
             abort(403, 'Unauthorized action.');
         }
 

@@ -31,6 +31,10 @@ class ServerDocumentController extends Controller
      */
     public function index(Request $request)
     {
+        if (Auth::check() && Auth::user()->role === 'teknisi') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $search  = $request->input('search');
         $perPage = (int) $request->input('perPage', 10);
         if (!in_array($perPage, [10, 25, 50, 100], true)) {

@@ -63,6 +63,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if the user has teknisi role.
+     */
+    public function isTeknisi(): bool
+    {
+        return $this->role === 'teknisi';
+    }
+
+    /**
+     * Check if the user can manage servers (admin or teknisi).
+     */
+    public function canManageServers(): bool
+    {
+        return in_array($this->role, ['admin', 'teknisi'], true);
+    }
+
+    /**
      * Check if the user has user role.
      */
     public function isUser(): bool

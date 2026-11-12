@@ -77,6 +77,7 @@
             <select name="role" onchange="this.form.submit()" class="border border-outline-variant rounded-lg bg-white py-1.5 pl-3 pr-8 text-sm focus:ring-1 focus:ring-primary focus:border-primary">
                 <option value="">Semua Role</option>
                 <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                <option value="teknisi" {{ request('role') == 'teknisi' ? 'selected' : '' }}>Teknisi</option>
                 <option value="user" {{ request('role') == 'user' ? 'selected' : '' }}>User OPD</option>
                 <option value="kepala_bidang_tik" {{ request('role') == 'kepala_bidang_tik' ? 'selected' : '' }}>Kepala Bidang TIK</option>
             </select>
@@ -117,6 +118,10 @@
                         @if ($u->role === 'admin')
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
                                 <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Admin
+                            </span>
+                        @elseif ($u->role === 'teknisi')
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Teknisi
                             </span>
                         @elseif ($u->role === 'kepala_bidang_tik')
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">

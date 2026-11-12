@@ -11,6 +11,8 @@
                     Admin Data Center
                 @elseif(Auth::user()->role === 'kepala_bidang_tik')
                     Kepala Bidang TIK
+                @elseif(Auth::user()->role === 'teknisi')
+                    Teknisi Server
                 @else
                     Pengguna OPD
                 @endif
@@ -71,7 +73,7 @@
 
             <div x-show="open" class="mt-1 ml-4 space-y-1">
 
-                @if(Auth::user()->role === 'admin')
+                @if(Auth::user()->canManageServers())
                 <a href="{{ route('server.index') }}"
                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs(['server.*', 'detailserver']) && !request()->routeIs('server.dokumen.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,6 +85,7 @@
                 </a>
                 @endif
 
+                @if(Auth::user()->role !== 'teknisi')
                 <a href="{{ route('server.dokumen.index') }}"
                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('server.dokumen.*') ? 'text-blue-400 font-semibold' : 'text-gray-400 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +94,7 @@
                     </svg>
                     Manajemen Dokumen
                 </a>
+                @endif
 
                 @if(Auth::user()->role === 'admin')
                 <a href="{{ route('master-data.index') }}"

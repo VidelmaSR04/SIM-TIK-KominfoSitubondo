@@ -40,5 +40,15 @@ class CreateDummyUsersSeeder extends Seeder
                 'password' => Hash::make('12345678'),
             ]
         );
+
+        // Teknisi Server User
+        User::firstOrCreate(
+            ['email' => 'teknisi@situbondo.go.id'],
+            [
+                'name' => 'Teknisi Server',
+                'role' => 'teknisi',
+                'password' => Hash::make('12345678'),
+            ]
+        );
     }
 }

@@ -116,7 +116,7 @@
                     </td>
                     <td class="p-4 text-center">
                         <div class="flex items-center justify-center gap-2 text-gray-500">
-                            @if (Auth::check() && (Auth::user()->isAdmin() || $s->user_id == Auth::id()))
+                            @if (Auth::check() && (Auth::user()->canManageServers() || $s->user_id == Auth::id()))
                                 <a href="{{ route('detailserver', $s->id) }}" class="hover:text-blue-600 transition-colors" title="Lihat Detail Server">
                                     <span class="material-symbols-outlined text-[19px]">visibility</span>
                                 </a>

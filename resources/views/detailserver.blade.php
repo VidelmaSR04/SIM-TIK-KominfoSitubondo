@@ -2,7 +2,7 @@
 
 @section('content')
     @auth
-        @if (Auth::user()->isAdmin() || $server->user_id == Auth::id())
+        @if (Auth::user()->canManageServers() || $server->user_id == Auth::id())
             @php
                 $statusColor = match ($server->status) {
                     'Aktif' => 'bg-emerald-100 text-emerald-800',
@@ -173,10 +173,12 @@
                                 class="flex items-center gap-1 bg-surface-container-low text-on-surface-variant px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-container transition-colors border border-outline-variant">
                                 <span class="material-symbols-outlined text-[18px]">link</span> Salin Link
                             </a>
+                            @if(Auth::user()->role !== 'teknisi')
                             <button onclick="downloadPdf({{$server->id}})"
                                 class="flex items-center gap-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-container transition-colors shadow-sm">
                                 <span class="material-symbols-outlined text-[18px]">print</span> Cetak PDF
                             </button>
+                            @endif
                         </div>
                     </div>
                 </div>

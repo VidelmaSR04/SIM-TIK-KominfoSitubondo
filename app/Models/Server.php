@@ -46,13 +46,13 @@ class Server extends Model
     ];
 
     public function scopeVisibleTo($query, $user)
-{
-        // Non-admin users only see their own servers.
-        if (!$user || $user->role !== 'admin') {
-        $query->where('user_id', $user?->id);
+    {
+        // Non-admin/non-teknisi users only see their own servers.
+        if (!$user || !$user->canManageServers()) {
+            $query->where('user_id', $user?->id);
+        }
+        return $query;
     }
-    return $query;
-}
 
 public function scopeFilter($query, ?string $search)
 {
