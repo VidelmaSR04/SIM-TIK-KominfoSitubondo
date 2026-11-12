@@ -22,12 +22,12 @@ Route::get('/qr/download/{id}', [QrCodeController::class, 'download'])->name('qr
 // ============= REGISTER SERVER =============
 // Routes removed - functionality not implemented
 
-// ============= MANAJEMEN SERVER (ADMIN) — dulu bernama "dashboard" =============
+// ============= MANAJEMEN SERVER (ADMIN & TEKNISI) — dulu bernama "dashboard" =============
 Route::get('/manajemen-server', [ManajemenServerController::class, 'index'])
-    ->middleware(['auth', 'role:admin,kepala_bidang_tik'])
+    ->middleware(['auth', 'role:admin,kepala_bidang_tik,teknisi'])
     ->name('manajemen-server');
 
-// ============= SERVER ROUTES (ADMIN) =============
+// ============= SERVER ROUTES (ADMIN & TEKNISI) =============
 Route::delete('/server/{id}/remove-image', [ServerController::class, 'removeImage'])->name('server.removeImage');
 
 // Custom routes untuk server
@@ -37,12 +37,12 @@ Route::get('/server/{server}/pdf', function (Server $server) {
 })->middleware('auth')->name('server.pdf');
 Route::get('/detailserver/{id}', [ServerController::class, 'show'])->name('detailserver');
 
-// ============= LENGKAPI DATA (Admin melengkapi data dari user) =============
+// ============= LENGKAPI DATA (Admin/Teknisi melengkapi data dari user) =============
 Route::get('/server/{id}/lengkapi', [ServerController::class, 'lengkapi'])
-    ->middleware(['auth', 'role:admin'])
+    ->middleware(['auth', 'role:admin,teknisi'])
     ->name('server.lengkapi');
 Route::put('/server/{id}/lengkapi', [ServerController::class, 'updateLengkapi'])
-    ->middleware(['auth', 'role:admin'])
+    ->middleware(['auth', 'role:admin,teknisi'])
     ->name('server.lengkapi.update');
 
 // Redirect /inputdata ke server.create (form ADMIN, biarkan seperti semula)

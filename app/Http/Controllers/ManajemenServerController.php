@@ -13,8 +13,8 @@ class ManajemenServerController extends Controller
 {
     public function index(Request $request)
     {
-        // Determine if user is admin or kepala_bidang_tik
-        $isAdmin = Auth::check() && in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik']);
+        // Determine if user is admin, kepala_bidang_tik, or teknisi (can view global device stats)
+        $isAdmin = Auth::check() && in_array(Auth::user()->role, ['admin', 'kepala_bidang_tik', 'teknisi']);
 
         // ==== Summary Cards ====
         $totalDevices = $isAdmin ? Server::count() : Server::where('user_id', Auth::id())->count();

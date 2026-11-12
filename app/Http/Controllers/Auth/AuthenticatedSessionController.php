@@ -36,7 +36,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->to(route('admin.manajemen-server', absolute: false));
         }
 
-        if ($user->role === 'kepala_bidang_tik') {
+        if ($user->role === 'kepala_bidang_tik' || $user->role === 'teknisi') {
             return redirect()->intended(route('manajemen-server', absolute: false));
         }
 
